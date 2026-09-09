@@ -468,7 +468,7 @@ Compose rewrite has to do.
       hence the `ret`. The expression table at 01f2 is byte-scaled, so the two tables do not
       share a convention.*
 
-- [ ] **T29 · Name the engine primitives**
+- [~] **T29 · Name the engine primitives**
       `vm_statement_table` (image `0x0060`) has 195 distinct targets and each is an engine
       primitive or a statement; their arity is already readable from the handlers
       (FORMATS.md section 6). Naming them is naming the engine's whole script-visible API,
@@ -479,6 +479,25 @@ Compose rewrite has to do.
       breaking on the handler and watching the game while it runs.*
       **Done when:** at least 30 primitives are named in `ishar.chani` with their arity, and
       FINDINGS.md lists the ones that touch combat, movement or the party.
+      *Half met. **155 handlers are named with signatures** (arity, inline operands, engine
+      variable sinks) -- far past the 30 asked for -- and coverage went 45.3% -> 49.6% with
+      seg_0000's undecoded bytes falling 6,512 -> 2,732. FINDINGS.md 6.3.
+      The semantic half is not met: the nine opcodes observed running while walking turn out
+      to be the **language core** (eval, assign, operand-skip), not movement verbs, which is
+      its own finding -- moving the party runs hundreds of thousands of script instructions
+      per second, so the game loop is script-driven. Domain verbs fire once per event and a
+      walk diff cannot see them. See T29c.*
+
+- [ ] **T29c · Attribute primitives to combat, magic and the party**
+      T29 named every statement handler's signature but not its meaning. Domain verbs fire
+      once per event, so the walk diff that worked for the language core cannot see them.
+      *Method: `tools/t11p-diff.py` takes a call-count snapshot, runs an action, and diffs --
+      it just needs the action to be a fight, a spell or a character-sheet open rather than
+      walking. The attack UI is mouse-driven, so this needs either mouse input through the
+      MCP or a keyboard route into combat. `seg_0000:2d94` (opcode 0x42) is the cheapest
+      first target: it runs only while walking and is not an operand-skip helper.*
+      **Done when:** at least ten primitives are attributed to combat, magic, inventory or
+      the party, each with the action whose diff revealed it, and named in `ishar.chani`.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

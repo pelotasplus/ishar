@@ -481,3 +481,51 @@ decompiler is tractable once the primitives are named (T29).
 
 **Evidence:** EOB opcode list from the file-format wiki in `../eob`; Ishar's structure
 from FORMATS.md section 6, which was measured from the image and live memory.
+
+### 6.3 The engine's script-visible API (T29)
+
+`vm_statement_table` (image `0x24`, 231 entries, word-scaled) holds every statement and
+every engine primitive. **155 handlers are now named in `ishar.chani` with a signature** --
+arity (how many expression arguments the handler evaluates), the inline operand bytes it
+fetches itself, and the engine variables it writes. A primitive's signature is readable
+directly from its handler because arguments arrive one evaluator call at a time:
+
+```
+vm_stmt_ba (seg_0000:296b)   arity 5, sinks ss:[0ba8]:w ss:[0ba0]:w ss:[0ba2]:b
+                                            ss:[0ba4]:b ss:[0ba6]:w
+vm_stmt_bf (seg_0000:2994)   arity 3, sinks ss:[0c02]:w ss:[0c04]:w ss:[0c06]:w
+                                            ss:[0c0e]:b
+```
+
+Seeding them took the listing from 45.3% to **49.6%**, and `seg_0000` from 6,512
+undecoded bytes to 2,732 -- so the statement handlers were most of what was still dark in
+that segment.
+
+**Which opcodes run while the party moves.** Cross-referencing the call-count diff taken
+across 15s of walking (section 6) against the table identifies nine:
+
+| opcode | handler | calls while walking |
+|---|---|---|
+| 0x1f | `seg_0000:2937` | 785,731 |
+| 0x14 | `seg_0000:289c` | 482,187 |
+| 0x20 | `vm_stmt_assign` | 215,743 |
+| 0x15 | `seg_0000:28a9` | 156,565 |
+| 0x12 | `vm_skip_operand_b` | 83,543 |
+| 0x16 | `seg_0000:28b4` | 50,802 |
+| 0x1e | `seg_0000:2915` | 39,493 |
+| 0x42 | `seg_0000:2d94` | 23,379 |
+| 0x13 | `vm_skip_operand_w` | 12,633 |
+
+**These are the language core, not movement verbs** -- expression evaluation, assignment
+and operand skipping. That is itself the finding: moving the party runs *hundreds of
+thousands of script instructions per second*, so movement, and by extension the rest of
+the game loop, is script-driven rather than native. `0x42` is the one worth reading next:
+it is not an operand-skip helper and it only appears while walking.
+
+**Not established:** which primitives are combat, magic or party verbs. Those fire once
+per event, so a call-count diff across walking cannot see them; it needs a diff taken
+across the specific action, and the attack UI is mouse-driven (T29c).
+
+**Evidence:** signatures generated mechanically from the listing by the same pass that
+wrote the annotations; the walking attribution is `.ish/t11p-walk.json` cross-referenced
+against the table read from the static image.

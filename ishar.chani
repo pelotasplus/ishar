@@ -996,4 +996,437 @@ attr[seg_0000:0024]: type = u16; name = vm_statement_table; comment = [[[
     Statements, control flow and the engine primitives all live here. Opcodes 0..4 point
     at 26f9..26fd, which are single `ret` bytes -- no-ops.
 ]]]
+
+// Statement/primitive signatures, generated from vm_statement_table (T29).
+// arity = how many expression arguments the handler evaluates; imm = inline
+// operand bytes it fetches itself; sinks = engine variables it writes.
+attr[seg_0000:26f9]: type = code; name = vm_stmt_00; comment = [[[
+    Opcode 0 (0x00) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:26fa]: type = code; name = vm_stmt_01; comment = [[[
+    Opcode 1 (0x01) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:26fb]: type = code; name = vm_stmt_02; comment = [[[
+    Opcode 2 (0x02) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:26fc]: type = code; name = vm_stmt_03; comment = [[[
+    Opcode 3 (0x03) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:273b]: type = code; name = vm_stmt_09; comment = [[[
+    Opcode 9 (0x09) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2802]: type = code; name = vm_stmt_0b; comment = [[[
+    Opcode 11 (0x0b) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2803]: type = code; name = vm_stmt_0c; comment = [[[
+    Opcode 12 (0x0c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2804]: type = code; name = vm_stmt_0d; comment = [[[
+    Opcode 13 (0x0d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2805]: type = code; name = vm_stmt_0e; comment = [[[
+    Opcode 14 (0x0e) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2806]: type = code; name = vm_stmt_0f; comment = [[[
+    Opcode 15 (0x0f) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2807]: type = code; name = vm_stmt_10; comment = [[[
+    Opcode 16 (0x10) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:28c0]: type = code; name = vm_stmt_17; comment = [[[
+    Opcode 23 (0x17) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:28cd]: type = code; name = vm_stmt_18; comment = [[[
+    Opcode 24 (0x18) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:28d8]: type = code; name = vm_stmt_19; comment = [[[
+    Opcode 25 (0x19) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:28e4]: type = code; name = vm_stmt_1a; comment = [[[
+    Opcode 26 (0x1a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:28f1]: type = code; name = vm_stmt_1b; comment = [[[
+    Opcode 27 (0x1b) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:28fc]: type = code; name = vm_stmt_1c; comment = [[[
+    Opcode 28 (0x1c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2908]: type = code; name = vm_stmt_1d; comment = [[[
+    Opcode 29 (0x1d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2969]: type = code; name = vm_stmt_22; comment = [[[
+    Opcode 34 (0x22) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:296a]: type = code; name = vm_stmt_23; comment = [[[
+    Opcode 35 (0x23) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2a9f]: type = code; name = vm_stmt_25; comment = [[[
+    Opcode 37 (0x25) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2ab1]: type = code; name = vm_stmt_26; comment = [[[
+    Opcode 38 (0x26) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2ace]: type = code; name = vm_stmt_27; comment = [[[
+    Opcode 39 (0x27) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2ae2]: type = code; name = vm_stmt_28; comment = [[[
+    Opcode 40 (0x28) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2850]: type = code; name = vm_stmt_2c; comment = [[[
+    Opcode 44 (0x2c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:286a]: type = code; name = vm_stmt_2d; comment = [[[
+    Opcode 45 (0x2d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2749]: type = code; name = vm_stmt_31; comment = [[[
+    Opcode 49 (0x31) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:27bd]: type = code; name = vm_stmt_33; comment = [[[
+    Opcode 51 (0x33) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5798]: type = code; name = vm_stmt_35; comment = [[[
+    Opcode 53 (0x35) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2e9b]: type = code; name = vm_stmt_38; comment = [[[
+    Opcode 56 (0x38) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2ec0]: type = code; name = vm_stmt_39; comment = [[[
+    Opcode 57 (0x39) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2e94]: type = code; name = vm_stmt_3a; comment = [[[
+    Opcode 58 (0x3a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2cce]: type = code; name = vm_stmt_3c; comment = [[[
+    Opcode 60 (0x3c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2d98]: type = code; name = vm_stmt_43; comment = [[[
+    Opcode 67 (0x43) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3aae]: type = code; name = vm_stmt_4a; comment = [[[
+    Opcode 74 (0x4a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3b9c]: type = code; name = vm_stmt_4d; comment = [[[
+    Opcode 77 (0x4d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:48bd]: type = code; name = vm_stmt_52; comment = [[[
+    Opcode 82 (0x52) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4a15]: type = code; name = vm_stmt_53; comment = [[[
+    Opcode 83 (0x53) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4ae1]: type = code; name = vm_stmt_54; comment = [[[
+    Opcode 84 (0x54) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4b17]: type = code; name = vm_stmt_55; comment = [[[
+    Opcode 85 (0x55) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4b59]: type = code; name = vm_stmt_56; comment = [[[
+    Opcode 86 (0x56) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4ba4]: type = code; name = vm_stmt_58; comment = [[[
+    Opcode 88 (0x58) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:551a]: type = code; name = vm_stmt_59; comment = [[[
+    Opcode 89 (0x59) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5353]: type = code; name = vm_stmt_5a; comment = [[[
+    Opcode 90 (0x5a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5274]: type = code; name = vm_stmt_5b; comment = [[[
+    Opcode 91 (0x5b) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:55dc]: type = code; name = vm_stmt_5c; comment = [[[
+    Opcode 92 (0x5c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5594]: type = code; name = vm_stmt_5d; comment = [[[
+    Opcode 93 (0x5d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:556b]: type = code; name = vm_stmt_5e; comment = [[[
+    Opcode 94 (0x5e) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3c3b]: type = code; name = vm_stmt_5f; comment = [[[
+    Opcode 95 (0x5f) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4bc4]: type = code; name = vm_stmt_60; comment = [[[
+    Opcode 96 (0x60) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5898]: type = code; name = vm_stmt_63; comment = [[[
+    Opcode 99 (0x63) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:58a7]: type = code; name = vm_stmt_65; comment = [[[
+    Opcode 101 (0x65) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5b6c]: type = code; name = vm_stmt_69; comment = [[[
+    Opcode 105 (0x69) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5db8]: type = code; name = vm_stmt_6b; comment = [[[
+    Opcode 107 (0x6b) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5dff]: type = code; name = vm_stmt_6c; comment = [[[
+    Opcode 108 (0x6c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:60d0]: type = code; name = vm_stmt_6e; comment = [[[
+    Opcode 110 (0x6e) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:58bc]: type = code; name = vm_stmt_6f; comment = [[[
+    Opcode 111 (0x6f) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:63ab]: type = code; name = vm_stmt_72; comment = [[[
+    Opcode 114 (0x72) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:63ba]: type = code; name = vm_stmt_73; comment = [[[
+    Opcode 115 (0x73) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:63c5]: type = code; name = vm_stmt_74; comment = [[[
+    Opcode 116 (0x74) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:63de]: type = code; name = vm_stmt_75; comment = [[[
+    Opcode 117 (0x75) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:63f8]: type = code; name = vm_stmt_76; comment = [[[
+    Opcode 118 (0x76) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:643c]: type = code; name = vm_stmt_78; comment = [[[
+    Opcode 120 (0x78) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:649a]: type = code; name = vm_stmt_79; comment = [[[
+    Opcode 121 (0x79) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:64c2]: type = code; name = vm_stmt_7a; comment = [[[
+    Opcode 122 (0x7a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:64c9]: type = code; name = vm_stmt_7b; comment = [[[
+    Opcode 123 (0x7b) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:64d0]: type = code; name = vm_stmt_7c; comment = [[[
+    Opcode 124 (0x7c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:65c6]: type = code; name = vm_stmt_7d; comment = [[[
+    Opcode 125 (0x7d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:65d8]: type = code; name = vm_stmt_7e; comment = [[[
+    Opcode 126 (0x7e) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:65e9]: type = code; name = vm_stmt_7f; comment = [[[
+    Opcode 127 (0x7f) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:65fa]: type = code; name = vm_stmt_80; comment = [[[
+    Opcode 128 (0x80) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6603]: type = code; name = vm_stmt_81; comment = [[[
+    Opcode 129 (0x81) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:67ae]: type = code; name = vm_stmt_82; comment = [[[
+    Opcode 130 (0x82) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:662e]: type = code; name = vm_stmt_85; comment = [[[
+    Opcode 133 (0x85) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6649]: type = code; name = vm_stmt_86; comment = [[[
+    Opcode 134 (0x86) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:675d]: type = code; name = vm_stmt_88; comment = [[[
+    Opcode 136 (0x88) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6789]: type = code; name = vm_stmt_89; comment = [[[
+    Opcode 137 (0x89) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6797]: type = code; name = vm_stmt_8a; comment = [[[
+    Opcode 138 (0x8a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:68b6]: type = code; name = vm_stmt_8c; comment = [[[
+    Opcode 140 (0x8c) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:692a]: type = code; name = vm_stmt_8d; comment = [[[
+    Opcode 141 (0x8d) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4a57]: type = code; name = vm_stmt_8e; comment = [[[
+    Opcode 142 (0x8e) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4a9c]: type = code; name = vm_stmt_8f; comment = [[[
+    Opcode 143 (0x8f) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3bb2]: type = code; name = vm_stmt_90; comment = [[[
+    Opcode 144 (0x90) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:679d]: type = code; name = vm_stmt_91; comment = [[[
+    Opcode 145 (0x91) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:67a8]: type = code; name = vm_stmt_92; comment = [[[
+    Opcode 146 (0x92) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:50bd]: type = code; name = vm_stmt_93; comment = [[[
+    Opcode 147 (0x93) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:60eb]: type = code; name = vm_stmt_97; comment = [[[
+    Opcode 151 (0x97) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:60dd]: type = code; name = vm_stmt_98; comment = [[[
+    Opcode 152 (0x98) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3339]: type = code; name = vm_stmt_99; comment = [[[
+    Opcode 153 (0x99) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:332d]: type = code; name = vm_stmt_9a; comment = [[[
+    Opcode 154 (0x9a) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3333]: type = code; name = vm_stmt_9b; comment = [[[
+    Opcode 155 (0x9b) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6370]: type = code; name = vm_stmt_9e; comment = [[[
+    Opcode 158 (0x9e) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:368f]: type = code; name = vm_stmt_9f; comment = [[[
+    Opcode 159 (0x9f) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3bce]: type = code; name = vm_stmt_a2; comment = [[[
+    Opcode 162 (0xa2) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4967]: type = code; name = vm_stmt_a3; comment = [[[
+    Opcode 163 (0xa3) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:49a2]: type = code; name = vm_stmt_a4; comment = [[[
+    Opcode 164 (0xa4) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:49dd]: type = code; name = vm_stmt_a5; comment = [[[
+    Opcode 165 (0xa5) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:33a3]: type = code; name = vm_stmt_a6; comment = [[[
+    Opcode 166 (0xa6) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:33cb]: type = code; name = vm_stmt_a8; comment = [[[
+    Opcode 168 (0xa8) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:33dc]: type = code; name = vm_stmt_a9; comment = [[[
+    Opcode 169 (0xa9) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3401]: type = code; name = vm_stmt_aa; comment = [[[
+    Opcode 170 (0xaa) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:33ec]: type = code; name = vm_stmt_ab; comment = [[[
+    Opcode 171 (0xab) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6210]: type = code; name = vm_stmt_ac; comment = [[[
+    Opcode 172 (0xac) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:48c4]: type = code; name = vm_stmt_ad; comment = [[[
+    Opcode 173 (0xad) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2ca5]: type = code; name = vm_stmt_ae; comment = [[[
+    Opcode 174 (0xae) of vm_statement_table. arity 3.
+]]]
+attr[seg_0000:2cbc]: type = code; name = vm_stmt_af; comment = [[[
+    Opcode 175 (0xaf) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:29c4]: type = code; name = vm_stmt_b0; comment = [[[
+    Opcode 176 (0xb0) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:29b5]: type = code; name = vm_stmt_b1; comment = [[[
+    Opcode 177 (0xb1) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2a6b]: type = code; name = vm_stmt_b6; comment = [[[
+    Opcode 182 (0xb6) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2a5e]: type = code; name = vm_stmt_b7; comment = [[[
+    Opcode 183 (0xb7) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2a85]: type = code; name = vm_stmt_b8; comment = [[[
+    Opcode 184 (0xb8) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:65cf]: type = code; name = vm_stmt_bb; comment = [[[
+    Opcode 187 (0xbb) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5b8b]: type = code; name = vm_stmt_bd; comment = [[[
+    Opcode 189 (0xbd) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2eff]: type = code; name = vm_stmt_c0; comment = [[[
+    Opcode 192 (0xc0) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2f41]: type = code; name = vm_stmt_c1; comment = [[[
+    Opcode 193 (0xc1) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2f21]: type = code; name = vm_stmt_c2; comment = [[[
+    Opcode 194 (0xc2) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2f61]: type = code; name = vm_stmt_c3; comment = [[[
+    Opcode 195 (0xc3) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:2f8f]: type = code; name = vm_stmt_c4; comment = [[[
+    Opcode 196 (0xc4) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3025]: type = code; name = vm_stmt_c5; comment = [[[
+    Opcode 197 (0xc5) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3052]: type = code; name = vm_stmt_c6; comment = [[[
+    Opcode 198 (0xc6) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3680]: type = code; name = vm_stmt_c7; comment = [[[
+    Opcode 199 (0xc7) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:31eb]: type = code; name = vm_stmt_c8; comment = [[[
+    Opcode 200 (0xc8) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:31ec]: type = code; name = vm_stmt_c9; comment = [[[
+    Opcode 201 (0xc9) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:515f]: type = code; name = vm_stmt_ca; comment = [[[
+    Opcode 202 (0xca) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:543b]: type = code; name = vm_stmt_cb; comment = [[[
+    Opcode 203 (0xcb) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:55b8]: type = code; name = vm_stmt_cc; comment = [[[
+    Opcode 204 (0xcc) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6198]: type = code; name = vm_stmt_ce; comment = [[[
+    Opcode 206 (0xce) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:369b]: type = code; name = vm_stmt_d0; comment = [[[
+    Opcode 208 (0xd0) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5d1c]: type = code; name = vm_stmt_d1; comment = [[[
+    Opcode 209 (0xd1) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5d75]: type = code; name = vm_stmt_d2; comment = [[[
+    Opcode 210 (0xd2) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:5f00]: type = code; name = vm_stmt_d3; comment = [[[
+    Opcode 211 (0xd3) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6da5]: type = code; name = vm_stmt_d4; comment = [[[
+    Opcode 212 (0xd4) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:36d0]: type = code; name = vm_stmt_d6; comment = [[[
+    Opcode 214 (0xd6) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6da6]: type = code; name = vm_stmt_d9; comment = [[[
+    Opcode 217 (0xd9) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:6daa]: type = code; name = vm_stmt_da; comment = [[[
+    Opcode 218 (0xda) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3aa4]: type = code; name = vm_stmt_db; comment = [[[
+    Opcode 219 (0xdb) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3225]: type = code; name = vm_stmt_df; comment = [[[
+    Opcode 223 (0xdf) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:31ed]: type = code; name = vm_stmt_e0; comment = [[[
+    Opcode 224 (0xe0) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:4bcd]: type = code; name = vm_stmt_e1; comment = [[[
+    Opcode 225 (0xe1) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:306e]: type = code; name = vm_stmt_e3; comment = [[[
+    Opcode 227 (0xe3) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:30e5]: type = code; name = vm_stmt_e4; comment = [[[
+    Opcode 228 (0xe4) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3142]: type = code; name = vm_stmt_e5; comment = [[[
+    Opcode 229 (0xe5) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:58e5]: type = code; name = vm_stmt_e6; comment = [[[
+    Opcode 230 (0xe6) of vm_statement_table. arity 0.
+]]]
 end

@@ -53,6 +53,21 @@ def body(start, limit=40):
     return out
 
 
+EVAL = ("069a6", "069a9", "069ab", "vm_dispatch")
+
+
+def arity_and_sinks(ins):
+    """How many expression arguments a handler reads, and where it puts them."""
+    n, sinks = 0, []
+    for _, mn, ops in ins:
+        if mn == "call" and any(e in ops for e in EVAL):
+            n += 1
+        m = re.match(r"ss:\[([0-9a-f]{3,4})h?\], (dx|dl|al|ax)$", ops)
+        if m:
+            sinks.append((m.group(1), "byte" if m.group(2) in ("dl", "al") else "word"))
+    return n, sinks
+
+
 def classify(ins):
     mns = [m for _, m, _ in ins]
     text = " | ".join(f"{m} {o}" for _, m, o in ins)
@@ -78,18 +93,26 @@ def classify(ins):
     return tags or ["load/other"]
 
 
-TABLE = 0x01f2
+# The statement table is word-scaled (`call cs:[bx+24h]` with bx = opcode*2) and the
+# expression tables are byte-scaled (`jmp cs:[di+1f2h]`). Getting this wrong makes every
+# opcode number meaningless, so it is explicit.
+TABLE, SCALE, COUNT = 0x0024, 2, 231
 for a in sys.argv[1:]:
     if a.startswith("--table="):
         TABLE = int(a.split("=")[1], 0)
+        if TABLE != 0x0024:
+            SCALE, COUNT = 1, 128
+    if a.startswith("--scale="):
+        SCALE = int(a.split("=")[1])
 table = {}
-for opc in range(0, 256, 2):
-    o = HDR + TABLE + opc
+for opc in range(COUNT):
+    o = HDR + TABLE + opc * SCALE * (1 if SCALE == 2 else 2)
+    o = HDR + TABLE + (opc * 2 if SCALE == 2 else opc * 2)
     if o + 2 > len(IMG):
         break
     w = struct.unpack_from("<H", IMG, o)[0]
     if 0x100 <= w <= 0x9410:
-        table[opc] = w
+        table[opc if SCALE == 2 else opc * 2] = w
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 want = args[0] if args else None
@@ -101,6 +124,10 @@ for opc, addr in sorted(table.items()):
         counts[t] = counts.get(t, 0) + 1
     if want and want not in tags:
         continue
-    txt = " ; ".join(f"{m} {o}".strip() for _, m, o in ins[:7])
-    print(f"op {opc:#04x} -> seg_0000:{addr:04x}  [{','.join(tags):28s}] {txt[:96]}")
+    n, sinks = arity_and_sinks(body(addr, 60))
+    sig = f"({n})" if n else "( )"
+    sk = " ".join(f"{a}:{w[0]}" for a, w in sinks[:6])
+    txt = " ; ".join(f"{m} {o}".strip() for _, m, o in ins[:5])
+    print(f"op {opc:3d} 0x{opc:02x} -> seg_0000:{addr:04x} {sig} [{','.join(tags):22s}] "
+          f"{sk:30s} {txt[:60]}")
 print("\ntotals:", counts)
