@@ -224,7 +224,11 @@ Compose rewrite has to do.
       which suggests the head of the file is a keyed table.
       **Done when:** `tools/io2png.py` can enumerate every sprite in a file without being
       given an offset, and FORMATS.md describes the directory.
-      *Progress: breaking on the draw confirmed sprites are reached by a normalised far
+      *Also tried and failed: no decode start between `seg_0e97:04c0` and the call at
+      `0531` lands on it, so the caller's entry is further back or the region interleaves
+      data. Next: get the entry from the emulator by breaking at the call and reading the
+      return address one level higher again, rather than searching for it statically.
+      Progress: breaking on the draw confirmed sprites are reached by a normalised far
       pointer the caller holds (FORMATS §3.8), and the callers are `seg_0e97:0534` and
       `:055e`. Those sit mid-function in code the emulator's catalogue does not name, so
       the next step is to seed their enclosing routine and read where the pointer comes

@@ -95,6 +95,22 @@ it.** Routine, table, flag, call site -- name it, type it, comment it, rerun
 `tools/disasm.sh`. This was skipped for the whole of M2 until the user asked why the
 database had not moved since T05.
 
+## Coverage is not comprehension
+
+`tools/disasm.sh` prints the share of code bytes chani decoded into instructions instead
+of leaving as `db`. That is all it measures: whether the disassembler knows where an
+instruction starts. It says nothing about whether anyone knows what the code does.
+
+At 38.1% coverage this project had roughly 370 annotations, of which about thirty name a
+routine and mean something. Combat, magic, character classes and quest logic had not been
+located at all. The number moves when a seed is imported from an execution trace, which
+costs nothing in understanding.
+
+Quote it as "38.1% of the code decodes as instructions", never as "we understand a third
+of the game". The honest measures of understanding are the ones in FINDINGS.md and
+FORMATS.md: a format is understood when a decoder reproduces the emulator's bytes, and a
+routine is understood when a prediction made from it survives a check.
+
 ## The clock that counts is the user's
 
 A tool that answers in 7 seconds after 27 minutes of restarts, expired budgets and dead
