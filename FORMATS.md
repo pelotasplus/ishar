@@ -835,3 +835,42 @@ the 4bpp path.
 **Verified by:** the marker scan reproduces every palette offset previously established
 by matching the emulator's DAC, and `tools/ioscan.py` now uses it -- which also corrected
 `geren.io`, where the old heuristic picked 12268 over the verified 6684.
+
+### 3.11 The nine assets that are not compressed (T11g)
+
+The container census over all 106 files, by `hdr_mode`:
+
+| mode | files | status |
+|---|---|---|
+| `0xa100` | 88 | bit-packed LZ, decodes |
+| `0xa101` | 6 | decodes |
+| `0xa102` | 3 | decodes |
+| `0x0000` | 5 | one is stored, four are not containers |
+| `0x0204`, `0x03cc`, `0xcdcd` | 4 | not containers |
+
+**`blancpc.io` is mode 0 = stored.** Its `hdr_size` of 2100 equals the file length, so
+`out_len` is 2094 and the payload is exactly 2094 bytes -- the decoder now copies it and
+reports **zero bytes left over**, which is the byte-for-byte check. It failed before
+because `stride_for()` had no case for mode 0 and defaulted to eight RLE passes,
+producing "input exhausted in pass 7".
+
+**The other eight are `.fic` files and are not containers at all.** Their first six bytes
+are data being misread as a header -- `cont1.fic` claims a size of 0, `cont3.fic` claims
+52,736 in a 4,860-byte file. The evidence that they are raw:
+
+- **`cont1` through `cont6` are all exactly 4,860 bytes.** Compressed files do not come
+  out the same length six times.
+- `0xcd` and `0xcc` are among the most common bytes in five of them -- the MSC
+  uninitialised-memory fill, so these were written from a partly-filled buffer.
+- `tab1.fic` (361 bytes) contains only the values 1, 2, 3 and 4: a lookup table.
+- `cont6.fic` is 97% zeros with 8 distinct values; `en1.fic` is 68% zeros.
+- All eight are named in `main.io`'s catalogue, and **none of their names appears in the
+  executable**, so they are addressed as data through the catalogue rather than opened by
+  name from code.
+
+**Lead, not a claim:** `cont` files are equal-sized grids of small integers with
+uninitialised padding, which is the shape of map data -- and Ishar's world is a set of
+regions. 4,860 factors as 81x60 or 54x90. See T11g2.
+
+**Verified by:** the mode census over all 106 files; `blancpc.io` decoding to exactly its
+declared length with no residue; byte histograms and the catalogue/executable name search.

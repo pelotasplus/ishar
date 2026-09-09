@@ -139,6 +139,17 @@ def decode(data):
         raise ValueError(f"header says {size} bytes with a {header_len}-byte header")
 
     payload = data[header_len:]
+    if mode == 0x00:
+        # Stored, no compression. blancpc.io is the only asset that uses it, and the
+        # numbers settle it rather than the name: hdr_size 2100 equals the file length,
+        # so out_len is 2094 and the payload is exactly 2094 bytes. Running it through
+        # the RLE path -- which stride_for() did, defaulting mode 0 to 8 passes --
+        # failed with "input exhausted in pass 7" (T11g).
+        if len(payload) < out_len:
+            raise ValueError(f"stored payload {len(payload)} < {out_len}")
+        info["consumed"] = out_len
+        info["left_over"] = len(payload) - out_len
+        return bytes(payload[:out_len]), info
     if mode == 0xA0:
         out = decode_lz(payload, out_len)
         info["consumed"] = None

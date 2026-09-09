@@ -191,13 +191,20 @@ Compose rewrite has to do.
       sequence — and neither touches the helper T10 had annotated. `main.io` carries the
       16-byte directory, `logo.IO` does not. FORMATS §3.3.*
 
-- [ ] **T11g · The nine assets that are not mode 0xa0**
+- [x] **T11g · The nine assets that are not mode 0xa0**
       `tools/io.py` decodes 97 of 106. The rest are mode `0x00` (five, including
       `blancpc.io`, which is read whole and whose `hdr_size` equals its file size, so
       probably raw), `0x02` (two) and `0xcc` (two). The RLE decoder at `seg_0000:7a79`
       is already transcribed for these but has never been checked against ground truth.
       **Done when:** each of the nine either decodes byte-for-byte against a captured
       buffer, or is documented as a different format with the evidence.
+      *Met, and the entry's premise was stale: the modes are `0xa100`/`0xa101`/`0xa102`
+      (97 files, all decoding), and the nine failures are `0x0000` (5), `0x0204`, `0x03cc`
+      and `0xcdcd`. `blancpc.io` is **mode 0 = stored** -- `hdr_size` equals the file length,
+      so the payload is copied and comes out to exactly `out_len` with zero residue;
+      `tools/io.py` now handles it, and all 106 files are accounted for. The other eight are
+      `.fic` and are **not containers**: their first six bytes are data misread as a header.
+      FORMATS.md 3.11.*
 
 - [ ] **T20b · The manual copy-protection gate**
       `PROTECTION TEST-MANUAL`, `PLEASE USE YOUR MANUAL AND ENTER`, `WORD LINE`,
@@ -546,6 +553,18 @@ Compose rewrite has to do.
       (c) Fix Spice86: it is a local checkout at `../Spice86`, and INT 33h function 0x0c is a
       small amount of code. This also helps every other DOS game.*
       **Done when:** clicking an ACTION menu entry from the harness changes the screen.
+
+- [ ] **T11g2 · What the `cont*.fic` files hold**
+      `cont1`-`cont6` are each **exactly 4,860 bytes** of small integers with `0xcd`
+      uninitialised padding, named in `main.io`'s catalogue but nowhere in the executable
+      (FORMATS.md 3.11). Equal-sized grids of small values is the shape of map data, and
+      Ishar's world is a set of regions; 4,860 factors as 81x60 or 54x90. `tab1.fic` is 361
+      bytes of only the values 1..4, and `en1.fic` is 3,640 mostly-zero bytes.
+      *Method: render each as a greyscale grid at the candidate dimensions -- a map will
+      look like a map and a wrong width will not. Cross-check against `map.io`, which
+      decodes normally and may hold the same world at a different resolution.*
+      **Done when:** FORMATS.md says what a `cont*.fic` record is, with a rendering or a
+      field-by-field decode as the evidence.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in
