@@ -224,14 +224,23 @@ Compose rewrite has to do.
       which suggests the head of the file is a keyed table.
       **Done when:** `tools/io2png.py` can enumerate every sprite in a file without being
       given an offset, and FORMATS.md describes the directory.
+      *Four static routes ruled out and recorded in FORMATS §3.8: no offset table in the
+      file head (the monotonic runs there are shading ramps), no offset in the catalogue,
+      no general chaining (works for logo.io, fails for presen.io and dragon.io), and no
+      palette. **Next attempt should ask the machine instead:** break on the sprite
+      blitter around `seg_0e97:0330`, read `SI` when the logo draws, and subtract the
+      decode buffer base — that gives the offset directly, and the logo appears about 13s
+      into a boot, well inside the crash budget.*
 
-- [ ] **T11j · Where the palette comes from**
+- [~] **T11j · Where the palette comes from**
       `captures/asset-logo-verified.png` used the DAC as the emulator had it, which
       proves nothing about whether the file carries a palette. Ishar-era assets often
       ship indices only, with the palette loaded separately — the gunboat work was
       caught out by exactly this.
       **Done when:** FORMATS.md says whether a palette travels with an asset, and if not,
       which file or code supplies it, with the DAC writes traced to their source.
+      *Half answered while doing T11k (FORMATS §3.9): `logo.io` carries no palette — the
+      captured DAC's entries appear nowhere in it. Still to find: what does supply it.*
 
 - [ ] **T11h · What consumes the catalogue's `0a` prefix**
       Each language variant in `main.io` is preceded by `0a <u16> 00 00` and carries its

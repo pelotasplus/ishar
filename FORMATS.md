@@ -431,6 +431,21 @@ from `ss:[0c2c]`/`ss:[0c2e]`, set by whoever asks for the draw.
 `tools/io2png.py logo.io out.png --at 1856` now reads the geometry from the header
 instead of being told a width. `captures/asset-logo-sprite.png` is the result.
 
+**Where it is not.** Four places were searched and ruled out, so the next attempt does
+not repeat them:
+
+- **Not an offset table at the head of the file.** `logo.io`'s first 1,856 bytes contain
+  monotonic word runs, but they are evenly-spaced ramps (steps of `0x1001`, `0x2222`) —
+  shading or fade tables, not offsets. The values `1856`, `1864` and `18856` appear
+  nowhere in that head.
+- **Not in the catalogue.** `main.io` does not contain the sprite's offset either; the
+  entry for `logo.IO` is just `45 40 00 "logo.IO"` with unrelated bytes around it.
+- **Not derivable by chaining.** Walking headers works for `logo.io` — the correct start
+  ranks first of only two candidates that yield a two-sprite chain — but `presen.io` and
+  `dragon.io` produce no chain at all, so sprites are not laid end to end in general.
+- **Not a palette either** (§3.9): the only 768-byte run of values ≤ 63 in `logo.io` is
+  inside the sprite's own pixels.
+
 **Still open:** how a sprite is located inside a file. Walking from 1856 finds the logo
 and then a 16x13 sprite at 18856, after which the headers degenerate, so there is a
 directory rather than a plain sequence. The file's first word is `64` — `logo.IO`'s own
@@ -482,6 +497,20 @@ first rows include bytes that are not part of that image.
 
 **Verified by:** the annotated disassembly of both blitters and the mode switch; the
 byte-level search that ruled out a width field near the pixels.
+
+### 3.9 The palette does not travel with the asset (T11j, partial)
+
+`logo.io` carries no palette. The DAC captured while its sprite was on screen has entries
+like `(54,63,63)`, `(0,45,0)`, `(63,0,0)`; nothing resembling that table appears anywhere
+in the decoded file, and the only 768-byte run whose bytes are all ≤ 63 — the shape a
+6-bit VGA palette would have — sits inside the sprite's own pixel data.
+
+So an asset is indices only, and the palette is loaded from somewhere else. Which is the
+trap gunboat hit: a correct image against the wrong palette looks broken, and once came
+out entirely black.
+
+**Verified by:** byte search of the decoded `logo.io` against `.ish/logo-palette.json`.
+**Open:** which file or code supplies it — T11j.
 
 ## 4. Video
 
