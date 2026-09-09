@@ -426,6 +426,44 @@ Compose rewrite has to do.
       chani-rs, or a `read_disassembly` transcript pasted into `ishar.chani` as a
       comment — and none is silently missing.
 
+- [ ] **T21 · Combat: to-hit and damage**
+      The UI names four combat skills — `1 HAND WEAPONS`, `2 HANDS WEAPONS`, `THROWING`,
+      `SHOOTING` — and the party panel shows a LIFE bar per member, so both inputs and
+      outputs are on screen and therefore in memory.
+      *Method: pick a fight, find a LIFE value by intersecting `search_memory` results
+      across two hits, then a `MEMORY_WRITE` breakpoint on it — the writer is the damage
+      routine. Read what it reads: attacker skill, weapon, target armour. Do not infer
+      the formula from watching numbers; read it from the arithmetic.*
+      **Done when:** FINDINGS.md states the damage formula with the code it came from,
+      and one damage value predicted in advance is confirmed in the running game.
+
+- [ ] **T22 · Magic: spells, costs, effects**
+      `CAST SPELL` is one of the party actions, and `messagee.io` carries the UI around
+      it. Spell names should be in the decoded text; the cast path will be a dispatch.
+      *Method: find the spell names in the decoded assets first — that is free and
+      offline. Then break where mana changes to find the cost table, and where the
+      target's state changes to find the effect. `chaniq unresolved` lists indirect calls
+      with no known target; the cast dispatcher will be among them.*
+      **Done when:** FORMATS.md or FINDINGS.md carries the spell table — id, name, cost,
+      school or class restriction — and at least one effect routine is read and named.
+
+- [ ] **T23 · Quests and world state**
+      Three quests are named in the text (FINDINGS §3b: the magician's talisman, the
+      exhausted witch, the rune tablets), so the game tracks their progress somewhere.
+      *Method: diff memory across a quest step — decoded assets and framebuffers
+      excluded, the candidate set is small — then a `MEMORY_WRITE` breakpoint on a flag
+      byte to catch the trigger. If a script VM exists, its interpreter shows up as a hot
+      indirect jump; if not, expect hard-coded triggers keyed on location and NPC id.*
+      **Done when:** FINDINGS.md carries the quest flag map and how a trigger fires, with
+      one flag watched changing at the moment the game acknowledges the step.
+
+- [ ] **T24 · Are there character classes?**
+      `messagee.io` names attributes and skills but no class names appeared in the first
+      pass over its strings, so whether Ishar has classes at all — or only stat spreads —
+      is unestablished. This matters for T19's record layout.
+      **Done when:** FINDINGS.md answers it from the decoded text or the character
+      structure, not from what the genre usually does.
+
 - [ ] **T20 · Input map**
       Which keys and mouse actions the game accepts in each state, from the handler
       rather than from experiment alone.
@@ -443,6 +481,9 @@ Compose rewrite has to do.
   out to be a phantom, caused by the segment map being offset by the MZ header.
 - T09 moved *behind* T11 rather than ahead of it: decoding 108 files offline beats
   tracing loads one at a time, and it reaches files no boot path touches.
+- Combat, magic and quests reached the roadmap only after the user asked where they
+  were: they had lived as playbooks in the Vault plan since the start and were never
+  turned into tasks. Anything that exists only in a planning document is not on the list.
 - The crashes are now a tax on every measurement, so T18 is scheduled third rather than
   left in M5 — a flag saying "promote this if things get bad" is not a decision, and
   nobody re-reads a conditional.
