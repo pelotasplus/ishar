@@ -442,6 +442,18 @@ Anything configured once at startup -- interrupt handlers, palettes, modes, devi
 -- is invisible to a trace that begins later, and the absence looks exactly like a
 feature that was never there.
 
+### A superseded finding stays in the roadmap until it is rewritten
+
+`T11m`'s entry stated `group = word0 >> 8` for two sessions after `T11r` disproved it and
+after `FORMATS.md` had been corrected. Ticking a status is not the same as fixing the
+prose, and the prose is what the next reader believes -- especially the reader who greps
+the roadmap rather than the spec.
+
+When a finding is overturned, grep both `ROADMAP.md` and `FORMATS.md` for the old claim in
+the same step as recording the new one. And say in the entry that the old version was
+believed: a task that reads as if it were always right teaches nothing about how it went
+wrong.
+
 ### Proposing work in the reply is not filing it
 
 The `main.io` disassembler was offered as "the obvious next step" in three separate

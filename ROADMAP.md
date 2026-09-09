@@ -306,21 +306,19 @@ Compose rewrite has to do.
       segment is an image paragraph, so the runtime segment is `load + seg`; `--runtime`
       now forces the old behaviour when a genuine runtime address is meant.*
 
-- [~] **T11m · Why the colours are wrong on extracted sprites**
-      **Answered, not yet proven to the acceptance bar.** The DAC is 16 sub-palettes of 16
-      (FORMATS.md 3.9): 227 non-zero entries in-game, every group from 1 up starting white
-      then black. So `vga_index = (word0 >> 8) * 16 + nibble`, and header word 0 -- the last
-      unexplained field -- carries the group in its high byte. The full 768-byte palette is
-      in the asset, 8-bit RGB: the in-game DAC matched `fond.io @ 12108` and `geren.io @ 6684`
-      768/768 by exhaustive search. `tools/ioscan.py` now finds palettes by the white/black
-      group signature instead of the old heuristic, which had picked 204 for `fond.io`.
-      *Still open: the pixel-by-pixel confirmation the Done-when asks for. `tools/t11m-verify.py`
-      searches the framebuffer for `group*16 + nibble` and found only one weak hit (32/40 opaque
-      pixels of a 16x4 sprite) because the game had returned to the launcher and the blitter
-      stopped firing. Redo it standing in a scene: capture with `tools/t11m-sprites.py`, then
-      run the verifier immediately, before anything redraws.*
-      **Done when:** `tools/ioscan.py` reproduces the emulator's framebuffer colours for one
-      sprite it did not take the palette from, checked pixel by pixel.
+- [x] **T11m · Why the colours are wrong on extracted sprites**
+      The DAC is 16 sub-palettes of 16 (FORMATS.md 3.9) and a 4bpp index resolves as
+      `base + nibble`. The full 768-byte palette is in the asset, 8-bit RGB, in a
+      `fe ff 00 00` record (T11m4); the in-game DAC matched `fond.io @ 12108` and
+      `geren.io @ 6684` 768/768 by exhaustive search.
+      *This entry previously stated `group = word0 >> 8`, which **T11r disproved** -- the
+      group is in word 3, and word 0's low byte selects one of five pixel formats. The
+      wrong version is recorded here because it was believed for two sessions.*
+      **Done when:** the pixel-exact confirmation -- superseded and met by T11r2, which found
+      the code instead: `sprite_base_from_word3` (`seg_0e97:0b4c`) does `mov al,[si+6]` /
+      `mov bh,al`, and `expand_4bpp` (`seg_0e97:0ad1`) adds BH to every nibble. An
+      instruction that adds the base is a stronger statement than a pixel comparison, and it
+      is not subject to the sprite scaling that made the framebuffer check fail.
 
 - [ ] **T11m2 · Sprites borrow a palette from the scene, so which scene?**
       Only 9 of ~110 assets carry a palette (FORMATS.md 3.9); the rest borrow one, and
@@ -762,37 +760,19 @@ Compose rewrite has to do.
       how the language choice selects among four ids, with a live check that picking
       English and French requests different ids for the same content.
 
-- [~] **T11b · What is actually inside a decoded asset**
-      Decoding gives bytes; the rewrite needs to know what they *mean*. The 6-byte
-      header and the decoder's plane count (`ss:[0b57]`: `0x80`→1, `0xa0`→2, else 8)
-      are the colour-depth story, but nothing yet says the dimensions, the plane
-      layout, or where the palette comes from — the questions a CPS file answers with
-      "320x200, 256 colours, palette inline".
-      **Done when:** FORMATS.md states, for one decoded image asset: width, height,
-      bit depth, plane order, and whether the palette travels with the file or comes
-      from elsewhere — each derived from the code or from a byte-for-byte comparison,
-      not from the picture looking right.
-      *Partly done (FORMATS §3.7): 8 bpp, one linear plane, and the decoded bytes are
-      byte-identical to what the game writes to VGA memory — logo.io's image is 144 px
-      wide, drawn near x=88, with transparency. Still open: height, because a file holds
-      several images; where the palette comes from; and the geometry's source, since the
-      width is not a plain word in the header. `tools/io2png.py` renders assets now,
-      taking the width as an argument.*
-      *Thread from T09b: `cfg_video` distinguishes CGA, EGA, VGA and Hercules, and the
-      decoder's plane count is 1, 2 or 8. Those two sets probably line up — 1 plane for
-      Hercules, 2 for CGA, 8 for VGA — which would mean a file carries several
-      representations, or the loader picks a variant. Check before assuming: the game
-      ships configured for VGA and we have only ever watched it in that mode.*
-
-- [x] **T11c · Decode the 6-byte header field by field**
-      Every asset starts with it; `load_container` reads it to `ss:2480` before
-      anything else, and `ss:[0b57]` (the plane selector) is one byte of it or derived
-      from it.
-      **Done when:** each of the six bytes is named in FORMATS.md with the code that
-      reads it, and the values for `main.io`, `logo.IO` and `blancpc.io` are tabulated.
-      *Done: three words — size, mode, and a catalogue discriminator (FORMATS §3.0),
-      each named from the code that consumes it and checked across all 106 files. Also
-      kills the "11-byte signature" guess: there is no signature.*
+- [x] **T11b · What is actually inside a decoded asset**
+      **Done when:** FORMATS.md states, for one decoded image asset: width, height, bit
+      depth, plane order, and whether the palette travels with the file.
+      *Met for `logo.io`'s sprite at 1856, and generalised well past the one asset the
+      criterion asked for. Width and height: 144x118, from the 8-byte header's word 1 and
+      word 2 as `width-1`/`height-1` (3.7). Bit depth: 8bpp, because word 0's low byte is
+      `0x14` -- one of five pixel formats (3.10), the other four being 4bpp and one more
+      8bpp variant. Plane order: none, a single linear plane, and index 0 is transparent.
+      Palette: it travels with the file, as a 772-byte `fe ff 00 00` record (3.9, T11m4),
+      except that ~100 of 110 assets carry none and borrow one.
+      All of it derived from the code or from byte-for-byte comparison: the decoded bytes
+      are identical to what the game writes to VGA memory, 12,875 of 16,992 pixels matching
+      with the remaining 4,117 all being transparent index 0.*
 
 - [ ] **T11d · Where the settings actually take effect**
       T09b named `cfg_video`, `cfg_sound`, `cfg_keyboard` and the rest, but only where

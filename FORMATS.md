@@ -389,7 +389,7 @@ emulator's buffer byte for byte on several files.
 
 ---
 
-### 3.7 What is inside a decoded asset (T11b, partial)
+### 3.7 What is inside a decoded asset (T11b)
 
 **Established, byte for byte.** A decoded asset holds **8-bit palette indices, one byte
 per pixel, laid out linearly** — the same values the game writes to VGA memory. Proven
