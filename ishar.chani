@@ -175,17 +175,25 @@ attr[seg_0000:1f0d]: type = code
 attr[seg_0000:1f97]: type = code
 attr[seg_0000:1fda]: type = code
 attr[seg_0000:1fdf]: type = code
-attr[seg_0000:1feb]: type = code
+attr[seg_0000:1feb]: type = code; name = after_dos_open; comment = [[[
+    Return point of the INT 21h open that every asset comes through. FINDINGS 3.0 traced blancpc.io, MAIN.IO and logo.IO all returning here, so this is the single open path for assets.
+]]]
 attr[seg_0000:1ffe]: type = code
 attr[seg_0000:2064]: type = code
 attr[seg_0000:20b5]: type = code
-attr[seg_0000:20be]: type = code
+attr[seg_0000:20be]: type = code; name = after_dos_close; comment = [[[
+    Return point of the INT 21h close for assets.
+]]]
 attr[seg_0000:212d]: type = code
-attr[seg_0000:2136]: type = code
+attr[seg_0000:2136]: type = code; name = after_dos_read; comment = [[[
+    Return point of the INT 21h read for assets; the container decoder sits just upstream of it (FORMATS 3.2).
+]]]
 attr[seg_0000:2151]: type = code
 attr[seg_0000:215d]: type = code
 attr[seg_0000:21a0]: type = code
-attr[seg_0000:21a9]: type = code
+attr[seg_0000:21a9]: type = code; name = after_cd_tst_create; comment = [[[
+    Return point of the create that makes cd.tst -- a writability probe of the drive at startup (FINDINGS 3.0).
+]]]
 attr[seg_0000:222a]: type = code
 attr[seg_0000:224e]: type = code
 attr[seg_0000:2395]: type = code

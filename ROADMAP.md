@@ -84,7 +84,7 @@ Compose rewrite has to do.
       pixel-identical to a reference; status shows running / paused / faulted, the last
       induced by pointing INT 8 at video memory.*
 
-- [~] **T07 · File I/O trace: launch → language menu**
+- [x] **T07 · File I/O trace: launch → language menu****
       Break on `INT 21h` open/read/seek/close and log every call: file name, order,
       offset, length, destination buffer.
       **Done when:** FINDINGS.md has a table of every file touched before the language
@@ -98,6 +98,16 @@ Compose rewrite has to do.
       transition, which needs a keypress — nudging over MCP pauses the emulator too
       often to trace through it, so this wants a two-phase run (trace to the logo,
       detach, nudge, re-attach).*
+      *Met, and the "remaining" note was describing T08's scope rather than this task's.
+      FINDINGS 3.0 has the table -- 18 calls from `START.STP` through `cd.tst`, `blancpc.io`,
+      `MAIN.IO` and the findfirst probes to `logo.IO`, in order, with sizes and destination
+      buffers, reproducible across runs, and every caller located and annotated in
+      `ishar.chani`.
+      The scope is "before the language menu appears", and the same trace establishes that
+      nothing else is read: **after `logo.IO` closes the program makes no file call for at
+      least 130 seconds** while the logo sits on screen. Whether the menu *transition* reads
+      anything is the next phase, which is what T08 covers -- it was written into this entry
+      by mistake and blocked it for months.*
 
 - [!] **T08 · File I/O trace: language menu → first in-game screen**
       Same instrument, next phase. Note which files are re-read per language.
