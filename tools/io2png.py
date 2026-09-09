@@ -9,7 +9,7 @@ the logo was on screen. What is NOT established is the geometry: the width is
 per-asset and the header that carries it has not been read yet, so this tool
 takes the width as an argument and defaults to the 144 measured for logo.io.
 
-    tools/io2png.py logo.io out.png --width 144 --skip 296
+    tools/io2png.py logo.io out.png --at 1856        # geometry from the header
     tools/io2png.py logo.io out.png --width 144 --palette .ish/logo-palette.json
     tools/io2png.py --grid foret.io out.png --width 320   # try a width quickly
 
@@ -47,16 +47,31 @@ def main():
     src, dst = args[0], args[1]
     if not os.path.exists(src):
         src = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com", src)
-    width = int(sys.argv[sys.argv.index("--width") + 1]) if "--width" in sys.argv else 144
-    skip = int(sys.argv[sys.argv.index("--skip") + 1]) if "--skip" in sys.argv else 0
+    data_all = decode(open(src, "rb").read())[0]
+    if "--at" in sys.argv:
+        # A sprite carries an 8-byte header: word[1] is width-1 and word[2] is
+        # height-1, which is what the blitter reads as [si+2]. Verified for
+        # logo.io at 1856: 144x118, matching the framebuffer exactly once
+        # colour 0 is treated as transparent.
+        at = int(sys.argv[sys.argv.index("--at") + 1], 0)
+        import struct as _st
+        _, w1, h1, _f = _st.unpack_from("<4H", data_all, at)
+        width, skip, height = w1 + 1, at + 8, h1 + 1
+        print(f"sprite at {at}: {width}x{height} from its header")
+    else:
+        width = int(sys.argv[sys.argv.index("--width") + 1]) if "--width" in sys.argv else 144
+        skip = int(sys.argv[sys.argv.index("--skip") + 1]) if "--skip" in sys.argv else 0
+        height = None
     pal = (load_palette(sys.argv[sys.argv.index("--palette") + 1])
            if "--palette" in sys.argv else [(i, i, i) for i in range(256)])
 
-    data = decode(open(src, "rb").read())[0][skip:]
-    height = len(data) // width
+    data = data_all[skip:]
+    if height is None:
+        height = len(data) // width
     if height == 0:
         sys.exit(f"{len(data)} bytes is less than one row of {width}")
     rows = [[pal[data[y * width + x]] for x in range(width)] for y in range(height)]
+    # colour 0 is transparent in the original; rendered as black here
     png.write(dst, rows)
     print(f"{os.path.basename(src)}: {len(data)} bytes -> {dst}  {width}x{height}"
           f"  ({len(data) % width} bytes left over)")

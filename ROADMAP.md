@@ -193,7 +193,7 @@ Compose rewrite has to do.
       **Done when:** FINDINGS.md says when it triggers, what it accepts, and where the
       check lives in the code — and whether a measurement session can get past it.
 
-- [~] **T11i · Where an asset's geometry comes from**
+- [x] **T11i · Where an asset's geometry comes from**
       The width is not a word in the decoded header (checked for `logo.io`: 144, 88 and
       110 appear nowhere in the first 300 bytes), yet the game knows how wide to draw.
       Read the routine that blits a decoded asset — it takes the geometry from
@@ -201,7 +201,14 @@ Compose rewrite has to do.
       the picture stops shearing.
       **Done when:** FORMATS.md states where width, height and draw position come from,
       and `tools/io2png.py` derives them instead of taking `--width`.
-      *Partly done (FORMATS §3.8): the drawing system is mapped — mode 13h, a swappable
+      *Done: an 8-byte header immediately precedes each sprite's pixels, carrying
+      width-1 and height-1 — the `[si+2]` the blitter reads. Verified on logo.io's
+      144x118 sprite against the framebuffer, where every non-matching pixel was
+      decoded 0x00 against the screen's background, establishing **colour 0 as
+      transparent**. Draw position is not in the header; it comes from
+      `ss:[0c2c]`/`ss:[0c2e]`. `tools/io2png.py --at OFFSET` now derives geometry.
+      Remaining: how a sprite is located inside a file (T11k).*
+      *Background (FORMATS §3.8): the drawing system is mapped — mode 13h, a swappable
       draw-target far pointer, a 320-byte stride, a rectangle blitter with clip bounds,
       and a sprite blitter that takes `[si+2]` as a dimension and steps an 8-byte header
       before the pixels. Draw position is `ss:[0c2c]`/`ss:[0c2e]`. What is still open is
@@ -209,6 +216,14 @@ Compose rewrite has to do.
       in the `0x26`-byte descriptor the sprite blitter reads at `ES:DI+0x22`. Next step:
       decode those records — they are counted by `main.io`'s directory, so §3.5's
       catalogue work and this meet there.*
+
+- [ ] **T11k · How a sprite is located inside its file**
+      Geometry comes from an 8-byte header (T11i), but finding the header still needs an
+      offset. Walking from the first sprite works for two and then degenerates, so there
+      is a directory. The file's first word is its own asset id from the catalogue,
+      which suggests the head of the file is a keyed table.
+      **Done when:** `tools/io2png.py` can enumerate every sprite in a file without being
+      given an offset, and FORMATS.md describes the directory.
 
 - [ ] **T11j · Where the palette comes from**
       `captures/asset-logo-verified.png` used the DAC as the emulator had it, which

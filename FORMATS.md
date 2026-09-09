@@ -408,7 +408,35 @@ finding those exact bytes inside decoded `logo.io`:
 `captures/asset-logo-verified.png` is the verified region rendered at 144 px wide with
 the DAC palette captured at the same moment — it is a recognisable piece of the logo.
 
-**Not established.** Height, because a file holds **more than one image**: 40,632 bytes
+#### The sprite header — 8 bytes, and it carries the geometry
+
+```
+word 0   purpose unknown (1812 for the logo)
+word 1   width  - 1     <- what the blitter reads as [si+2]
+word 2   height - 1
+word 3   flags? (0 for the logo, 128 for the next sprite in the file)
+```
+
+then `width x height` bytes of 8-bit indices. **Colour index 0 is transparent.**
+
+Verified on `logo.io`'s sprite at offset 1856: the header says `144 x 118`, and comparing
+those 16,992 pixels against the framebuffer while the logo was on screen gives
+**12,875 identical and 4,117 differing — every one of them decoded `0x00` against the
+screen's background `0x05`**. Identical plus transparent accounts for 100% of the sprite,
+which is what makes index 0's meaning a measurement rather than an impression.
+
+It was drawn at (84, 11). That position is **not** in the header — the blitter takes it
+from `ss:[0c2c]`/`ss:[0c2e]`, set by whoever asks for the draw.
+
+`tools/io2png.py logo.io out.png --at 1856` now reads the geometry from the header
+instead of being told a width. `captures/asset-logo-sprite.png` is the result.
+
+**Still open:** how a sprite is located inside a file. Walking from 1856 finds the logo
+and then a 16x13 sprite at 18856, after which the headers degenerate, so there is a
+directory rather than a plain sequence. The file's first word is `64` — `logo.IO`'s own
+asset id from the catalogue (§3.5) — so the head of each file is likely keyed the same way.
+
+**Not established.** Height per file, because a file holds **more than one image**: 40,632 bytes
 is 282 rows of 144, far more than a 200-line screen, and rendering the whole file at 144
 shows the logo followed by other content. And the width is **not** a plain word in the
 header — `144`, `88` and `110` appear nowhere in the first 300 bytes. Where the palette
