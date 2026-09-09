@@ -724,12 +724,18 @@ A script is a byte stream. `SI` is the program counter, `DX` the accumulator, `B
 evaluation stack pointer reset to `0x277c` at every statement, `ES:BP` the local frame
 and `ss:[0bf6]` a second base for globals. Operands follow their opcode inline.
 
-**Four dispatch tables**, all indexed by an *unscaled* opcode byte -- so every opcode is
-even, and a table of N entries holds N/2 opcodes:
+**Four dispatch tables**, and they do **not** share an indexing convention -- getting this
+wrong makes the opcode numbers meaningless:
+
+- `vm_statement_table` is **word-scaled** (`call cs:[bx+24h]` with `bx = opcode*2`), so its
+  opcodes run 0..230 and take every value.
+- The three expression tables are indexed by an **unscaled** byte (`jmp cs:[di+1f2h]`), so
+  their opcodes are even and a table of N words holds N/2 opcodes.
+
 
 | table | image offset | entries | what it dispatches |
 |---|---|---|---|
-| `vm_statement_table` | `0x0060` | 201 words, 195 distinct | statements, control flow, engine primitives -- **indexing unverified**, see below |
+| `vm_statement_table` | `0x0024` | 231 entries, opcodes 0..230 | statements, control flow, engine primitives -- **word-scaled** |
 | `vm_opcode_table` | `0x01f2` | ~120 | **load**: value -> accumulator |
 | `vm_store_table` | `0x029c` | ~56 | **store**: accumulator -> variable |
 | add-assign table | `0x02d8` | ~84 | **`+=`**: accumulator into variable |
@@ -774,12 +780,15 @@ So a primitive's **arity and argument widths are readable straight off its handl
 the 195 distinct statement targets are an upper bound on the engine's script-visible API
 -- which is the list a rewrite has to reimplement.
 
-**Caveat on the statement table.** `0x0060`-`0x01f2` is a verified contiguous run of 201
-words that all point at real handlers (`0x62` -> `vm_stmt_eval`, `0x198` -> `vm_prim_5args`,
-and so on). What is *not* established is how it is indexed: no `jmp cs:[reg+0060]` exists
-in the image, and 201 entries is more than an unscaled opcode byte can reach (128). So it
-may be word-indexed, reached by a different instruction form, or be two adjacent tables.
-Treat "195 opcodes" as an upper bound on handler count, not as a measured opcode count.
+**The statement interpreter** is `vm_run` at `seg_0000:26eb`:
+
+```
+sub ah,ah / lodsb / add ax,ax / mov bx,ax / call cs:[bx+24h] / jmp back
+```
+
+Handlers are **called**, not jumped to, which is why they end in `ret` and why a primitive
+can return to the interpreter. Opcodes 0..4 point at `26f9`..`26fd`, five consecutive `ret`
+bytes -- no-ops.
 
 **Status:** encoding established; individual primitives not yet identified.
 **Verified by:** all four tables read from the static image and cross-checked against live

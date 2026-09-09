@@ -983,10 +983,17 @@ attr[seg_13d7:1a2f]: type = code
 attr[seg_0000:274a]: type = code; name = vm_branch_take; comment = [[[
     Takes a relative branch -- `add ax, si` applies the displacement to the program counter. Also carries the task bookkeeping: a stack at ss:[0c56] and a frame slot at es:[bp-0ch], so scripts can be suspended and resumed.
 ]]]
-attr[seg_0000:0060]: type = u16; name = vm_statement_table; comment = [[[
-    The VM's top-level opcode table: 201 words, 195 distinct targets, indexed by an
-    unscaled opcode byte so opcodes are even. Statements, control flow and the engine
-    primitives all live here; the three tables above it (01f2 load, 029c store, 02d8
-    add-assign) are addressing-mode matrices the statements dispatch into.
+attr[seg_0000:26eb]: type = code; name = vm_run; comment = [[[
+    The statement interpreter -- the outer loop of the script VM.
+        sub ah,ah / lodsb / add ax,ax / mov bx,ax / call cs:[bx+24h] / jmp back
+    So an opcode is a byte, the table is WORD-scaled (base image 0x24, 231 entries,
+    opcodes 0..230 -- every value, not just even), and handlers are CALLed, which is why
+    they end in `ret`. The expression table at 01f2 is byte-scaled instead, so its opcodes
+    really are even; the two tables do not share a convention. FORMATS.md section 6.
+]]]
+attr[seg_0000:0024]: type = u16; name = vm_statement_table; comment = [[[
+    231 handler pointers, image 0x24..0x1f2, indexed as 0x24 + opcode*2 by vm_run.
+    Statements, control flow and the engine primitives all live here. Opcodes 0..4 point
+    at 26f9..26fd, which are single `ret` bytes -- no-ops.
 ]]]
 end

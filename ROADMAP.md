@@ -452,7 +452,7 @@ Compose rewrite has to do.
       so **the VM is cooperatively multitasked** -- scripts suspend and resume.
       `tools/vmops.py` classifies any table's handlers mechanically. FORMATS.md section 6.*
 
-- [ ] **T29b · How is vm_statement_table indexed?**
+- [x] **T29b · How is vm_statement_table indexed?**
       `0x0060`-`0x01f2` is a contiguous run of 201 words pointing at real handlers, but no
       `jmp cs:[reg+0060]` exists in the image and 201 entries exceeds what an unscaled opcode
       byte can reach. So either it is word-indexed, or reached by an instruction form
@@ -461,6 +461,12 @@ Compose rewrite has to do.
       names the dispatcher, and its instruction says how the index is formed.*
       **Done when:** the dispatch instruction is named in `ishar.chani` and FORMATS.md states
       the true opcode range.
+      *Met. The dispatcher is `vm_run` at `seg_0000:26eb`: `lodsb / add ax,ax / mov bx,ax /
+      call cs:[bx+24h]`. So the table base is image **0x24**, not 0x60 -- the run of words I
+      had measured started partway in -- it holds **231 entries**, it is **word-scaled**, and
+      opcodes are 0..230 taking every value rather than only even ones. Handlers are called,
+      hence the `ret`. The expression table at 01f2 is byte-scaled, so the two tables do not
+      share a convention.*
 
 - [ ] **T29 · Name the engine primitives**
       `vm_statement_table` (image `0x0060`) has 195 distinct targets and each is an engine
