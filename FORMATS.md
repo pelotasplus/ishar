@@ -539,6 +539,59 @@ own palette inside the same compressed file.
 **Verified by:** an IO breakpoint on port `0x3c9` and a memory-write breakpoint on the
 staging buffer, both naming their writers; then the byte-for-byte shift check.
 
+### 3.10 Sprites are 4 bits per pixel, and they chain (T11k, T11l)
+
+**This is the piece that was missing, and it invalidates every "the decoder is broken"
+theory tried before it.** The blitter's row arithmetic at `seg_0e97:03f1` is
+
+```
+mov bx,[si+2]     ; width - 1
+inc bx            ; width
+mul bx            ; y * width
+shr ax,1          ; ... / 2      <- two pixels per byte
+```
+
+and the same `shr ax,1` appears on the x offset at `:0398`, `:041d` and `:045f`.
+So a sprite row is `ceil(width/2)` bytes, **high nibble first**, and an index is 0..15.
+
+**Sprites are stored back to back.** A record is the 8-byte header plus
+`ceil(width/2) * height` bytes, and the next header follows immediately:
+
+```
+record size = 8 + ceil(width/2) * height
+```
+
+Measured on 30 sprites captured live at the blitter: the gap between consecutive
+sprites in a buffer equals that expression in every case (112x24 -> 1352, 96x169 ->
+8120, 80x168 -> 6728, 112x51 -> 2864). Chaining was tried before and rejected because
+8bpp made the arithmetic wrong at the first step, which looked like "there is no chain".
+
+That answers T11k without a directory: **walk the chain.** `tools/ioscan.py` picks the
+start offset whose chain explains the most of the file and walks it — 811 sprites out
+of 75 files, with the chain accounting for 80-95% of the bytes in the good cases.
+
+**Word 3 is not the depth (T11l).** Every sprite measured is 4bpp regardless of it —
+values 0, 16, 32, 128, 160, 162-165, 47872 all came out 4bpp by the spacing oracle. It
+does carry something: `162, 163, 164, 165` sit on sprites of 96x169, 80x168, 64x166,
+48x162 — a shrinking sequence, so it reads as a **distance/perspective slot in the 3D
+view** rather than a pixel format.
+
+**Depth is per-path, not per-sprite.** `logo.io`'s sprite at 1856 is verified
+byte-for-byte as **8bpp** against the framebuffer (3.7), and its neighbour sits exactly
+`8 + w*h` away, so the title screen genuinely uses a separate 8bpp blitter. Finding that
+routine is what is still open.
+
+**Verified by:** `tools/t11m-sprites.py` reads 30 sprites out of emulator memory at the
+blitter breakpoint; `captures/blit-sheet.png` renders them 8bpp (unreadable) and
+`captures/blit4-sheet.png` 4bpp (the ISHAR title lettering, "LEGEND OF THE FORTRESS"
+and the parchment art, all clean). `captures/assets-contact-sheet.png` is the static
+extraction over the whole game.
+
+**Still open:** which 16 of the 256 palette entries a sprite uses. Indices are 0..15 and
+the file carries a 256-entry palette (3.9), so there is a base or sub-palette per sprite;
+the contact sheet has correct shapes and wrong colours because of it.
+
+
 ## 4. Video
 
 **Status:** unknown

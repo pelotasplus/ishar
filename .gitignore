@@ -22,3 +22,7 @@ ishar_legend_of_the_fortress_DOSGamer.com/
 # Python bytecode
 __pycache__/
 *.pyc
+# Bulk sprite extraction: the game's own artwork, and regenerated in seconds by
+# `tools/ioscan.py --all captures/assets/`. The small reference sheets are kept.
+captures/assets/
+captures/blit4/

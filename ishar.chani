@@ -658,4 +658,22 @@ attr[seg_0e97:038b]: type = code; name = draw_sprite; comment = [[[
 attr[seg_0e97:02dd]: type = code; name = draw_sprite_variant; comment = [[[
     Runs 443 times, paired with draw_sprite; the two are almost certainly the flipped and unflipped paths selected by bit 0 of the descriptor byte at +0x22.
 ]]]
+
+attr[seg_0e97:0398]: type = code; name = sprite_x_halved; comment = [[[
+    shr ax,1 on the x offset. With the shr at 0x03f7 on the row offset this is what
+    establishes that sprite pixels are 4bpp, two per byte (FORMATS 3.10). Every earlier
+    render assumed 8bpp, which is why they all sheared.
+]]]
+attr[seg_0e97:03f1]: type = code; name = sprite_row_offset; comment = [[[
+    mov bx,[si+2] / inc bx / mul bx / shr ax,1 -- source offset for row y is
+    y * width / 2, so a row is ceil(width/2) bytes. Sprites chain end to end:
+    record size = 8 + ceil(width/2) * height, confirmed against 30 sprites read out of
+    memory here (FORMATS 3.10, T11k).
+]]]
+attr[seg_0e97:0463]: type = code; name = sprite_src_advance; comment = [[[
+    add si,8 -- skips the 8-byte header, so pixel data starts at header+8.
+    The following les di,ss:[1dbf] / mul ss:[1dd5] computes the destination in the
+    framebuffer from ss:[0c2c] (x) and ss:[0c2e] (y).
+]]]
+
 end

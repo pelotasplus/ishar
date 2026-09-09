@@ -217,7 +217,12 @@ Compose rewrite has to do.
       decode those records — they are counted by `main.io`'s directory, so §3.5's
       catalogue work and this meet there.*
 
-- [ ] **T11k · How a sprite is located inside its file**
+- [x] **T11k · How a sprite is located inside its file**
+      **Partly answered from the other side:** sprites are 4bpp (FORMATS.md 3.10), which is
+      why every static offset scan produced garbage and looked like a decoder bug.
+      `tools/t11m-sprites.py` now captures real sprites from the blitter. Locating them
+      inside a file is still open; the next lever is header word 3, which carries far more
+      structure than a flag byte.
       Geometry comes from an 8-byte header (T11i), but finding the header still needs an
       offset. Walking from the first sprite works for two and then degenerates, so there
       is a directory. The file's first word is its own asset id from the catalogue,
@@ -257,6 +262,41 @@ Compose rewrite has to do.
       with no emulator at all. The earlier "carries no palette" entry was wrong — that
       search looked for the 6-bit DAC values, not the 8-bit stored form. Where the
       palette sits varies per file, which is the same unknown as T11k.*
+
+- [x] **T11l · Header word 3 — the depth/mode selector**
+      Sprites captured live from the blitter render correctly at 4bpp; `logo.io`'s sprite
+      at 1856 was verified byte-for-byte at **8bpp** (FORMATS.md 3.7). Both cannot be the
+      default, so something per-sprite selects it, and word 3 of the 8-byte header is the
+      only field left unexplained. Values seen live: 0, 16, 32, 128, 160, 162-165, 47872.
+      *Method: the spacing between consecutive sprites in one buffer is a depth oracle that
+      needs no emulator — 8 + w*h means 8bpp, 8 + w*h/2 means 4bpp. Correlate that against
+      word 3 across the captured set, then confirm the winner against VRAM the way 3.7 did.*
+      **Done when:** given a sprite header, `tools/io2png.py` picks the right depth on its
+      own and reproduces the emulator's framebuffer for at least one sprite of each depth.
+
+- [ ] **T11o · `ish dis` resolves seg:off to the wrong bytes**
+      `tools/ish dis 0e97:0380` printed data where `ishar-listing.txt` and both the live
+      memory and the static image agree there is code. The live bytes at `seg_0e97:038b`
+      match the image at file offset `0xef4b` exactly, so the listing is right and the
+      command is wrong -- probably the same 0x250 MZ-header bias that bit `addr.py`.
+      It cost a wrong turn during T11k.
+      **Done when:** `ish dis 0e97:038b` prints the same instructions as the listing does.
+
+- [ ] **T11m · Which 16 palette entries a 4bpp sprite uses**
+      Sprites carry indices 0..15; the file carries a 256-entry palette (FORMATS.md 3.9).
+      Shapes extract correctly now but colours are wrong, so there is a base or sub-palette
+      chosen per sprite or per file.
+      *Method: break on the blitter, read the DAC and the sprite's indices, and see which
+      16 DAC entries the drawn pixels actually land on. Header word 0 varies per sprite
+      (272, 784, 1040, 1296, 2816, 3600...) and is the only unexplained field left.*
+      **Done when:** `tools/ioscan.py` reproduces the emulator's framebuffer colours for a
+      sprite it did not get the palette from, checked pixel by pixel.
+
+- [ ] **T11n · The 8bpp path used by the title screen**
+      `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
+      routine draws it, and full-screen art probably shares that path.
+      **Done when:** the routine is named in `ishar.chani`, breaks during the logo, and
+      `tools/ioscan.py` picks 8bpp for those assets without being told.
 
 - [ ] **T11h · What consumes the catalogue's `0a` prefix**
       Each language variant in `main.io` is preceded by `0a <u16> 00 00` and carries its

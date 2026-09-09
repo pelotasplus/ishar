@@ -385,6 +385,23 @@ minutes went.
 Cap exploratory runs at ~30s, reuse a running emulator, and stop at the first decisive
 signal.
 
+### A wrong width and a broken decoder look identical
+
+`tools/ioscan.py` guessed sprite offsets by scanning for plausible 8-byte headers.
+It found `logo.io`'s two known sprites, which read as success; run over all 108
+files it produced 76 images of which exactly one was a picture. The rest was noise,
+and the obvious next thought was that the decoder is wrong for files other than
+`logo.io`.
+
+It is not. `logo.io` decodes byte-for-byte correctly against the emulator's
+framebuffer, and rendering *it* as a raw 320-wide dump looks just as much like
+noise as the others. Any 8bpp image laid out at the wrong width does.
+
+So: before blaming a decoder for ugly output, render a **known-good** file the same
+wrong way. If it looks equally bad, the decoder is not the problem and the layout is.
+And a heuristic that reproduces the one case you already knew has not been tested —
+`ioscan.py` is kept as a lead-generator, never as a source of truth.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their
