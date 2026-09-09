@@ -225,10 +225,17 @@ Compose rewrite has to do.
       language selection reaches a different file — with the code or the trace that
       shows it, not the filename pattern.
 
-- [ ] **T11 · `tools/io.py`**
+- [~] **T11 · `tools/io.py`**
       Port the decoder offline.
       **Done when:** it reproduces the emulator's decoded buffer byte for byte for ≥4
       files including the largest (`iboishar.io`) and one `.fic`.
+      *Partly done. The RLE path (modes other than 0xa0) is transcribed and `tools/io.py`
+      decodes 65 files with it — but the mode test at `seg_0000:7a2a` sends the other 97,
+      including every file we care about, to a **bit-packed LZ decoder at
+      `seg_0000:7b85`** that is not yet read: a bit reader at `0x7cbf`/`0x7ceb`, counts
+      built from 2-bit groups, and eight bytes of the stream copied into its own code at
+      `cs:[7cb7]`. Ground truth for checking it is captured: `.ish/logo-decoded.bin`,
+      40,632 bytes, via `tools/t11-capture.py`.*
 
 - [ ] **T12 · Palette**
       Capture the DAC at the language menu; establish where the palette comes from —

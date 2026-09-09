@@ -231,7 +231,18 @@ sub-arrays from them — `ss:[2486]` sizes one region, `ss:[2488]` counts 6-byte
 elements, `ss:[248e]` a region rounded up to paragraphs, `ss:[2492]` counts
 `0x26`-byte elements. Element sizes are read off the code, not guessed.
 
-A byte-oriented **RLE decoder** sits at `seg_0000:7a79` with its stream helpers:
+**There are two decoders, chosen by mode.** At `seg_0000:7a2a` the code masks
+`ss:[0b57]` with `0xf0` and compares against `0xa0`: a match calls `seg_0000:7b85`,
+anything else falls into the loop at `seg_0000:7a79`. Since 97 of 106 files are mode
+`0xa0`, **the common path is `0x7b85`, not the RLE loop below.**
+
+`0x7b85` is bit-oriented and table-driven: it copies the first 8 bytes of the stream
+into its own code at `cs:[7cb7]` (self-modifying), then decodes with a bit reader
+(`0x7cbf` for one bit, `0x7ceb` for CL bits) and a variable-length count built from
+2-bit groups that continue while the group reads 3. Offsets are added to the output
+pointer, so it is an LZ77-family scheme, not RLE. Not yet transcribed.
+
+The **byte-oriented RLE decoder** below serves the other modes:
 
 | address | name | what it does |
 |---|---|---|
@@ -240,9 +251,24 @@ A byte-oriented **RLE decoder** sits at `seg_0000:7a79` with its stream helpers:
 | `seg_0000:7aee` | `read_next_chunk` | refill: 0x1f40 (8000) bytes into the buffer at `ss:[0b5a]` |
 | `seg_0000:7b06` | `put_byte` | write one byte to `ds:[si]`, bounds-checked |
 
-Plane count comes from `ss:[0b57]`: `0x80` → 1 plane, `0xa0` → 2 (with a special path
-at `0x7b85`), anything else → 8. A control byte below `0x80` is a literal run of `c+1`
-bytes; `c >= 0x80` takes the branch at `0x7aa3`, not yet read.
+Its pass count comes from `ss:[0b57]`: `0x80` → 1, anything but `0xa0` → 8. A control
+byte below `0x80` copies `c` literal bytes; `c >= 0x80` repeats the next byte `c & 0x7f`
+times. Each pass writes every `stride`-th output byte, pass *p* starting at offset *p*,
+so the passes interleave — `put_byte` advances `si` by the stride and the pass ends on a
+bounds check rather than a counter.
+
+`tools/io.py` implements exactly this, and fails loudly on the `0xa0` files it cannot
+yet decode: 65 of 106 produce output, and even those leave most of the payload
+unconsumed, which is the signature of decoding the wrong scheme.
+
+### Ground truth
+
+`.ish/logo-decoded.bin` — 40,632 bytes, the emulator's own decode of `logo.io`, captured
+by `tools/t11-capture.py` (break where the header is consumed, read the output pointer
+from `ss:[0bc8]`, break again at the close, dump `hdr_size - 6` bytes). Regenerate with
+`tools/ish start --gdb --pause && tools/t11-capture.py`. Any decoder claiming to work
+must reproduce this byte for byte; it begins
+`40 00 16 00 00 17 00 00 00 00 16 00 00 00 68 02`.
 
 ### 3.4 Assets are addressed by id, not by name
 

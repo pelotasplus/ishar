@@ -186,6 +186,18 @@ closing `end` — that is what a `tools/note` equivalent is for, once it exists.
 `data` is not a type: unrecognised names are read as struct names, so the error says
 `unknown struct 'data'`, which does not read like a bad type at all. Use `u8`.
 
+### Read the branch before transcribing the routine
+
+`tools/io.py` was written from the RLE decoder at `seg_0000:7a79`, which is real, well
+annotated, and used by nine of the game's 106 assets. Four instructions earlier there is
+a test on the mode byte that sends the other 97 somewhere else entirely — to a
+bit-packed LZ decoder that copies part of the stream into its own code.
+
+The port failed on the files that matter and produced plausible-looking output for the
+rest. Before transcribing a routine, walk backwards to whatever chose it and check which
+inputs actually arrive there — and prefer ground truth captured from the machine, which
+is what showed the output could not possibly have come from the code being read.
+
 ### A routine you found by reading is not the routine in use
 
 T10 located an RLE decoder with a refill helper by reading the listing, annotated it,
