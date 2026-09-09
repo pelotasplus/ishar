@@ -1,0 +1,483 @@
+#!/usr/bin/env python3
+"""
+Drive Ishar under Spice86, deterministically.
+
+run.sh is for playing the game; this is for measuring it. Fixed clock, sync
+rendering, dummy audio, no CFG reload -- so cycle counts mean the same thing on
+every run and a waypoint can be written down.
+
+    ish start [--window] [--audio on|off|none] [--packed] [--verbose]
+    ish stop | status | log [N]
+    ish boot                      drive to gameplay, confirming each step
+    ish regs | stack
+    ish mem SEG:OFF LEN | dis SEG:OFF [N] | poke SEG:OFF HEX
+    ish bp SEG:OFF|LINEAR [--type T] [--cond C] | bps | clearbp
+    ish go | pause | step [N] | run-until SEG:OFF | run-for CYCLES
+    ish keys K [K...]             each sent as press then release
+    ish shot NAME                 writes captures/NAME.png
+    ish funcs [LIMIT]
+
+Addresses are seg:off in RUNTIME segments (what Spice86 shows), or a bare
+linear number. tools/addr.py converts to listing addresses.
+"""
+import json
+import os
+import re
+import shutil
+import signal
+import subprocess
+import sys
+import time
+import urllib.request
+
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
+RUN = os.path.join(HERE, ".ish")
+CAPS = os.path.join(HERE, "captures")
+SPICE86 = os.environ.get("SPICE86_HOME", os.path.join(os.path.dirname(HERE), "Spice86"))
+DLL = os.path.join(SPICE86, "src", "Spice86", "bin", "Debug", "net10.0", "Spice86.dll")
+CLOCK = "1992-01-01T00:00:00Z"
+_id = [0]
+
+
+def die(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
+
+def state():
+    try:
+        return json.load(open(os.path.join(RUN, "state.json")))
+    except Exception:
+        die("no emulator running -- `ish start` first")
+
+
+def mcp(tool, args=None, port=None, timeout=120):  # noqa: C901
+    _id[0] += 1
+    port = port or state()["port"]
+    body = json.dumps({"jsonrpc": "2.0", "id": _id[0], "method": "tools/call",
+                       "params": {"name": tool, "arguments": args or {}}}).encode()
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/mcp", data=body, method="POST",
+                                 headers={"Content-Type": "application/json",
+                                          "Accept": "application/json, text/event-stream"})
+    raw = urllib.request.urlopen(req, timeout=timeout).read().decode()
+    for ln in raw.splitlines():
+        if ln.startswith("data:"):
+            r = json.loads(ln[5:].strip())
+            if "error" in r:
+                die(f"{tool}: {r['error']}")
+            r = r["result"]
+            if r.get("isError"):
+                die(f"{tool}: {json.dumps(r)[:300]}")
+            return r.get("structuredContent", {})
+    die(f"{tool}: no response")
+
+
+def free_port(base):
+    for p in range(base, base + 100):
+        if not subprocess.run(["lsof", "-nP", f"-iTCP:{p}", "-sTCP:LISTEN", "-t"],
+                              capture_output=True, text=True).stdout.strip():
+            return p
+    die(f"no free port at or above {base}")
+
+
+def addr(text):
+    """seg:off (runtime) or a bare linear number -> linear."""
+    m = re.fullmatch(r"([0-9a-fA-F]{1,4}):([0-9a-fA-F]{1,4})", text)
+    if m:
+        return int(m.group(1), 16) * 16 + int(m.group(2), 16)
+    return int(text, 0)
+
+
+def cmd_start(argv):
+    cmd_stop([])
+    stray = reap()
+    if stray:
+        print(f"cleared {stray} stray emulator process(es) first")
+    os.makedirs(RUN, exist_ok=True)
+    os.makedirs(CAPS, exist_ok=True)
+    if not os.path.exists(DLL):
+        die(f"no Spice86.dll at {DLL} (set SPICE86_HOME)")
+    exe = os.path.join(GAME, "start.exe" if "--packed" in argv
+                       else "start-unpacked.exe")
+    if not os.path.exists(exe):
+        subprocess.run([sys.executable, os.path.join(HERE, "tools", "unpack.py")], check=True)
+    audio = argv[argv.index("--audio") + 1] if "--audio" in argv else "off"
+    port = free_port(8300)
+    # The GDB stub is off unless asked for: it pushes a stop packet when a
+    # breakpoint fires, which is what makes tracing cheap, but it also holds a
+    # port and pauses on disconnect.
+    gdb = free_port(int(argv[argv.index("--gdb") + 1]) if
+                    len(argv) > argv.index("--gdb") + 1 and "--gdb" in argv and
+                    argv[argv.index("--gdb") + 1].isdigit() else 10300) \
+        if "--gdb" in argv else 0
+    log = os.path.join(RUN, "spice86.log")
+    cmd = ["dotnet", DLL, "--Exe", exe, "--CDrive", GAME,
+           "--McpHttpPort", str(port), "--HttpApiPort", "0", "--GdbPort", str(gdb),
+           "--ClockStartTime", CLOCK, "--RenderingMode", "Sync",
+           "--ReloadCfgGraph", "false",
+           "--HeadlessMode", "Off" if "--window" in argv else "Minimal"]
+    if audio != "on":
+        cmd += ["--AudioEngine", "Dummy"]
+    if audio == "none":
+        cmd += ["--SbType", "None", "--OplMode", "None"]
+    cmd += ["--VerboseLogs"] if "--verbose" in argv else ["--WarningLogs"]
+    # --Debug halts at the program entry, so a tracer can attach and arm its
+    # breakpoints before the game has opened a single file. Without it the
+    # emulator is already tens of millions of cycles into the boot by the time
+    # the MCP server answers.
+    if "--pause" in argv:
+        cmd += ["--Debug"]
+    with open(log, "w") as f:
+        proc = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT,
+                                start_new_session=True)
+    json.dump({"port": port, "gdb": gdb, "pid": proc.pid, "log": log, "exe": exe},
+              open(os.path.join(RUN, "state.json"), "w"))
+    for _ in range(900):
+        try:
+            if urllib.request.urlopen(f"http://127.0.0.1:{port}/health",
+                                      timeout=2).status == 200:
+                break
+        except Exception:
+            time.sleep(0.1)
+    else:
+        die(f"MCP never came up -- see {log}")
+    load = mcp("read_dos_program_state", port=port)["CurrentProgramSegmentPrefix"] + 0x10
+    print(f"port {port}  gdb {gdb or 'off'}  pid {proc.pid}  load {load:04x}  "
+          f"exe {os.path.basename(exe)}")
+
+
+def reap():
+    """Kill every Ishar emulator, not just the one we recorded.
+
+    `start` used to stop only the instance in state.json, so a run started any
+    other way -- run.sh, a crashed session, an earlier start whose state file
+    was overwritten -- stayed alive holding memory and CPU. Eleven of them were
+    found running at once.
+    """
+    ps = subprocess.run(["ps", "-eo", "pid=,command="], capture_output=True, text=True).stdout
+    killed = 0
+    for line in ps.splitlines():
+        pid, _, cmd = line.strip().partition(" ")
+        if "Spice86" in cmd and "ishar" in cmd.lower() and "--Exe" in cmd:
+            try:
+                os.kill(int(pid), signal.SIGKILL)
+                killed += 1
+            except (OSError, ValueError):
+                pass
+    return killed
+
+
+def cmd_stop(argv):
+    if "--all" in argv:
+        print(f"killed {reap()} emulator process(es)")
+        try:
+            os.remove(os.path.join(RUN, "state.json"))
+        except OSError:
+            pass
+        return
+    try:
+        st = json.load(open(os.path.join(RUN, "state.json")))
+    except Exception:
+        n = reap()
+        print(f"nothing recorded; killed {n} stray emulator process(es)" if n
+              else "nothing running")
+        return
+    # Kill the process GROUP: `dotnet` spawns the emulator as a child, and
+    # killing only the parent leaves it holding the port.
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(os.getpgid(st["pid"]), sig)
+        except OSError:
+            pass
+        time.sleep(1)
+        if not subprocess.run(["lsof", "-nP", f"-iTCP:{st['port']}", "-sTCP:LISTEN", "-t"],
+                              capture_output=True, text=True).stdout.strip():
+            break
+    os.remove(os.path.join(RUN, "state.json"))
+    print("stopped")
+
+
+def faulted():
+    st = state()
+    try:
+        txt = open(st["log"], errors="ignore").read()
+    except Exception:
+        return None
+    m = re.search(r"Error is: (.+)", txt)
+    return m.group(1).strip() if "Emulation failed" in txt or "halted" in txt else None
+
+
+def cmd_status(_argv):
+    st = state()
+    fault = faulted()
+    # A faulted emulator usually stops answering, so the MCP call has to be
+    # allowed to fail: reporting a traceback where "faulted" belongs is how a
+    # dead run gets mistaken for a broken tool.
+    try:
+        a = mcp("read_cpu_state", timeout=10)
+    except Exception:
+        alive = subprocess.run(["lsof", "-nP", f"-iTCP:{st['port']}", "-sTCP:LISTEN", "-t"],
+                               capture_output=True, text=True).stdout.strip()
+        if fault:
+            print(f"faulted -- {fault}")
+        elif alive:
+            print("not responding (still listening) -- busy or wedged")
+        else:
+            print("gone -- the emulator exited; see the log")
+        print(f"port {st['port']}  log {st['log']}")
+        return
+    time.sleep(0.4)
+    b = mcp("read_cpu_state")
+    moving = b["Cycles"] != a["Cycles"]
+    where = f"{b['CS']:04x}:{b['IP']:04x}"
+    if fault:
+        print(f"faulted at {where}  cycles {b['Cycles']}  -- {fault}")
+    elif moving:
+        print(f"running at {where}  cycles {b['Cycles']} (+{b['Cycles']-a['Cycles']})")
+    else:
+        print(f"paused at {where}  cycles {b['Cycles']}")
+    print(f"port {st['port']}  log {st['log']}")
+
+
+def cmd_log(argv):
+    n = int(argv[0]) if argv else 30
+    print("".join(open(state()["log"], errors="ignore").readlines()[-n:]), end="")
+
+
+def cmd_regs(_argv):
+    s = mcp("read_cpu_state")
+    print(f"CS:IP {s['CS']:04x}:{s['IP']:04x}  SS:SP {s['SS']:04x}:{s['ESP']:04x}  "
+          f"DS {s['DS']:04x} ES {s['ES']:04x}")
+    print(f"AX {s['EAX']:04x} BX {s['EBX']:04x} CX {s['ECX']:04x} DX {s['EDX']:04x}  "
+          f"SI {s['ESI']:04x} DI {s['EDI']:04x} BP {s['EBP']:04x}  cycles {s['Cycles']}")
+
+
+def cmd_mem(argv):
+    seg, off = argv[0].split(":")
+    n = int(argv[1], 0) if len(argv) > 1 else 64
+    seg, off = int(seg, 16), int(off, 16)
+    out = bytearray()
+    while n > 0:
+        take = min(n, 4096)
+        out += bytes.fromhex(mcp("read_memory", {"segment": seg, "offset": off,
+                                                 "length": take})["Data"])
+        off += take
+        n -= take
+    base = int(argv[0].split(":")[1], 16)
+    for i in range(0, len(out), 16):
+        row = out[i:i + 16]
+        print(f"{seg:04x}:{base+i:04x}  " + " ".join(f"{b:02x}" for b in row).ljust(48)
+              + "|" + "".join(chr(b) if 32 <= b < 127 else "." for b in row))
+
+
+def cmd_dis(argv):
+    seg, off = argv[0].split(":")
+    n = int(argv[1]) if len(argv) > 1 else 20
+    d = mcp("read_disassembly", {"segment": int(seg, 16), "offset": int(off, 16),
+                                 "instructionCount": n})
+    for i in d["Instructions"]:
+        a = i["Address"]
+        print(f"{a['Segment']:04x}:{a['Offset']:04x}  {i['Bytes']:<14} {i['Assembly']}")
+
+
+def cmd_poke(argv):
+    seg, off = argv[0].split(":")
+    mcp("write_memory", {"segment": int(seg, 16), "offset": int(off, 16), "data": argv[1]})
+    print("ok")
+
+
+def cmd_bp(argv):
+    kind = argv[argv.index("--type") + 1] if "--type" in argv else "CPU_EXECUTION_ADDRESS"
+    cond = argv[argv.index("--cond") + 1] if "--cond" in argv else None
+    r = mcp("add_breakpoint", {"address": addr(argv[0]), "type": kind, "condition": cond})
+    print(f"breakpoint {r['Id']} at {addr(argv[0]):#x} {kind}" + (f" if {cond}" if cond else ""))
+
+
+def cmd_bps(_argv):
+    for b in mcp("list_breakpoints").get("Breakpoints", []):
+        print(b)
+
+
+def cmd_clearbp(_argv):
+    mcp("clear_breakpoints")
+    print("cleared")
+
+
+def cmd_go(_argv):
+    print(mcp("resume_emulator").get("Message", "resumed"))
+
+
+def cmd_pause(_argv):
+    print(mcp("pause_emulator").get("Message", "paused"))
+
+
+def cmd_step(argv):
+    for _ in range(int(argv[0]) if argv else 1):
+        mcp("step")
+    cmd_regs([])
+
+
+def wait_at(linear, secs=120):
+    for _ in range(int(secs / 0.05)):
+        s = mcp("read_cpu_state")
+        if s["CS"] * 16 + s["IP"] == linear:
+            return s
+        if faulted():
+            die(f"emulator faulted while waiting: {faulted()}")
+        time.sleep(0.05)
+    die(f"never reached {linear:#x}")
+
+
+def cmd_run_until(argv):
+    linear = addr(argv[0])
+    mcp("add_breakpoint", {"address": linear, "type": "CPU_EXECUTION_ADDRESS",
+                           "condition": None})
+    mcp("resume_emulator")
+    s = wait_at(linear)
+    print(f"stopped at {s['CS']:04x}:{s['IP']:04x} cycles {s['Cycles']}")
+
+
+def cmd_run_for(argv):
+    target = mcp("read_cpu_state")["Cycles"] + int(argv[0], 0)
+    mcp("resume_emulator")
+    while mcp("read_cpu_state")["Cycles"] < target:
+        if faulted():
+            die(f"emulator faulted: {faulted()}")
+        time.sleep(0.05)
+    mcp("pause_emulator")
+    cmd_regs([])
+
+
+def cmd_keys(argv):
+    for k in argv:
+        mcp("send_keyboard_key", {"key": k, "isPressed": True})
+        time.sleep(0.12)
+        mcp("send_keyboard_key", {"key": k, "isPressed": False})
+        time.sleep(0.35)
+    print("sent " + " ".join(argv))
+
+
+def cmd_shot(argv):
+    if not argv:
+        die("shot needs a name: `ish shot menu-language`")
+    src = mcp("screenshot")["FilePath"]
+    dst = os.path.join(CAPS, argv[0] + ".png")
+    shutil.copyfile(src, dst)
+    print(dst)
+
+
+def cmd_funcs(argv):
+    d = mcp("list_functions", {"limit": int(argv[0]) if argv else 5000})
+    fs = d["Functions"] if "Functions" in d else d
+    print(json.dumps(fs))
+
+
+PANEL = (0, 260, 640, 140)          # the party panel, constant during play
+
+
+def in_game(tmp="_boot"):
+    """True when the party panel is on screen.
+
+    Not a CS check: the main loop runs in the launcher's segment during play
+    as well as in the menus, so `CS` cannot tell the two apart. The panel is
+    pixel-identical across different scenes (measured: 0/89600 differing
+    pixels between two locations), which makes it a signal that cannot be
+    confused with the intro.
+    """
+    sys.path.insert(0, os.path.join(HERE, "tools"))
+    import png
+    ref_path = os.path.join(CAPS, "game-party-panel.png")
+    if not os.path.exists(ref_path):
+        die(f"no reference at {ref_path} -- capture one in-game first")
+    shot = mcp("screenshot")["FilePath"]
+    _, _, cur = png.read(shot)
+    _, _, ref = png.read(ref_path)
+    try:
+        bad, tot = png.diff(png.crop(cur, *PANEL), png.crop(ref, *PANEL))
+    except ValueError:
+        return False, 1.0         # text mode during boot -- not gameplay
+    return bad / tot < 0.005, bad / tot
+
+
+def cmd_wait(argv):
+    """Run until the screen matches a capture, then pause.
+
+    `ish wait menu-language` -- waits for captures/menu-language.png. A region
+    can be given as x,y,w,h to match only part of the screen (the party panel
+    is 0,260,640,140 and is identical in every scene).
+    """
+    if not argv:
+        die("wait needs a capture name, e.g. `ish wait menu-language`")
+    sys.path.insert(0, os.path.join(HERE, "tools"))
+    import png
+    ref_path = os.path.join(CAPS, argv[0] + ".png")
+    if not os.path.exists(ref_path):
+        die(f"no reference at {ref_path}")
+    region = None
+    if "--region" in argv:
+        region = [int(v) for v in argv[argv.index("--region") + 1].split(",")]
+    timeout = int(argv[argv.index("--timeout") + 1]) if "--timeout" in argv else 240
+    tol = float(argv[argv.index("--tolerance") + 1]) if "--tolerance" in argv else 0.01
+    _, _, ref = png.read(ref_path)
+    if region:
+        ref = png.crop(ref, *region)
+    deadline = time.time() + timeout
+    best = 1.0
+    while time.time() < deadline:
+        if faulted():
+            die(f"faulted while waiting: {faulted()}")
+        _, _, cur = png.read(mcp("screenshot")["FilePath"])
+        if region:
+            cur = png.crop(cur, *region)
+        try:
+            bad, tot = png.diff(cur, ref)
+        except ValueError:
+            time.sleep(2)         # different video mode -- not this screen
+            continue
+        best = min(best, bad / tot)
+        if bad / tot <= tol:
+            s = mcp("read_cpu_state")
+            print(f"matched {argv[0]} to {100*(1-bad/tot):.2f}% at cycles {s['Cycles']}")
+            return
+        time.sleep(2)
+    die(f"{argv[0]} never appeared within {timeout}s (closest {100*(1-best):.2f}%)")
+
+
+def cmd_boot(argv):
+    """Drive to gameplay and prove it by what is on screen.
+
+    Kp1 selects English at the language menu; the top row only produces digits
+    after remap-digits.sh patches memory, and a measurement run should stay as
+    the game shipped. Escape and Space skip the credits and the intro, which
+    loops back to the menu if left alone.
+    """
+    limit = int(argv[0]) if argv else 30
+    for i in range(limit):
+        ok, frac = in_game()
+        if ok:
+            s = mcp("read_cpu_state")
+            print(f"in the game after {i} nudges, cycles {s['Cycles']} "
+                  f"(panel matches to {100*(1-frac):.2f}%)")
+            return
+        if faulted():
+            die(f"faulted during boot: {faulted()}")
+        for k in ("Kp1", "Escape", "Space"):
+            mcp("send_keyboard_key", {"key": k, "isPressed": True})
+            time.sleep(0.1)
+            mcp("send_keyboard_key", {"key": k, "isPressed": False})
+            time.sleep(0.2)
+        time.sleep(4)
+    die(f"never reached gameplay after {limit} nudges -- try `ish shot` to see where")
+
+
+COMMANDS = {"start": cmd_start, "stop": cmd_stop, "status": cmd_status, "log": cmd_log,
+            "regs": cmd_regs, "mem": cmd_mem, "dis": cmd_dis, "poke": cmd_poke,
+            "bp": cmd_bp, "bps": cmd_bps, "clearbp": cmd_clearbp, "go": cmd_go,
+            "pause": cmd_pause, "step": cmd_step, "run-until": cmd_run_until,
+            "run-for": cmd_run_for, "keys": cmd_keys, "shot": cmd_shot,
+            "funcs": cmd_funcs, "boot": cmd_boot, "wait": cmd_wait}
+
+if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+    die(__doc__)
+COMMANDS[sys.argv[1]](sys.argv[2:])

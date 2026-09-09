@@ -1,0 +1,24 @@
+# Derived: rebuild with tools/unpack.py. It lives inside the game folder (which
+# is ignored wholesale) because --CDrive makes that folder C:.
+ishar_legend_of_the_fortress_DOSGamer.com/start-unpacked.exe
+# Output of tools/disasm.sh -- never edited by hand
+ishar-listing.txt
+# Spice86 recorded-data directories (hash-named) and logs
+[0-9A-F][0-9A-F][0-9A-F][0-9A-F]*/
+logs/
+_merge.chani
+_probe.chani
+_probe.err
+# The game itself is not ours to commit
+ishar_legend_of_the_fortress_DOSGamer.com/
+*.zip
+*.exe
+# Harness state: emulator pid/port, its log, trace output
+.ish/
+# Torrents and other packaging leftovers
+*.torrent
+# macOS
+.DS_Store
+# Python bytecode
+__pycache__/
+*.pyc

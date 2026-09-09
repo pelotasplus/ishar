@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#
+# Run a command under a hard time cap, and say what it cost.
+#
+#   tools/timebox 30 tools/gdbtrace.py --stop-after logo.io
+#   tools/timebox 120 --why "full boot trace, ends at the menu" tools/ish boot
+#
+# Exists because the failure mode is not one slow command, it is a chain of
+# reasonable-looking ones: eight emulator restarts and two expired budgets cost
+# a user 27 minutes for an answer that took 7 seconds to compute. A cap that has
+# to be typed is a cap that gets noticed.
+set -u
+CAP="${1:?usage: timebox SECONDS [--why REASON] COMMAND...}"; shift
+WHY=""
+if [ "${1:-}" = "--why" ]; then WHY="$2"; shift 2; fi
+[ -n "$WHY" ] && echo "timebox ${CAP}s: $WHY" >&2
+
+START=$(date +%s)
+"$@" &
+PID=$!
+( sleep "$CAP"; kill -TERM $PID 2>/dev/null ) 2>/dev/null &
+WATCH=$!
+wait $PID; RC=$?
+kill $WATCH 2>/dev/null
+ELAPSED=$(( $(date +%s) - START ))
+
+if [ $ELAPSED -ge "$CAP" ]; then
+  echo "timebox: KILLED at ${ELAPSED}s (cap ${CAP}s) -- it did not answer in the time it was given" >&2
+  exit 124
+fi
+echo "timebox: ${ELAPSED}s" >&2
+exit $RC

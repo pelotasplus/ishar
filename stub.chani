@@ -1,0 +1,86 @@
+project[ishar-stub]:
+
+arch = 8086
+
+file[start]:
+    format = bin
+    path   = ishar_legend_of_the_fortress_DOSGamer.com/start.exe
+attr[seg000:a7e3]: type = code; name = get_bit
+attr[seg000:a7ef]: type = code; name = match_short
+attr[seg000:a849]: type = code; name = match_long
+attr[seg000:a854]: type = code; name = match_len2
+attr[seg000:a8a3]: type = code; name = relocate
+end
+
+// The whole packed image, minus the 32-byte MZ header. Image offset == segment
+// offset here; the image is 0xa8e1 bytes so it all fits in one segment.
+segment[seg000]:
+  type = code
+  load = [0x0000..]:start[0x20..]
+  assume = ds:seg000 ss:seg000
+end
+
+attr[seg000:0003]: type = code; name = stub_entry; comment = [[[
+    Entry (MZ CS:IP = 0000:0003). Copies the whole image up by 0x0b64
+    paragraphs, then far-jumps into the copy.
+]]]
+attr[seg000:a85c]: type = code; name = unpack_entry; comment = [[[
+    Target of the stub's far jump, reached at runtime as (load+0x158c):05dc.
+    Image offset = 0x158c0 + 0x5dc - 0xb640.
+]]]
+attr[seg000:a7e3]: type = code; name = get_bit
+attr[seg000:a7ef]: type = code; name = match_short
+attr[seg000:a849]: type = code; name = match_long
+attr[seg000:a854]: type = code; name = match_len2
+attr[seg000:a8a3]: type = code; name = relocate
+attr[seg000:0035]: type = code; comment = [[[
+    jmp far 158c:05dc -- the segment word (image +0x38) is patched with the load
+    segment by the `add [0138],ax` above, which reaches it because DS is still
+    the PSP at entry: (load-0x10)*16 + 0x138 = load*16 + 0x38.
+]]]
+attr[seg000:003a]: type = u16; name = bit_stream_head; comment = [[[
+    First bit-stream word, loaded into BP by the prologue. Compressed data
+    follows at +0x3c. Both are read through DS = load+0x0b63, i.e. from the
+    copy, so the addresses seen at runtime are these plus 0xb640.
+]]]
+attr[seg000:a7e3]: type = code; name = get_bit; comment = [[[
+    Returns the next bit in CF. 16-bit words, LSB first; DL counts down from
+    0x10 and the word is refilled when it reaches zero. The refill does not
+    re-shift, so the bit returned by a refilling call is the last bit of the
+    old word.
+]]]
+attr[seg000:a7ef]: type = code; name = match_short; comment = [[[
+    Two-bit offset extension into BH, then a length: 3..6 from the four-bit
+    unary run, else 7/8 from two more bits, else 9..16 from three bits (+9),
+    else a literal length byte + 0x11.
+]]]
+attr[seg000:a849]: type = code; name = match_long; comment = [[[
+    Three more offset bits into BH, BH -= 1, length 2.
+]]]
+attr[seg000:a854]: type = code; name = match_len2; comment = [[[
+    Length 2 with the offset byte just read (BH = 0xff).
+]]]
+attr[seg000:a856]: type = code; name = copy_match; comment = [[[
+    mov al,es:[bx+di] / stosb / loop. BX is a negative displacement, so this is
+    a back-reference into what has already been written.
+]]]
+attr[seg000:a87c]: type = code; name = rebase_pointers; comment = [[[
+    Escape (offset byte 0xff, offset high 0xff, next bit set): re-base ES:DI and
+    DS:SI so DI stays inside a segment. Both rebases preserve the linear
+    address, so a flat-buffer implementation does nothing here.
+]]]
+attr[seg000:a8a3]: type = code; name = relocate; comment = [[[
+    BP = load segment (pushed at entry). Reads 0x8a records from CS:004a --
+    which is in the DECOMPRESSED image, not in this file: the table is
+    compressed with the program and lands at output offset 0x1590a, the last
+    0x11c bytes. A word with bit15 clear is a segment (biased by BP at runtime)
+    followed by an offset word; a word with bit15 set is a 15-bit signed delta
+    on the current offset. Each record does `add es:[bx],bp`.
+]]]
+attr[seg000:a8c5]: type = code; name = handover; comment = [[[
+    Restores the entry DS/ES, sets SS:SP = (load+0x158d):0000, zeroes the
+    registers and far-jumps to the real entry. The jump's segment word reads
+    0000 in this file and 017d in memory -- the relocation loop patches it --
+    so the unbiased entry is 0000:25e5.
+]]]
+end
