@@ -610,3 +610,28 @@ sets, also gates the read.
 **Evidence:** INT 33h trace from a cold boot (8 calls, all during startup); a breakpoint
 on `seg_0000:1249` during `send_mouse_move` (0 hits); two screenshot comparisons at 0
 pixels changed.
+
+### 6.6 Evidence that the palette group is not word 0's high byte (T11r)
+
+`buste.io` holds the party portraits. The sprite at 14802 (64x44) has
+`word0 = 0x0010`, so under the model in FORMATS.md 3.10 its palette group is 0 and its
+colours are entries 0..15 of the scene palette.
+
+Rendered that way it is a **green face**. Rendered against each of the 16 groups in turn
+(`captures/buste-all-groups.png`), several give a natural bearded face with plausible
+skin, hair and cloth -- groups 4, 6, 8, 9 and 10 all look like a person, and group 0 does
+not. Using `fond.io`'s verified palette instead of the bank changes nothing, because
+`bank#0` and `fond.io`'s palette are byte-identical.
+
+So either the group is not the high byte of word 0, or portraits are drawn against a
+palette that has not been identified. The model was only ever inferred -- the low byte is
+constant at 16 and the high byte spans 0..15, which is suggestive and not a measurement
+(T11r) -- and this is the first evidence that actively contradicts it.
+
+The on-screen portrait for comparison is `captures/portrait-onscreen.png`, cropped from
+the live game: pale skin, a magenta circular background and silver armour. It is a
+different character from the sprite at 14802, so it is not a pixel comparison, but it
+does say what a correct portrait looks like.
+
+**Evidence:** `captures/buste-all-groups.png` (the same 64x44 sprite under all 16 groups)
+and `captures/buste-bank0-vs-fond.png`.

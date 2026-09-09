@@ -395,6 +395,12 @@ Compose rewrite has to do.
       does not run in the viewport. A UI sprite avoids the scaling problem.*
       **Done when:** one sprite's pixels are matched to the framebuffer with `group * 16 +
       nibble` at over 95%, and the eight-groups-in-one-file observation is explained.
+      *Counter-evidence found (FINDINGS.md 6.6): `buste.io`'s 64x44 portrait at 14802 has
+      `word0 = 0x0010`, so group 0 -- and group 0 renders it as a **green face** while
+      groups 4, 6, 8, 9 and 10 each render a natural bearded man. Using `fond.io`'s verified
+      palette changes nothing, since it is byte-identical to `bank#0`. So the group is
+      probably **not** word 0's high byte, or portraits use a palette not yet found. This is
+      now a task to disprove a model rather than to confirm one.*
 
 - [~] **T11p · The viewport renderer is not the blitter we know**
       `seg_0e97:038b` fires 445 times during the launcher/title/intro and **zero times in
