@@ -23,6 +23,25 @@ Every finding carries an **Evidence:** line saying how it was established. Every
 carries **Status** and **Verified by**. A claim with neither is a guess, and six weeks
 later it will be read as a fact.
 
+## A rule with no trigger gets walked past
+
+Everything that went wrong in the session that produced this file was already written
+down somewhere in it. Better wording would not have helped; three attempts at the same
+approach, twenty-seven minutes of unreported waiting, and a database that had not moved
+since T05 all happened with the rules sitting right there.
+
+What made them bite was one of two things, and it is worth reaching for these before
+writing another paragraph:
+
+- **Mechanical enforcement.** `tools/timebox 30 <command>` kills at the cap. A default
+  buried in a script gets forgotten; a cap you have to type gets noticed.
+- **A step at the moment it applies.** "Record findings as you go" changed nothing until
+  the `goal` skill's Reporting section ended with *sweep the roadmap for what this
+  revealed*. The rule says where; the step says when.
+
+So when a rule keeps being broken, do not rewrite it. Ask where in the work it should
+have fired, and put it there — or make a tool refuse.
+
 ## The rule that matters most
 
 **A check that cannot distinguish a right answer from a wrong one is not a check.**
