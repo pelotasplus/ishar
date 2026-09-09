@@ -1245,3 +1245,73 @@ not yet found.
 
 `tools/ioscan.py` carries this as an explicit `INDEX_SHIFT` exception so the extraction is
 usable while the reason stays open. **It should not be read as understood.**
+
+## 8. `affobj.io`, byte by byte
+
+730 bytes on disk, 1432 after decoding. Asset **id 7**. The name reads as *affichage
+objet* -- object display.
+
+### 8.1 The file on disk (730 bytes)
+
+| offset | bytes | field | value | meaning |
+|---|---|---|---|---|
+| 0 | `9e 05` | `hdr_size` | 1438 | decoded length **including** this 6-byte header, so the payload expands to 1432 |
+| 2 | `00 a1` | `hdr_mode` | `0xa100` | high byte `0xa0` after the `& 0xfe` mask -> the bit-packed LZ77 decoder at `seg_0000:7b85` (3.0, 3.2) |
+| 4 | `01 00` | `hdr_is_catalogue` | 1 | non-zero, so **no** 16-byte directory follows; the payload starts at offset 6 |
+| 6..729 | 724 bytes | payload | | LZ77 stream: an 8-byte offset-width table, then MSB-first bit codes (3.2) |
+
+Every byte of the file is therefore accounted for: 6 of header, 724 of compressed stream.
+
+### 8.2 The 1432 decoded bytes
+
+**What they are not**, each ruled out by measurement rather than by eye:
+
+- **Not a sprite bank.** The chain walk finds no valid sprite record (3.10); it is one of
+  the 20 assets with no sprites at all (3.6).
+- **Not a palette.** No `fe ff 00 00` record, and no 768-byte run passes the white/black
+  group signature (3.9).
+- **Not a fixed-record table.** 1432 factors as 8 x 179, but split into 8-byte records all
+  eight byte positions have the *same* distribution -- 50 to 61 distinct values each, all
+  peaking on `0x00`, `0x14`, `0x1e`. A record table has different fields in different
+  columns; this has none.
+- **Not text.** Only short printable runs, and its byte distribution is far from
+  `textine.io`'s (cosine 0.64).
+- **No repeating structure at all**: autocorrelation over lags 1-120 peaks at 0.149,
+  against 0.47 for a real grid like `cont1.fic` (3.12).
+
+**What they are: VM bytecode.** Three independent signals:
+
+1. Its byte-frequency distribution is closest to `main.io`'s **verified code region** --
+   cosine 0.83, against 0.68 for `main.io`'s own data region, 0.79 for sprite pixels and
+   0.64 for text. Code and data *within* `main.io` sit at 0.72, so 0.83 is above the
+   spread that separates them.
+2. Its commonest bytes are `0x00, 0x14, 0x1e, 0x3a, 0x38, 0x2c, 0x1f, 0x12` -- the VM's
+   language-core opcodes, the same set that dominates the call-count diff while the party
+   moves (FINDINGS 6.3).
+3. Scripts are stored in `.io` assets and executed in place (section 7), and this asset is
+   loaded by the same `vm_op_load_asset` instruction as everything else -- `main.io` offset
+   2824, `45 07 00 "affobj.IO" 00`, immediately after `geren.IO` and before `encont.IO`
+   and `dplt.IO`, the common startup set.
+
+### 8.3 What is *not* established -- read this before using the above
+
+**Byte-by-byte meaning of the payload cannot be given yet, and this section does not give
+it.** Disassembling requires an entry point, and:
+
+- Every start offset from 0 to 79 scores identically under `main.io`'s opcode profile
+  (0.109 to 0.110), so the alignment cannot be chosen that way. 219 of 231 byte values are
+  valid opcodes, which makes "it disassembles" true of any alignment and therefore worthless
+  as evidence (7.1).
+- Sampling the interpreter's program counter 20 times during play put `DS:SI` inside
+  `main.io` every time and never inside `affobj.io`, so its entry point was not observed.
+  That is consistent with a script run only when an object is displayed.
+- `main.io` itself begins with data and its code starts around offset 3270 (section 7), so
+  offset 0 is not a safe assumption here either.
+
+A listing from offset 0 is therefore **not** included, because it would be indistinguishable
+from a listing of the wrong alignment. See T33.
+
+**Verified by:** the header fields against `tools/io.py`'s decode (1432 bytes out, zero
+residue); the four negative results above each from the tool that would have found the
+structure; the distribution comparison against regions of `main.io` whose status is
+independently known.

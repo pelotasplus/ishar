@@ -43,7 +43,7 @@ print(f"breakpoint seg_0000:{OFF:04x} at {entry:#x}", flush=True)
 
 samples = []
 t0 = time.time()
-while time.time() - t0 < 30 and len(samples) < 4:
+while time.time() - t0 < 45 and len(samples) < 20:
     g.cont()
     if g.wait_stop(timeout=max(1, 30 - (time.time() - t0))) is None: break
     r = g.registers()
@@ -51,7 +51,7 @@ while time.time() - t0 < 30 and len(samples) < 4:
     ds, si = r["ds"] & 0xffff, r["si"] & 0xffff
     blob = g.read_mem(ds * 16 + si, 48)
     samples.append((ds, si, blob))
-    print(f"  DS:SI={ds:04x}:{si:04x}  {blob[:24].hex()}", flush=True)
+    pass
 mcp("clear_breakpoints")
 g.cont()
 

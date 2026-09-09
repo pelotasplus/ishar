@@ -853,6 +853,20 @@ Compose rewrite has to do.
       name is a lead, not a conclusion.*
       **Done when:** FORMATS.md says what each of the seven holds, with the evidence.
 
+- [ ] **T33 · Find `affobj.io`'s entry point**
+      `affobj.io` is VM bytecode (FORMATS.md 8.2) but no alignment can be chosen from the
+      bytes: every start offset scores the same under `main.io`'s opcode profile, because
+      219 of 231 byte values are valid opcodes. Twenty samples of the interpreter's program
+      counter during play all landed in `main.io`, never in this asset.
+      *Method: it is asset id 7, and the loader records ids at `ss:[0b04]`. Either break on
+      `vm_run` while an object is displayed -- inventory, or picking something up -- and check
+      whether `DS:SI` enters its buffer, or find the opcode that runs a script by asset id
+      and read where it sets SI. The buffer address comes from the loader, so a write
+      breakpoint on it during load gives the segment to compare against.*
+      **Done when:** `tools/vmdis.py affobj.io --from N` produces a listing whose instruction
+      boundaries match program counters observed live, the same check that validated
+      `main.io` (7.1).
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.
