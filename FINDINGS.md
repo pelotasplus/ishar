@@ -393,3 +393,46 @@ inside the code segment, ascending from the byte after the dispatch itself.
 
 **Not established:** what any opcode does, where the scripts live (in the assets or in
 the image), or which of the two interpreters is which. See T26 and T27.
+
+### 6.1 The VM's shape and its first opcodes (T26)
+
+The interpreter is a register machine with an inline operand stream:
+
+| | |
+|---|---|
+| `SI` | script program counter -- every handler starts by `lodsb`/`lodsw`-ing its operands |
+| `DX` | the accumulator; nearly every handler ends `mov dx, ax / ret` |
+| `ES:BP` | the variable frame -- locals are `es:[bp + offset]` |
+| `ss:[0bf6]` | a second base, so there are two variable areas (frame and globals) |
+| `cs:[01f2]` | the handler table, indexed by the opcode **byte**, so opcodes are even |
+
+The opcode set is an addressing-mode matrix rather than a list of unrelated
+instructions -- the same operation appears once per operand width and once per access
+mode, which is why 120 handlers cover so little conceptual ground:
+
+| handler | opcode | what it does |
+|---|---|---|
+| `seg_0000:69c7` | 0x00 | `DX = imm8` (sign-extended) |
+| `seg_0000:69cc` | 0x02 | `DX = imm16` |
+| `seg_0000:69e3` | 0x06 | `DX = (int8) es:[bp+imm16]` |
+| `seg_0000:69ed` | 0x08 | `DX = es:[bp+imm16]` (word) |
+| `seg_0000:69f4` | 0x0a | far form: pushes ES/DS/BX and reloads DS from ES |
+| `seg_0000:6a16` | 0x0e | `DX = (int8) es:[bp + vm_index_byte(imm16)]` -- array read |
+| `seg_0000:6a52` | 0x1a | `DX = (int8) es:[bp+imm8]` |
+| `seg_0000:6a5e` | 0x1c | `DX = es:[bp+imm8]` (word) |
+| `seg_0000:6a8b` | 0x22 | indexed byte read, byte operand |
+| `seg_0000:6a9a` | 0x24 | indexed word read, byte operand |
+| `seg_0000:6acd` | 0x2a | `DX = (int8) es:[ss:[0bf6] + imm16]` -- the global area |
+
+`vm_index_byte` (`seg_0000:6c2e`) is shared by eight handlers, `vm_index_word`
+(`6c5b`) and `vm_index_far` (`6c8a`) by the rest -- these are the array index/scale
+helpers, and they were among the hottest routines in the walk trace (242k and 195k
+calls in 15s).
+
+**Evidence:** handlers read from `ishar-listing.txt` after seeding all jump-table
+targets; the table-to-opcode mapping follows from the dispatch reading
+`cs:[di+01f2]` with `di` an unscaled byte.
+
+**Coverage:** seeding every jump table in the image (`tools/vmseed.py`, 8 tables, 256
+distinct targets) plus the executed-function import took the listing from **38.1% to
+45.3%**, and `seg_0e97` from 786 decoded instructions to 1,602.

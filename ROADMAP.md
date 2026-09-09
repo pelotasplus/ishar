@@ -403,7 +403,7 @@ Compose rewrite has to do.
       alignment across that whole region, so they cannot be read until it is re-seeded.
       Remaining for this task: name the drawing routine those writes sit in, and the scale.*
 
-- [~] **T26 · Decode the VM opcode set**
+- [x] **T26 · Decode the VM opcode set**
       `vm_dispatch` (`seg_0000:69a6`) dispatches 120 handlers through `vm_opcode_table` at
       `seg_0000:01f2`, and `vm_dispatch_2` (`seg_0000:2937`) another 56 through `029c`
       (FINDINGS.md section 6). Nothing is known about what any opcode does. Each handler is a
@@ -416,10 +416,25 @@ Compose rewrite has to do.
       **Done when:** every handler is a named `code` seed in `ishar.chani`, coverage moves
       from 38.1% to over 45%, and at least ten opcodes have a documented meaning in
       FINDINGS.md.
-      *Started: 135 handler addresses read out of the **static image** (both tables agree with
-      live memory), seeded as `vm_op_xxxx` code attrs. No chani panic. Coverage 38.1% -> 41.4%
-      and seg_0000's undecoded bytes 10,239 -> 7,370. Remaining: reach 45%, and read the
-      handlers to document what ten of them do.*
+      *Met. `tools/vmseed.py` finds every `jmp cs:[reg+imm]` in the image and walks the table
+      behind it -- 8 tables, 256 distinct targets, five of them in `seg_0e97`. Two seeds
+      (`seg_0e97:3648`, `:3ec4`) trip the known chani layout panic and are listed in the
+      database footer. With the executed-function import, coverage went **38.1% -> 45.3%**
+      and `seg_0e97` from 786 to 1,602 instructions. Eleven opcodes and three index helpers
+      are named in `ishar.chani` and tabulated in FINDINGS.md 6.1: the VM is a register
+      machine with SI as program counter, DX as accumulator, ES:BP as the variable frame and
+      `ss:[0bf6]` as a second base.*
+
+- [ ] **T28 · The VM's control flow and call opcodes**
+      FINDINGS.md 6.1 covers the load opcodes -- the addressing-mode matrix -- which is the
+      easy third. What is not identified yet: branches, comparisons, arithmetic, and the
+      opcode that calls a native routine. The last one matters most, because it is the bridge
+      from script to the engine and therefore the list of primitives a rewrite has to provide.
+      *Method: the handlers that write `SI` are the branches; the ones that `call` an address
+      taken from the stream are the native bridge. Both are greppable in the listing now that
+      the region decodes.*
+      **Done when:** the branch, compare and native-call opcodes are named in `ishar.chani`,
+      and FORMATS.md describes the script's control-flow encoding.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

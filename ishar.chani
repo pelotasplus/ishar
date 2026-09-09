@@ -101,7 +101,11 @@ attr[seg_0000:0462]: type = code
 attr[seg_0000:06b2]: type = code
 attr[seg_0000:06d3]: type = code
 attr[seg_0000:073f]: type = code
+attr[seg_0000:07c4]: type = code
+attr[seg_0000:0800]: type = code
+attr[seg_0000:085f]: type = code
 attr[seg_0000:08ce]: type = code
+attr[seg_0000:0900]: type = code
 attr[seg_0000:098f]: type = code
 attr[seg_0000:0990]: type = code
 attr[seg_0000:09aa]: type = code
@@ -116,6 +120,7 @@ attr[seg_0000:0bfa]: type = code
 attr[seg_0000:0cce]: type = code
 attr[seg_0000:0cf4]: type = code
 attr[seg_0000:0cf9]: type = code
+attr[seg_0000:0d2a]: type = code
 attr[seg_0000:0d2c]: type = code
 attr[seg_0000:0d42]: type = code
 attr[seg_0000:0d6d]: type = code
@@ -184,12 +189,15 @@ attr[seg_0000:21a9]: type = code
 attr[seg_0000:222a]: type = code
 attr[seg_0000:224e]: type = code
 attr[seg_0000:2395]: type = code
+attr[seg_0000:245e]: type = code
 attr[seg_0000:249b]: type = code
 attr[seg_0000:24ae]: type = code
 attr[seg_0000:24c1]: type = code
 attr[seg_0000:24d3]: type = code
 attr[seg_0000:24e6]: type = code
 attr[seg_0000:24ef]: type = code
+attr[seg_0000:253a]: type = code
+attr[seg_0000:254d]: type = code
 attr[seg_0000:2569]: type = code
 attr[seg_0000:25b8]: type = code
 attr[seg_0000:25e7]: type = code
@@ -237,6 +245,7 @@ attr[seg_0000:2a78]: type = code
 attr[seg_0000:2a92]: type = code
 attr[seg_0000:2abe]: type = code
 attr[seg_0000:2afc]: type = code
+attr[seg_0000:2afe]: type = code
 attr[seg_0000:2b14]: type = code
 attr[seg_0000:2b26]: type = code
 attr[seg_0000:2b30]: type = code
@@ -258,12 +267,14 @@ attr[seg_0000:2de5]: type = code
 attr[seg_0000:2ded]: type = code
 attr[seg_0000:2e93]: type = code
 attr[seg_0000:2ef3]: type = code
+attr[seg_0000:2f2e]: type = code
 attr[seg_0000:300f]: type = code
 attr[seg_0000:3029]: type = code
 attr[seg_0000:3038]: type = code
 attr[seg_0000:3061]: type = code
 attr[seg_0000:3094]: type = code
 attr[seg_0000:30ef]: type = code
+attr[seg_0000:311b]: type = code
 attr[seg_0000:311f]: type = code
 attr[seg_0000:3167]: type = code
 attr[seg_0000:31c5]: type = code
@@ -273,6 +284,7 @@ attr[seg_0000:3279]: type = code
 attr[seg_0000:3288]: type = code
 attr[seg_0000:32b1]: type = code
 attr[seg_0000:32e4]: type = code
+attr[seg_0000:3332]: type = code
 attr[seg_0000:333f]: type = code
 attr[seg_0000:335e]: type = code
 attr[seg_0000:3367]: type = code
@@ -286,6 +298,7 @@ attr[seg_0000:3428]: type = code
 attr[seg_0000:3445]: type = code
 attr[seg_0000:3478]: type = code
 attr[seg_0000:3491]: type = code
+attr[seg_0000:3534]: type = code
 attr[seg_0000:35ae]: type = code
 attr[seg_0000:35b7]: type = code
 attr[seg_0000:35cf]: type = code
@@ -295,6 +308,7 @@ attr[seg_0000:3695]: type = code
 attr[seg_0000:36c8]: type = code
 attr[seg_0000:36e1]: type = code
 attr[seg_0000:3705]: type = code
+attr[seg_0000:3736]: type = code
 attr[seg_0000:37a5]: type = code
 attr[seg_0000:37ad]: type = code
 attr[seg_0000:37fa]: type = code
@@ -306,6 +320,7 @@ attr[seg_0000:388b]: type = code
 attr[seg_0000:38aa]: type = code
 attr[seg_0000:3902]: type = code
 attr[seg_0000:3936]: type = code
+attr[seg_0000:3938]: type = code
 attr[seg_0000:3955]: type = code
 attr[seg_0000:39f5]: type = code
 attr[seg_0000:39fd]: type = code
@@ -320,52 +335,75 @@ attr[seg_0000:3ad1]: type = code
 attr[seg_0000:3adb]: type = code
 attr[seg_0000:3aec]: type = code
 attr[seg_0000:3afa]: type = code
+attr[seg_0000:3b2c]: type = code
 attr[seg_0000:3b52]: type = code
+attr[seg_0000:3b6c]: type = code
+attr[seg_0000:3b6d]: type = code
 attr[seg_0000:3b86]: type = code
 attr[seg_0000:3c05]: type = code
 attr[seg_0000:3c76]: type = code
 attr[seg_0000:3c97]: type = code
 attr[seg_0000:3ceb]: type = code
+attr[seg_0000:3cfe]: type = code
+attr[seg_0000:3d3a]: type = code
 attr[seg_0000:3d3c]: type = code
+attr[seg_0000:3e3c]: type = code
 attr[seg_0000:3e55]: type = code
 attr[seg_0000:3e89]: type = code
 attr[seg_0000:3ec5]: type = code
 attr[seg_0000:3edd]: type = code
 attr[seg_0000:3f20]: type = code
 attr[seg_0000:3f47]: type = code
+attr[seg_0000:3f4e]: type = code
 attr[seg_0000:4028]: type = code
 attr[seg_0000:40a5]: type = code
 attr[seg_0000:40cf]: type = code
 attr[seg_0000:40d9]: type = code
+attr[seg_0000:410f]: type = code
 attr[seg_0000:4115]: type = code
 attr[seg_0000:412d]: type = code
 attr[seg_0000:4170]: type = code
 attr[seg_0000:4197]: type = code
 attr[seg_0000:41ab]: type = code
+attr[seg_0000:41fe]: type = code
+attr[seg_0000:4256]: type = code
 attr[seg_0000:4278]: type = code
 attr[seg_0000:42e5]: type = code
 attr[seg_0000:42f5]: type = code
 attr[seg_0000:431f]: type = code
+attr[seg_0000:4358]: type = code
 attr[seg_0000:43fb]: type = code
+attr[seg_0000:4453]: type = code
 attr[seg_0000:44d3]: type = code
 attr[seg_0000:4535]: type = code
+attr[seg_0000:4557]: type = code
+attr[seg_0000:455a]: type = code
 attr[seg_0000:4665]: type = code
 attr[seg_0000:4723]: type = code
+attr[seg_0000:4746]: type = code
 attr[seg_0000:478d]: type = code
 attr[seg_0000:48b5]: type = code
 attr[seg_0000:493f]: type = code
 attr[seg_0000:498d]: type = code
+attr[seg_0000:4a48]: type = code
 attr[seg_0000:4b08]: type = code
 attr[seg_0000:4b8f]: type = code
+attr[seg_0000:4c4b]: type = code
+attr[seg_0000:4d4e]: type = code
 attr[seg_0000:4ebf]: type = code
+attr[seg_0000:4f49]: type = code
 attr[seg_0000:4f5f]: type = code
 attr[seg_0000:510f]: type = code
 attr[seg_0000:51af]: type = code
+attr[seg_0000:51fe]: type = code
+attr[seg_0000:5452]: type = code
 attr[seg_0000:54bb]: type = code
 attr[seg_0000:54c3]: type = code
 attr[seg_0000:54e8]: type = code
 attr[seg_0000:5518]: type = code
 attr[seg_0000:5548]: type = code
+attr[seg_0000:5559]: type = code
+attr[seg_0000:555a]: type = code
 attr[seg_0000:5560]: type = code
 attr[seg_0000:5571]: type = code
 attr[seg_0000:5589]: type = code
@@ -379,11 +417,13 @@ attr[seg_0000:56ce]: type = code
 attr[seg_0000:570b]: type = code
 attr[seg_0000:5713]: type = code
 attr[seg_0000:5738]: type = code
+attr[seg_0000:573e]: type = code
 attr[seg_0000:5758]: type = code
 attr[seg_0000:5768]: type = code
 attr[seg_0000:57b0]: type = code
 attr[seg_0000:57c1]: type = code
 attr[seg_0000:57d9]: type = code
+attr[seg_0000:5854]: type = code
 attr[seg_0000:588a]: type = code
 attr[seg_0000:58a1]: type = code
 attr[seg_0000:58ad]: type = code
@@ -391,9 +431,11 @@ attr[seg_0000:58b3]: type = code
 attr[seg_0000:58ce]: type = code
 attr[seg_0000:58d5]: type = code
 attr[seg_0000:591e]: type = code
+attr[seg_0000:593e]: type = code
 attr[seg_0000:5942]: type = code
 attr[seg_0000:59a8]: type = code
 attr[seg_0000:59b8]: type = code
+attr[seg_0000:5a3e]: type = code
 attr[seg_0000:5b92]: type = code
 attr[seg_0000:5c08]: type = code
 attr[seg_0000:5c57]: type = code
@@ -427,6 +469,7 @@ attr[seg_0000:64bd]: type = code
 attr[seg_0000:6565]: type = code
 attr[seg_0000:660d]: type = code
 attr[seg_0000:665c]: type = code
+attr[seg_0000:6664]: type = code
 attr[seg_0000:66c8]: type = code
 attr[seg_0000:670d]: type = code
 attr[seg_0000:674e]: type = code
@@ -436,37 +479,212 @@ attr[seg_0000:675b]: type = code
 attr[seg_0000:6765]: type = code
 attr[seg_0000:6768]: type = code
 attr[seg_0000:67b5]: type = code
+attr[seg_0000:6867]: type = code
+attr[seg_0000:6975]: type = code
 attr[seg_0000:699e]: type = code
 attr[seg_0000:69a6]: type = code
 attr[seg_0000:69a9]: type = code
 attr[seg_0000:69ab]: type = code
 attr[seg_0000:69b5]: type = code
 attr[seg_0000:69b8]: type = code
+attr[seg_0000:69c7]: type = code; name = vm_op_load_imm8; comment = [[[
+    lodsb/cbw/mov dx,ax -- load a sign-extended byte immediate into DX.
+]]]
+attr[seg_0000:69cc]: type = code; name = vm_op_load_imm16; comment = [[[
+    lodsw/mov dx,ax -- load a word immediate into DX.
+]]]
+attr[seg_0000:69d0]: type = code
 attr[seg_0000:69de]: type = code
+attr[seg_0000:69e3]: type = code; name = vm_op_load_byte_var_w; comment = [[[
+    Operand is a word offset: DX = sign-extended byte at es:[bp+imm16].
+]]]
+attr[seg_0000:69ed]: type = code; name = vm_op_load_word_var_w; comment = [[[
+    Operand is a word offset: DX = word at es:[bp+imm16].
+]]]
+attr[seg_0000:69f4]: type = code; name = vm_op_load_far; comment = [[[
+    Pushes ES/DS/BX and reloads DS from ES before the access -- the far-pointer form of the loads above.
+]]]
 attr[seg_0000:6a0b]: type = code
+attr[seg_0000:6a16]: type = code; name = vm_op_load_byte_idx_w; comment = [[[
+    DX = byte at es:[bp + vm_index(imm16)] -- an indexed/array read.
+]]]
+attr[seg_0000:6a23]: type = code
+attr[seg_0000:6a2d]: type = code
 attr[seg_0000:6a3a]: type = code
+attr[seg_0000:6a52]: type = code; name = vm_op_load_byte_var_b; comment = [[[
+    Same as vm_op_load_byte_var_w with a zero-extended byte operand.
+]]]
+attr[seg_0000:6a5e]: type = code; name = vm_op_load_word_var_b; comment = [[[
+    Same as vm_op_load_word_var_w with a zero-extended byte operand.
+]]]
+attr[seg_0000:6a67]: type = code
+attr[seg_0000:6a8b]: type = code; name = vm_op_load_byte_idx_b; comment = [[[
+    Indexed byte read with a byte operand.
+]]]
+attr[seg_0000:6a9a]: type = code; name = vm_op_load_word_idx_b; comment = [[[
+    Indexed word read with a byte operand, via vm_index_word.
+]]]
+attr[seg_0000:6aa6]: type = code
+attr[seg_0000:6acd]: type = code; name = vm_op_load_byte_global; comment = [[[
+    DX = byte at es:[ss:[0bf6] + imm16] -- a second base register, so the VM has two variable areas: the frame at BP and this one.
+]]]
+attr[seg_0000:6adc]: type = code
+attr[seg_0000:6ae8]: type = code
+attr[seg_0000:6b0b]: type = code
+attr[seg_0000:6b20]: type = code
+attr[seg_0000:6b32]: type = code
 attr[seg_0000:6b39]: type = code
-attr[seg_0000:6c2e]: type = code
-attr[seg_0000:6c5b]: type = code
-attr[seg_0000:6c8a]: type = code
+attr[seg_0000:6b5c]: type = code
+attr[seg_0000:6b6a]: type = code
+attr[seg_0000:6b74]: type = code
+attr[seg_0000:6b89]: type = code
+attr[seg_0000:6bb7]: type = code
+attr[seg_0000:6bd8]: type = code
+attr[seg_0000:6bf6]: type = code
+attr[seg_0000:6c2e]: type = code; name = vm_index_byte; comment = [[[
+    Index/scale helper shared by the indexed byte opcodes; called from 8 handlers.
+]]]
+attr[seg_0000:6c5b]: type = code; name = vm_index_word; comment = [[[
+    Index/scale helper for the indexed word opcodes.
+]]]
+attr[seg_0000:6c8a]: type = code; name = vm_index_far; comment = [[[
+    Index helper used by the far-pointer opcodes.
+]]]
+attr[seg_0000:6cc5]: type = code
+attr[seg_0000:6ccb]: type = code
+attr[seg_0000:6cd1]: type = code
+attr[seg_0000:6cd7]: type = code
+attr[seg_0000:6cdf]: type = code
+attr[seg_0000:6ced]: type = code
+attr[seg_0000:6cfb]: type = code
+attr[seg_0000:6d09]: type = code
+attr[seg_0000:6d17]: type = code
+attr[seg_0000:6d25]: type = code
+attr[seg_0000:6d33]: type = code
+attr[seg_0000:6d39]: type = code
+attr[seg_0000:6d41]: type = code
+attr[seg_0000:6d53]: type = code
+attr[seg_0000:6d67]: type = code
+attr[seg_0000:6d6c]: type = code
+attr[seg_0000:6d71]: type = code
+attr[seg_0000:6d74]: type = code
+attr[seg_0000:6d7b]: type = code
 attr[seg_0000:6d89]: type = code
+attr[seg_0000:6d94]: type = code
 attr[seg_0000:6da2]: type = code
+attr[seg_0000:6db4]: type = code
+attr[seg_0000:6dc7]: type = code
+attr[seg_0000:6dc8]: type = code
+attr[seg_0000:6dd0]: type = code
+attr[seg_0000:6dd6]: type = code
+attr[seg_0000:6dde]: type = code
+attr[seg_0000:6de2]: type = code
+attr[seg_0000:6df4]: type = code
+attr[seg_0000:6df8]: type = code
+attr[seg_0000:6dfe]: type = code
+attr[seg_0000:6e13]: type = code
+attr[seg_0000:6e4f]: type = code
+attr[seg_0000:6e62]: type = code
+attr[seg_0000:6e83]: type = code
+attr[seg_0000:6e9e]: type = code
 attr[seg_0000:6f00]: type = code
+attr[seg_0000:6f2b]: type = code
+attr[seg_0000:6f38]: type = code
+attr[seg_0000:6f45]: type = code
+attr[seg_0000:6f55]: type = code
 attr[seg_0000:6f62]: type = code
+attr[seg_0000:6f6d]: type = code
+attr[seg_0000:6fde]: type = code
+attr[seg_0000:6fe6]: type = code
+attr[seg_0000:6fec]: type = code
+attr[seg_0000:706f]: type = code
+attr[seg_0000:7093]: type = code
+attr[seg_0000:7097]: type = code
+attr[seg_0000:70ae]: type = code
+attr[seg_0000:70bd]: type = code
+attr[seg_0000:70cc]: type = code
+attr[seg_0000:70db]: type = code
+attr[seg_0000:70ea]: type = code
+attr[seg_0000:70f9]: type = code
+attr[seg_0000:7108]: type = code
+attr[seg_0000:7140]: type = code
+attr[seg_0000:7147]: type = code
 attr[seg_0000:7150]: type = code
+attr[seg_0000:7156]: type = code
+attr[seg_0000:715a]: type = code
+attr[seg_0000:7161]: type = code
+attr[seg_0000:7168]: type = code
+attr[seg_0000:7183]: type = code
+attr[seg_0000:7193]: type = code
+attr[seg_0000:71a3]: type = code
+attr[seg_0000:71c1]: type = code
+attr[seg_0000:71ca]: type = code
+attr[seg_0000:71d3]: type = code
+attr[seg_0000:71f0]: type = code
+attr[seg_0000:7202]: type = code
+attr[seg_0000:7214]: type = code
+attr[seg_0000:7234]: type = code
+attr[seg_0000:7240]: type = code
+attr[seg_0000:724c]: type = code
+attr[seg_0000:7265]: type = code
+attr[seg_0000:726c]: type = code
+attr[seg_0000:7284]: type = code
+attr[seg_0000:729c]: type = code
+attr[seg_0000:72c5]: type = code
+attr[seg_0000:72da]: type = code
+attr[seg_0000:72ef]: type = code
+attr[seg_0000:7318]: type = code
+attr[seg_0000:733c]: type = code
+attr[seg_0000:7360]: type = code
+attr[seg_0000:7361]: type = code
+attr[seg_0000:7371]: type = code
+attr[seg_0000:7393]: type = code
+attr[seg_0000:739a]: type = code
+attr[seg_0000:73b0]: type = code
+attr[seg_0000:73b7]: type = code
+attr[seg_0000:73be]: type = code
+attr[seg_0000:73e3]: type = code
 attr[seg_0000:73f1]: type = code
+attr[seg_0000:73f3]: type = code
+attr[seg_0000:7403]: type = code
+attr[seg_0000:742a]: type = code
+attr[seg_0000:7433]: type = code
+attr[seg_0000:743d]: type = code
+attr[seg_0000:7463]: type = code
+attr[seg_0000:7475]: type = code
+attr[seg_0000:7487]: type = code
+attr[seg_0000:74b0]: type = code
+attr[seg_0000:74bc]: type = code
+attr[seg_0000:74c8]: type = code
+attr[seg_0000:74ef]: type = code
+attr[seg_0000:7507]: type = code
+attr[seg_0000:751f]: type = code
+attr[seg_0000:754f]: type = code
+attr[seg_0000:7564]: type = code
+attr[seg_0000:7579]: type = code
+attr[seg_0000:75a9]: type = code
+attr[seg_0000:75cd]: type = code
+attr[seg_0000:75f1]: type = code
 attr[seg_0000:760f]: type = code
+attr[seg_0000:762b]: type = code
 attr[seg_0000:7641]: type = code
+attr[seg_0000:7663]: type = code
 attr[seg_0000:76a9]: type = code
 attr[seg_0000:76bc]: type = code
+attr[seg_0000:7771]: type = code
 attr[seg_0000:7799]: type = code
 attr[seg_0000:7839]: type = code
 attr[seg_0000:785f]: type = code
+attr[seg_0000:7877]: type = code
+attr[seg_0000:7879]: type = code
 attr[seg_0000:78f9]: type = code
 attr[seg_0000:791a]: type = code
 attr[seg_0000:7935]: type = code
+attr[seg_0000:7974]: type = code
 attr[seg_0000:79e9]: type = code
+attr[seg_0000:7a61]: type = code
 attr[seg_0000:7a6f]: type = code
+attr[seg_0000:7a74]: type = code
 attr[seg_0000:7a79]: type = code
 attr[seg_0000:7a99]: type = code
 attr[seg_0000:7a9b]: type = code
@@ -499,6 +717,7 @@ attr[seg_0000:849c]: type = code
 attr[seg_0000:86f9]: type = code
 attr[seg_0000:8790]: type = code
 attr[seg_0000:87fd]: type = code
+attr[seg_0000:8847]: type = code
 attr[seg_0000:888b]: type = code
 attr[seg_0000:8949]: type = code
 attr[seg_0000:896d]: type = code
@@ -529,27 +748,52 @@ attr[seg_0000:914a]: type = code
 attr[seg_0000:9156]: type = code
 attr[seg_0000:91d0]: type = code
 attr[seg_0000:92e0]: type = code
+attr[seg_0000:92f1]: type = code
+attr[seg_0000:935d]: type = code
 attr[seg_0000:9375]: type = code
 attr[seg_0000:9386]: type = code
 attr[seg_0000:9396]: type = code
 attr[seg_0000:93a6]: type = code
+attr[seg_0941:0047]: type = code
+attr[seg_0941:00b9]: type = code
+attr[seg_0941:00d2]: type = code
+attr[seg_0941:0155]: type = code
+attr[seg_0941:01cd]: type = code
+attr[seg_0941:021e]: type = code
+attr[seg_0941:0245]: type = code
+attr[seg_0941:0294]: type = code
+attr[seg_0941:02dd]: type = code
+attr[seg_0941:0312]: type = code
 attr[seg_0941:0322]: type = code
+attr[seg_0941:0351]: type = code
+attr[seg_0941:035f]: type = code
 attr[seg_0941:03a5]: type = code
+attr[seg_0941:03c7]: type = code
 attr[seg_0941:041d]: type = code
+attr[seg_0941:0429]: type = code
 attr[seg_0941:046e]: type = code
 attr[seg_0941:0495]: type = code
 attr[seg_0941:04e4]: type = code
+attr[seg_0941:0517]: type = code
 attr[seg_0941:052d]: type = code
 attr[seg_0941:0562]: type = code
+attr[seg_0941:0576]: type = code
 attr[seg_0941:05a1]: type = code
 attr[seg_0941:05af]: type = code
 attr[seg_0941:0617]: type = code
+attr[seg_0941:0649]: type = code
 attr[seg_0941:0679]: type = code
 attr[seg_0941:0767]: type = code
 attr[seg_0941:07c6]: type = code
+attr[seg_0941:088a]: type = code
 attr[seg_0941:0899]: type = code
+attr[seg_0941:0905]: type = code
 attr[seg_0941:0ada]: type = code
 attr[seg_0941:0b55]: type = code
+attr[seg_0941:0f62]: type = code
+attr[seg_0941:1063]: type = code
+attr[seg_0941:10eb]: type = code
+attr[seg_0941:1192]: type = code
 attr[seg_0941:11b2]: type = code
 attr[seg_0941:12b3]: type = code
 attr[seg_0941:133b]: type = code
@@ -574,19 +818,49 @@ attr[seg_0941:5458]: type = code
 attr[seg_0941:54b7]: type = code
 attr[seg_0941:54b8]: type = code
 attr[seg_0e97:008d]: type = code
+attr[seg_0e97:0122]: type = code
 attr[seg_0e97:013b]: type = code
 attr[seg_0e97:0148]: type = code
 attr[seg_0e97:01a7]: type = code
 attr[seg_0e97:01a8]: type = code
+attr[seg_0e97:023c]: type = code
+attr[seg_0e97:0244]: type = code
+attr[seg_0e97:0247]: type = code
+attr[seg_0e97:0266]: type = code
+attr[seg_0e97:0281]: type = code
+attr[seg_0e97:02a5]: type = code
+attr[seg_0e97:02d5]: type = code
 attr[seg_0e97:02dd]: type = code
+attr[seg_0e97:02f8]: type = code
+attr[seg_0e97:0336]: type = code
+attr[seg_0e97:0375]: type = code
 attr[seg_0e97:038b]: type = code
+attr[seg_0e97:0398]: type = code
+attr[seg_0e97:03d8]: type = code
+attr[seg_0e97:03e3]: type = code
+attr[seg_0e97:03e6]: type = code
+attr[seg_0e97:03f1]: type = code
+attr[seg_0e97:041a]: type = code
+attr[seg_0e97:0463]: type = code
+attr[seg_0e97:04db]: type = code
+attr[seg_0e97:0603]: type = code
+attr[seg_0e97:062b]: type = code
+attr[seg_0e97:0674]: type = code
+attr[seg_0e97:06e9]: type = code
+attr[seg_0e97:0878]: type = code
 attr[seg_0e97:098b]: type = code
 attr[seg_0e97:0a4b]: type = code
 attr[seg_0e97:0a70]: type = code
+attr[seg_0e97:0a74]: type = code
 attr[seg_0e97:0aca]: type = code
 attr[seg_0e97:0b01]: type = code
+attr[seg_0e97:0b78]: type = code
 attr[seg_0e97:0bbc]: type = code
 attr[seg_0e97:0bdb]: type = code
+attr[seg_0e97:0c2c]: type = code
+attr[seg_0e97:0c2e]: type = code
+attr[seg_0e97:0c30]: type = code
+attr[seg_0e97:0c45]: type = code
 attr[seg_0e97:0c58]: type = code
 attr[seg_0e97:0c79]: type = code
 attr[seg_0e97:0c9b]: type = code
@@ -595,15 +869,51 @@ attr[seg_0e97:0cda]: type = code
 attr[seg_0e97:0cf8]: type = code
 attr[seg_0e97:0d1a]: type = code
 attr[seg_0e97:0d51]: type = code
+attr[seg_0e97:0d74]: type = code
 attr[seg_0e97:0daa]: type = code
 attr[seg_0e97:0e0c]: type = code
 attr[seg_0e97:0e0d]: type = code
+attr[seg_0e97:0e45]: type = code
 attr[seg_0e97:0e4f]: type = code
 attr[seg_0e97:0f2a]: type = code
 attr[seg_0e97:0f48]: type = code
 attr[seg_0e97:0ffa]: type = code
 attr[seg_0e97:105d]: type = code
 attr[seg_0e97:109f]: type = code
+attr[seg_0e97:1174]: type = code
+attr[seg_0e97:123c]: type = code
+attr[seg_0e97:143c]: type = code
+attr[seg_0e97:168b]: type = code
+attr[seg_0e97:1dbf]: type = code
+attr[seg_0e97:1dd5]: type = code
+attr[seg_0e97:2245]: type = code
+attr[seg_0e97:260c]: type = code
+attr[seg_0e97:26d0]: type = code
+attr[seg_0e97:2b26]: type = code
+attr[seg_0e97:2b36]: type = code
+attr[seg_0e97:2c06]: type = code
+attr[seg_0e97:2c16]: type = code
+attr[seg_0e97:2e1d]: type = code
+attr[seg_0e97:2e2b]: type = code
+attr[seg_0e97:2ea3]: type = code
+attr[seg_0e97:3006]: type = code
+attr[seg_0e97:322e]: type = code
+attr[seg_0e97:3600]: type = code
+attr[seg_0e97:3608]: type = code
+attr[seg_0e97:360c]: type = code
+attr[seg_0e97:36d8]: type = code
+attr[seg_0e97:36f8]: type = code
+attr[seg_0e97:3c01]: type = code
+attr[seg_0e97:3c02]: type = code
+attr[seg_0e97:3c03]: type = code
+attr[seg_0e97:3c04]: type = code
+attr[seg_0e97:3c80]: type = code
+attr[seg_0e97:3e03]: type = code
+attr[seg_0e97:3fe9]: type = code
+attr[seg_0e97:4202]: type = code
+attr[seg_0e97:420c]: type = code
+attr[seg_0e97:4302]: type = code
+attr[seg_0e97:45f6]: type = code
 attr[seg_13d7:0944]: type = code
 attr[seg_13d7:0974]: type = code
 attr[seg_13d7:09cf]: type = code
@@ -651,192 +961,4 @@ attr[seg_13d7:18cc]: type = code
 attr[seg_13d7:1933]: type = code
 attr[seg_13d7:1a2f]: type = code
 
-// The sprite draw path, located by breaking on it (T11k).
-attr[seg_0e97:038b]: type = code; name = draw_sprite; comment = [[[
-    Draws one sprite. Called 445 times during a boot -- the hot graphics routine. DS:SI arrives pointing at the sprite's 8-byte header, normalised so SI is 8 to 12; observed headers 48x48, 32x20 and 16x1, matching the width-1/height-1 layout of FORMATS 3.7. Callers seen: 0x0534 and 0x055e.
-]]]
-attr[seg_0e97:02dd]: type = code; name = draw_sprite_variant; comment = [[[
-    Runs 443 times, paired with draw_sprite; the two are almost certainly the flipped and unflipped paths selected by bit 0 of the descriptor byte at +0x22.
-]]]
-
-attr[seg_0e97:0398]: type = code; name = sprite_x_halved; comment = [[[
-    shr ax,1 on the x offset. With the shr at 0x03f7 on the row offset this is what
-    establishes that sprite pixels are 4bpp, two per byte (FORMATS 3.10). Every earlier
-    render assumed 8bpp, which is why they all sheared.
-]]]
-attr[seg_0e97:03f1]: type = code; name = sprite_row_offset; comment = [[[
-    mov bx,[si+2] / inc bx / mul bx / shr ax,1 -- source offset for row y is
-    y * width / 2, so a row is ceil(width/2) bytes. Sprites chain end to end:
-    record size = 8 + ceil(width/2) * height, confirmed against 30 sprites read out of
-    memory here (FORMATS 3.10, T11k).
-]]]
-attr[seg_0e97:0463]: type = code; name = sprite_src_advance; comment = [[[
-    add si,8 -- skips the 8-byte header, so pixel data starts at header+8.
-    The following les di,ss:[1dbf] / mul ss:[1dd5] computes the destination in the
-    framebuffer from ss:[0c2c] (x) and ss:[0c2e] (y).
-]]]
-
-// The bytecode interpreter, found by diffing call counts across a walk (T11p).
-attr[seg_0000:69a6]: type = code; name = vm_dispatch; comment = [[[
-    Bytecode interpreter main loop. SI is the script program counter: `lodsb` fetches an
-    opcode and `jmp cs:[di+01f2]` dispatches through vm_opcode_table. Called 8677 times in
-    15s of walking, with the inner fetch at 69ab running 3.79M times -- the game viewport is
-    driven by interpreted script, not by native drawing code. FINDINGS.md section 6.
-]]]
-attr[seg_0000:01f2]: type = u16; name = vm_opcode_table; comment = [[[
-    Handler table for vm_dispatch: 120 distinct near targets, all inside seg_0000, ascending
-    from 0x69c7. Indexed by the opcode byte, so opcodes are even.
-]]]
-attr[seg_0000:2937]: type = code; name = vm_dispatch_2; comment = [[[
-    A second interpreter, same shape as vm_dispatch, jumping through vm_opcode_table_2 at
-    cs:[029c]. 785731 calls during the same walk.
-]]]
-attr[seg_0000:029c]: type = u16; name = vm_opcode_table_2; comment = [[[
-    Handler table for vm_dispatch_2: 56 distinct targets from 0x715a upward.
-]]]
-attr[seg_0000:2885]: type = code; name = vm_skip_operand_b; comment = [[[
-    Advance SI past a byte-counted operand: lodsb / cbw / add si,ax. One of a family at
-    2880-28b4 that skip the operands of the instruction just dispatched.
-]]]
-attr[seg_0000:2890]: type = code; name = vm_skip_operand_w; comment = [[[
-    Advance SI past a word-counted operand: lodsw / add si,ax.
-]]]
-
-// VM opcode handlers, seeded from vm_opcode_table / vm_opcode_table_2 (T26).
-// Read out of the static image, so this list is reproducible without the emulator.
-attr[seg_0000:410f]: type = code; name = vm_op_410f
-attr[seg_0000:5854]: type = code; name = vm_op_5854
-attr[seg_0000:69c7]: type = code; name = vm_op_69c7
-attr[seg_0000:69cc]: type = code; name = vm_op_69cc
-attr[seg_0000:69d0]: type = code; name = vm_op_69d0
-attr[seg_0000:69e3]: type = code; name = vm_op_69e3
-attr[seg_0000:69ed]: type = code; name = vm_op_69ed
-attr[seg_0000:69f4]: type = code; name = vm_op_69f4
-attr[seg_0000:6a16]: type = code; name = vm_op_6a16
-attr[seg_0000:6a23]: type = code; name = vm_op_6a23
-attr[seg_0000:6a2d]: type = code; name = vm_op_6a2d
-attr[seg_0000:6a52]: type = code; name = vm_op_6a52
-attr[seg_0000:6a5e]: type = code; name = vm_op_6a5e
-attr[seg_0000:6a67]: type = code; name = vm_op_6a67
-attr[seg_0000:6a8b]: type = code; name = vm_op_6a8b
-attr[seg_0000:6a9a]: type = code; name = vm_op_6a9a
-attr[seg_0000:6aa6]: type = code; name = vm_op_6aa6
-attr[seg_0000:6acd]: type = code; name = vm_op_6acd
-attr[seg_0000:6adc]: type = code; name = vm_op_6adc
-attr[seg_0000:6ae8]: type = code; name = vm_op_6ae8
-attr[seg_0000:6b0b]: type = code; name = vm_op_6b0b
-attr[seg_0000:6b20]: type = code; name = vm_op_6b20
-attr[seg_0000:6b32]: type = code; name = vm_op_6b32
-attr[seg_0000:6b5c]: type = code; name = vm_op_6b5c
-attr[seg_0000:6b74]: type = code; name = vm_op_6b74
-attr[seg_0000:6b89]: type = code; name = vm_op_6b89
-attr[seg_0000:6bb7]: type = code; name = vm_op_6bb7
-attr[seg_0000:6bd8]: type = code; name = vm_op_6bd8
-attr[seg_0000:6bf6]: type = code; name = vm_op_6bf6
-attr[seg_0000:6cc5]: type = code; name = vm_op_6cc5
-attr[seg_0000:6ccb]: type = code; name = vm_op_6ccb
-attr[seg_0000:6cd1]: type = code; name = vm_op_6cd1
-attr[seg_0000:6cd7]: type = code; name = vm_op_6cd7
-attr[seg_0000:6cdf]: type = code; name = vm_op_6cdf
-attr[seg_0000:6ced]: type = code; name = vm_op_6ced
-attr[seg_0000:6cfb]: type = code; name = vm_op_6cfb
-attr[seg_0000:6d09]: type = code; name = vm_op_6d09
-attr[seg_0000:6d17]: type = code; name = vm_op_6d17
-attr[seg_0000:6d25]: type = code; name = vm_op_6d25
-attr[seg_0000:6d33]: type = code; name = vm_op_6d33
-attr[seg_0000:6d39]: type = code; name = vm_op_6d39
-attr[seg_0000:6d41]: type = code; name = vm_op_6d41
-attr[seg_0000:6d53]: type = code; name = vm_op_6d53
-attr[seg_0000:6d67]: type = code; name = vm_op_6d67
-attr[seg_0000:6d71]: type = code; name = vm_op_6d71
-attr[seg_0000:6d74]: type = code; name = vm_op_6d74
-attr[seg_0000:6d7b]: type = code; name = vm_op_6d7b
-attr[seg_0000:6d94]: type = code; name = vm_op_6d94
-attr[seg_0000:6da2]: type = code; name = vm_op_6da2
-attr[seg_0000:6db4]: type = code; name = vm_op_6db4
-attr[seg_0000:6dc7]: type = code; name = vm_op_6dc7
-attr[seg_0000:6dc8]: type = code; name = vm_op_6dc8
-attr[seg_0000:6dd0]: type = code; name = vm_op_6dd0
-attr[seg_0000:6dd6]: type = code; name = vm_op_6dd6
-attr[seg_0000:6dde]: type = code; name = vm_op_6dde
-attr[seg_0000:6de2]: type = code; name = vm_op_6de2
-attr[seg_0000:6df4]: type = code; name = vm_op_6df4
-attr[seg_0000:6df8]: type = code; name = vm_op_6df8
-attr[seg_0000:6dfe]: type = code; name = vm_op_6dfe
-attr[seg_0000:6e13]: type = code; name = vm_op_6e13
-attr[seg_0000:6e4f]: type = code; name = vm_op_6e4f
-attr[seg_0000:6e83]: type = code; name = vm_op_6e83
-attr[seg_0000:6e9e]: type = code; name = vm_op_6e9e
-attr[seg_0000:6f2b]: type = code; name = vm_op_6f2b
-attr[seg_0000:6f38]: type = code; name = vm_op_6f38
-attr[seg_0000:6f45]: type = code; name = vm_op_6f45
-attr[seg_0000:6f55]: type = code; name = vm_op_6f55
-attr[seg_0000:6f6d]: type = code; name = vm_op_6f6d
-attr[seg_0000:6fde]: type = code; name = vm_op_6fde
-attr[seg_0000:6fe6]: type = code; name = vm_op_6fe6
-attr[seg_0000:6fec]: type = code; name = vm_op_6fec
-attr[seg_0000:7093]: type = code; name = vm_op_7093
-attr[seg_0000:7097]: type = code; name = vm_op_7097
-attr[seg_0000:70ae]: type = code; name = vm_op_70ae
-attr[seg_0000:70bd]: type = code; name = vm_op_70bd
-attr[seg_0000:70cc]: type = code; name = vm_op_70cc
-attr[seg_0000:70db]: type = code; name = vm_op_70db
-attr[seg_0000:70ea]: type = code; name = vm_op_70ea
-attr[seg_0000:70f9]: type = code; name = vm_op_70f9
-attr[seg_0000:7108]: type = code; name = vm_op_7108
-attr[seg_0000:7140]: type = code; name = vm_op_7140
-attr[seg_0000:7147]: type = code; name = vm_op_7147
-attr[seg_0000:7150]: type = code; name = vm_op_7150
-attr[seg_0000:7156]: type = code; name = vm_op_7156
-attr[seg_0000:715a]: type = code; name = vm_op_715a
-attr[seg_0000:7161]: type = code; name = vm_op_7161
-attr[seg_0000:7168]: type = code; name = vm_op_7168
-attr[seg_0000:7183]: type = code; name = vm_op_7183
-attr[seg_0000:7193]: type = code; name = vm_op_7193
-attr[seg_0000:71a3]: type = code; name = vm_op_71a3
-attr[seg_0000:71c1]: type = code; name = vm_op_71c1
-attr[seg_0000:71ca]: type = code; name = vm_op_71ca
-attr[seg_0000:71d3]: type = code; name = vm_op_71d3
-attr[seg_0000:71f0]: type = code; name = vm_op_71f0
-attr[seg_0000:7202]: type = code; name = vm_op_7202
-attr[seg_0000:7214]: type = code; name = vm_op_7214
-attr[seg_0000:7234]: type = code; name = vm_op_7234
-attr[seg_0000:7240]: type = code; name = vm_op_7240
-attr[seg_0000:724c]: type = code; name = vm_op_724c
-attr[seg_0000:726c]: type = code; name = vm_op_726c
-attr[seg_0000:7284]: type = code; name = vm_op_7284
-attr[seg_0000:729c]: type = code; name = vm_op_729c
-attr[seg_0000:72c5]: type = code; name = vm_op_72c5
-attr[seg_0000:72da]: type = code; name = vm_op_72da
-attr[seg_0000:72ef]: type = code; name = vm_op_72ef
-attr[seg_0000:7318]: type = code; name = vm_op_7318
-attr[seg_0000:733c]: type = code; name = vm_op_733c
-attr[seg_0000:7360]: type = code; name = vm_op_7360
-attr[seg_0000:7393]: type = code; name = vm_op_7393
-attr[seg_0000:739a]: type = code; name = vm_op_739a
-attr[seg_0000:73b0]: type = code; name = vm_op_73b0
-attr[seg_0000:73b7]: type = code; name = vm_op_73b7
-attr[seg_0000:73be]: type = code; name = vm_op_73be
-attr[seg_0000:73e3]: type = code; name = vm_op_73e3
-attr[seg_0000:73f3]: type = code; name = vm_op_73f3
-attr[seg_0000:7403]: type = code; name = vm_op_7403
-attr[seg_0000:742a]: type = code; name = vm_op_742a
-attr[seg_0000:7433]: type = code; name = vm_op_7433
-attr[seg_0000:743d]: type = code; name = vm_op_743d
-attr[seg_0000:7463]: type = code; name = vm_op_7463
-attr[seg_0000:7475]: type = code; name = vm_op_7475
-attr[seg_0000:7487]: type = code; name = vm_op_7487
-attr[seg_0000:74b0]: type = code; name = vm_op_74b0
-attr[seg_0000:74bc]: type = code; name = vm_op_74bc
-attr[seg_0000:74c8]: type = code; name = vm_op_74c8
-attr[seg_0000:74ef]: type = code; name = vm_op_74ef
-attr[seg_0000:7507]: type = code; name = vm_op_7507
-attr[seg_0000:751f]: type = code; name = vm_op_751f
-attr[seg_0000:754f]: type = code; name = vm_op_754f
-attr[seg_0000:7564]: type = code; name = vm_op_7564
-attr[seg_0000:7579]: type = code; name = vm_op_7579
-attr[seg_0000:75a9]: type = code; name = vm_op_75a9
-attr[seg_0000:75cd]: type = code; name = vm_op_75cd
-attr[seg_0000:75f1]: type = code; name = vm_op_75f1
-attr[seg_0000:762b]: type = code; name = vm_op_762b
 end
