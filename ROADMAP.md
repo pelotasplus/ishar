@@ -193,7 +193,7 @@ Compose rewrite has to do.
       **Done when:** FINDINGS.md says when it triggers, what it accepts, and where the
       check lives in the code — and whether a measurement session can get past it.
 
-- [ ] **T11i · Where an asset's geometry comes from**
+- [~] **T11i · Where an asset's geometry comes from**
       The width is not a word in the decoded header (checked for `logo.io`: 144, 88 and
       110 appear nowhere in the first 300 bytes), yet the game knows how wide to draw.
       Read the routine that blits a decoded asset — it takes the geometry from
@@ -201,6 +201,14 @@ Compose rewrite has to do.
       the picture stops shearing.
       **Done when:** FORMATS.md states where width, height and draw position come from,
       and `tools/io2png.py` derives them instead of taking `--width`.
+      *Partly done (FORMATS §3.8): the drawing system is mapped — mode 13h, a swappable
+      draw-target far pointer, a 320-byte stride, a rectangle blitter with clip bounds,
+      and a sprite blitter that takes `[si+2]` as a dimension and steps an 8-byte header
+      before the pixels. Draw position is `ss:[0c2c]`/`ss:[0c2e]`. What is still open is
+      the width: it is not stored beside the pixels (searched), so it most likely lives
+      in the `0x26`-byte descriptor the sprite blitter reads at `ES:DI+0x22`. Next step:
+      decode those records — they are counted by `main.io`'s directory, so §3.5's
+      catalogue work and this meet there.*
 
 - [ ] **T11j · Where the palette comes from**
       `captures/asset-logo-verified.png` used the DAC as the emulator had it, which

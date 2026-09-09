@@ -422,6 +422,39 @@ judge by eye but is not proof.
 **Verified by:** `.ish/logo-vram.bin` (the emulator's 64,000-byte framebuffer) against
 the decode of `logo.io`, captured by `tools/t11b-capture.py`.
 
+### 3.8 The drawing system (T11i, partial)
+
+Mode 13h, set by `int 10h` at `seg_0e97:0ccd`. Immediately after, the game stores a
+**far pointer to the drawing target** — `draw_target_seg:draw_target_off`, initially
+`a000:0000` — and a **row stride** `row_stride` = `0x140` (320). The pointer is swapped
+at `seg_0000:4370`, so drawing can go to an off-screen buffer and be copied later.
+
+Two blitters use them:
+
+- `blit_rect` (`seg_0e97:0148`) copies a rectangle between two buffers that share the
+  stride, taking its bounds from the clip variables `clip_left`, `clip_top`,
+  `clip_right`, `clip_bottom` — set to the full screen `(0,0)-(319,199)` by
+  `set_full_screen_clip`. This is page work, not sprite drawing.
+- A **sprite blitter** around `seg_0e97:0330-03d0` takes its geometry from the sprite
+  itself: `[si+2]` is a dimension and `add si, 8` steps over an **8-byte header** before
+  the pixels. It also consults a descriptor at `ES:DI`, testing bit 0 of byte `+0x22`
+  to choose between two paths — almost certainly a horizontal flip. `0x22` sits inside
+  the `0x26`-byte records that `main.io`'s directory counts (§3.0), which is the first
+  concrete link between the catalogue's records and drawing. Draw position comes from
+  `ss:[0c2c]` and `ss:[0c2e]`.
+
+**So an asset's width is not carried next to its pixels.** Searching the decode of
+`logo.io` for a word of 140-148 anywhere in the 400 bytes before the verified image
+found nothing, and the eight bytes immediately before it are not a plausible header.
+The likely source is the `0x26`-byte descriptor record, which is where T11i continues.
+
+This also explains the distortion at the top of `captures/asset-logo-verified.png`: the
+296-byte offset it renders from was **fitted from a pixel match, not derived**, so the
+first rows include bytes that are not part of that image.
+
+**Verified by:** the annotated disassembly of both blitters and the mode switch; the
+byte-level search that ruled out a width field near the pixels.
+
 ## 4. Video
 
 **Status:** unknown
