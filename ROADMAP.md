@@ -181,6 +181,15 @@ Compose rewrite has to do.
       **Done when:** each of the nine either decodes byte-for-byte against a captured
       buffer, or is documented as a different format with the evidence.
 
+- [ ] **T11h · What consumes the catalogue's `0a` prefix**
+      Each language variant in `main.io` is preceded by `0a <u16> 00 00` and carries its
+      own asset id (FORMATS §3.5). Something reads that stream and decides which id to
+      use; `cfg_keyboard`'s neighbour `cfg_language` — if there is one — would be set by
+      the menu.
+      **Done when:** FINDINGS.md names the code that parses the tagged stream and shows
+      how the language choice selects among four ids, with a live check that picking
+      English and French requests different ids for the same content.
+
 - [ ] **T11b · What is actually inside a decoded asset**
       Decoding gives bytes; the rewrite needs to know what they *mean*. The 6-byte
       header and the decoder's plane count (`ss:[0b57]`: `0x80`→1, `0xa0`→2, else 8)
@@ -291,6 +300,15 @@ Compose rewrite has to do.
       the CMP work can start against `FORMATS.md` alone.
 
 ## M5 — Foundations for mechanics
+
+- [ ] **T18b · Spice86's missing FPU opcodes**
+      `0xDA` faults as an invalid opcode; Spice86 supports only parts of `D9`, `DB`,
+      `DD` (FINDINGS §5.2). The game reaches floating-point code, so measurement runs
+      die there — and §5.0's "modrm mod=3" fault looks like the same cause.
+      **Done when:** it is known which escapes the game actually executes and how often,
+      and a decision is recorded: implement them in the local Spice86 checkout, avoid
+      those paths, or live with it. If implementing, the check is that a run which
+      previously faulted now passes the same point.
 
 - [ ] **T18 · Root-cause the INT 8 crash**
       **Scheduled third, after T11** — promoted out of "foundations for later" on the

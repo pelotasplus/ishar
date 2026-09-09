@@ -229,6 +229,30 @@ for §5.1 when it recurs.
 **Evidence:** `.ish/spice86.log` from the T08 attempt; the tracer's socket was reset
 when the emulator exited.
 
+### 5.2 Spice86 does not implement the FPU opcodes this game uses
+
+A run died with `Invalid opcode 0xDA at 1014:0F0A`. `0xDA` is an x87 escape, and
+Spice86's instruction parser says so plainly:
+
+```
+// FPU escapes (0xD8-0xDF): only D9, DB, DD have partial support
+```
+
+So the game uses floating point that the emulator cannot execute. This is very likely
+the common cause behind §5.0 as well — "Instruction requires a memory operand but
+encoding selects a register (modrm mod=3)" is exactly what partial FPU support produces
+when it meets a register-form encoding of an opcode it half-knows.
+
+Whether §5.1's timer-vector crash shares the cause is not established: that one lands in
+palette data with a stale vector, which is a different signature.
+
+This is a constraint on the whole project, not a bug in the game: any measurement that
+reaches FPU code will stop. The options are to implement the missing escapes in the
+local Spice86 checkout, to avoid the paths that use them, or to accept short sessions.
+
+**Evidence:** the fault text with its address, and the comment at
+`Spice86.Core/Emulator/CPU/CfgCpu/Parser/InstructionParser.cs:354`.
+
 ### 5.1 Timer interrupt goes stale — reproducible crash
 
 IRQ0 vectors to `0ABE:0D98`, which is not an interrupt handler: it is ordinary

@@ -302,6 +302,38 @@ from `ss:[0bc8]`, break again at the close, dump `hdr_size - 6` bytes). Regenera
 must reproduce this byte for byte; it begins
 `40 00 16 00 00 17 00 00 00 00 16 00 00 00 68 02`.
 
+### 3.5 The catalogue's contents (T11e, partial)
+
+`main.io` decodes to 26,384 bytes that are **a tagged stream, not a record array**.
+Filenames live in it — 241 of them — in entries shaped:
+
+```
+45 <id> 00 <name>\0        introduces an asset: one-byte id, then its filename
+0a <u16> 00 00             prefixes each member of a language group
+```
+
+`logo.IO` is `45 40 00 "logo.IO"` → **id 0x40**. 225 entries match that exact shape.
+
+**The language variants are in the data, four to a group, always in the same order —
+`e`, `d`, `i`, then no suffix:**
+
+```
+0a 39 00 00  45 63 00  messagee.IO
+0a 34 00 00  45 64 00  messaged.IO
+0a 21 00 00  45 65 00  messagei.IO
+0a 0e 00 00  45 0e 00  message.IO
+```
+
+and likewise `sose/sosd/sosi/sos`, `textine/textind/textini/textin`. Each variant has
+its **own id**, so the selection is not a filename transformation — the game asks for a
+different asset number, and the `0a` word before each is presumably what the language
+choice tests.
+
+**Verified by:** the decoded bytes of `main.io`, which are themselves verified byte for
+byte against the emulator (§3.2). **Not yet verified:** that a live load of `logo.IO`
+requests id `0x40` — the run that would have confirmed it died on the FPU fault in
+FINDINGS §5.2 — and what consumes the `0a` prefix.
+
 ### 3.4 Assets are addressed by id, not by name
 
 Only **three** filenames exist anywhere in the 88 KB image: `blancpc.io`, `main.io` and
