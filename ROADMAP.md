@@ -379,7 +379,7 @@ Compose rewrite has to do.
       811 -> 786 records, 0 invalid remaining, rejects confirmed as static
       (`captures/t11q-dropped.png`). FORMATS.md 3.10.*
 
-- [ ] **T11r · Prove word 0's high byte is the palette group**
+- [x] **T11r · Prove word 0's high byte is the palette group**
       The claim behind every colour in the extraction, and it is inferred, not measured:
       the low byte is constant at 16 (a colour count) and the high byte spans exactly 0..15
       (the DAC's group range), which is suggestive rather than conclusive. Rendering with
@@ -401,6 +401,15 @@ Compose rewrite has to do.
       palette changes nothing, since it is byte-identical to `bank#0`. So the group is
       probably **not** word 0's high byte, or portraits use a palette not yet found. This is
       now a task to disprove a model rather than to confirm one.*
+      *Answered, and the model was wrong: **the group is `word3 >> 4`, not word 0's high
+      byte.** `buste.io`'s 33 portraits all carry `word0 = 0x0010`, which would put every one
+      in group 0 and renders them as green faces, while their `word3` runs 0x60, 0x70 ...
+      0xd0 -- exactly `group * 16`. The portrait at 14802 is legible only at group 6 = 0x60>>4,
+      identified by eye from `captures/buste-all-groups.png`. Word 3's low nibble is a
+      per-sprite index, which explains the live capture's 0xa2..0xa5 on four shrinking
+      sprites: group 10, distance steps 2-5. Applying it makes the whole extraction legible.
+      The eight-groups-in-one-file puzzle dissolves too -- that was word 0's flag nibble
+      being read as a group. FORMATS.md 3.10.*
 
 - [~] **T11p · The viewport renderer is not the blitter we know**
       `seg_0e97:038b` fires 445 times during the launcher/title/intro and **zero times in

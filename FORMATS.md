@@ -676,11 +676,25 @@ outside the 16 the DAC has.
 **Verified by:** the flag/group split is a census over every chain record in all 106
 decodable assets; the rejects were rendered and inspected.
 
-**How a 4bpp index becomes a colour (T11m).** The DAC is 16 sub-palettes of 16 (3.9), so
+**How a 4bpp index becomes a colour (T11m, corrected by T11r).** The DAC is 16
+sub-palettes of 16 (3.9), so
 
 ```
-vga_index = group * 16 + nibble        group = header word 0 >> 8
+vga_index = group * 16 + nibble        group = (word 3 >> 4) & 0x0f
 ```
+
+**The group is in word 3, not word 0.** Word 0 was wrongly read as the group for a while
+because its low byte is constant at 16 and its high byte happens to span 0..15; that model
+survived until a portrait disproved it. `buste.io`'s 33 portraits all carry
+`word0 = 0x0010` -- so word 0 would put every one of them in group 0, which renders them
+as green faces -- while their `word3` values are `0x60, 0x70, 0x80 ... 0xd0`, exactly
+`group * 16`, and the portrait at 14802 is legible only at group 6 = `0x60 >> 4`.
+
+Word 3's **low nibble is a per-sprite index**, which is what the live capture's
+`0xa2, 0xa3, 0xa4, 0xa5` on four shrinking sprites meant: group 10, distance steps 2 to 5.
+
+Word 0 is `flags | colour-count` after all (3.10, T11q): low byte 16 for 742 of ~800
+sprites, high nibble `0x00`/`0x10`/`0x20`.
 
 Header word 0 was the last unexplained field, and its high byte is the group: the
 values read live were `0x0012, 0x0017, 0x0310, 0x070f, 0x0b00, 0x0c14, 0x0e10` --
@@ -693,10 +707,11 @@ screen exactly, colours included (`captures/t11m2-vram.png` against
 `captures/t11m2-state.png`). That validates 3.9 end to end -- the file's 768 bytes really
 are the DAC the game is running.
 
-**Status:** the mapping is established from the DAC's structure and word 0's shape,
-and it is *not yet* confirmed pixel-by-pixel against the framebuffer -- the one
-attempt matched 32/40 opaque pixels of a 16x4 sprite, which is not enough to call it.
-See T11m.
+**Status:** confirmed by rendering. Taking the group from word 3 turns the whole
+extraction legible -- skin tones, silver armour, a wooden cabinet, stained glass -- where
+word 0 gave green faces. A pixel-exact framebuffer comparison is still outstanding
+(T11m), but the model now has a falsification test it passed and a competing one it
+failed.
 
 
 ## 4. Video

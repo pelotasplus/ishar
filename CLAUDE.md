@@ -471,6 +471,22 @@ Two independent signals agreeing is the check: the marker *and* the white/black 
 signature. When a structural discovery replaces a heuristic, run both over the whole
 corpus and count the disagreements before deleting the heuristic.
 
+### Two weak signals pointing the same way are still weak
+
+The palette group was read out of word 0 because its low byte is constant at 16 and its
+high byte spans exactly 0..15 -- the range a group index would have. Both signals were
+real and both were consistent with the model, and the model was wrong: the group is in
+word 3. Word 0's high nibble is a flag, and 0..15 is simply what four bits do.
+
+"The values are in the right range" is not evidence about *which field* holds a value.
+Look for a field whose values are *unequally* distributed the way the answer should be --
+`buste.io` settled it in one look, because 33 portraits carrying word0 = 0x0010 cannot all
+be in the same palette group, while their word3 spread across 0x60..0xd0.
+
+And when a model cannot be checked directly, render the alternatives and look. The user
+identified the right group by eye from a 16-cell sheet in seconds, after two sessions of
+failing to prove it from the machine.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

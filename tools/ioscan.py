@@ -177,11 +177,17 @@ def find_palette(data, chain_end=0):
 def render(data, off, w, h, pal):
     """A 4bpp index is `group * 16 + nibble`. The DAC is 16 sub-palettes of 16
     (measured in-game: every group starts white, black, then a ramp), and the
-    group is the low nibble of header word 0's high byte -- the top nibble carries
-    flags (0x20 on 50 sprites across every group, 0x10 on 9).
+    group is `word3 >> 4`; word3's low nibble is a per-sprite index (a distance step
+    in the 3D view). Word 0 carries flags and a colour count, not the group.
     Rendering with group 0 for everything is what left the shapes right and the
     colours wrong."""
-    group = (struct.unpack_from("<H", data, off)[0] >> 8) & 0x0f
+    # The group is in word 3, not word 0 (T11r). buste.io's portraits carry
+    # word3 = 0x60, 0x70 ... 0xd0 -- exactly group*16 -- and the portrait at 14802
+    # is legible only at group 6, which is 0x60 >> 4. The same field explains the
+    # perspective sequence seen live: word3 0xa2, 0xa3, 0xa4, 0xa5 is group 10 with
+    # a distance index in the low nibble.
+    w3 = struct.unpack_from("<4H", data, off)[3]
+    group = (w3 >> 4) & 0x0f
     pbase = group * 16
     stride = (w + 1) // 2
     base = off + 8
