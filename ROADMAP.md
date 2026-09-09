@@ -189,12 +189,15 @@ Compose rewrite has to do.
       representations, or the loader picks a variant. Check before assuming: the game
       ships configured for VGA and we have only ever watched it in that mode.*
 
-- [ ] **T11c · Decode the 6-byte header field by field**
+- [x] **T11c · Decode the 6-byte header field by field**
       Every asset starts with it; `load_container` reads it to `ss:2480` before
       anything else, and `ss:[0b57]` (the plane selector) is one byte of it or derived
       from it.
       **Done when:** each of the six bytes is named in FORMATS.md with the code that
       reads it, and the values for `main.io`, `logo.IO` and `blancpc.io` are tabulated.
+      *Done: three words — size, mode, and a catalogue discriminator (FORMATS §3.0),
+      each named from the code that consumes it and checked across all 106 files. Also
+      kills the "11-byte signature" guess: there is no signature.*
 
 - [ ] **T11d · Where the settings actually take effect**
       T09b named `cfg_video`, `cfg_sound`, `cfg_keyboard` and the rest, but only where
@@ -203,6 +206,13 @@ Compose rewrite has to do.
       **Done when:** each `cfg_*` has its readers listed in `ishar.chani`, and the
       keyboard one is followed as far as the table build — which is what a rewrite needs
       in order to offer layouts at all.
+
+- [ ] **T11f · The four `.fic` files with an all-zero header**
+      `cont1`, `cont2`, `cont6` and `en1` have six zero bytes where every asset has a
+      header, so they are probably a different format — and `cont1..6` are all exactly
+      4860 bytes, which smells like fixed-size records.
+      **Done when:** FORMATS.md says what they are, or states plainly that nothing in
+      the code reads them as assets.
 
 - [ ] **T11e · Decode main.io's catalogue and answer the language question**
       Assets are fetched by numeric id through an index in `main.io` (FORMATS §3.4), so

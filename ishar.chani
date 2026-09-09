@@ -535,4 +535,17 @@ attr[seg_0000:0bc2]: type = u16; name = asset_index_ptr; comment = [[[
 attr[seg_0000:0bce]: type = u16; name = asset_index_count; comment = [[[
     Number of entries in that index.
 ]]]
+// The 6-byte asset header, read to ss:2480 before anything else (T11c).
+attr[seg_0000:2480]: type = u16; name = hdr_size; comment = [[[
+    Header word 0: total size, headers included. The decoder subtracts 22 on the catalogue path (6-byte header + 16-byte directory) and 6 on the direct path. For the one uncompressed asset seen, blancpc.io, it equals the file size exactly; for the rest it exceeds it, so it is the decompressed size.
+]]]
+attr[seg_0000:2482]: type = u16; name = hdr_mode; comment = [[[
+    Header word 1. The high byte with bit 0 cleared (`and ah,0feh`) becomes the mode at ss:[0b57], which selects the decoder's pass count: 0x80 one pass, 0xa0 two, anything else eight. 97 of 106 files are 0xa0. The low byte is passed as a parameter (`and ax,0ffh`) when the mode's sign bit is set.
+]]]
+attr[seg_0000:2484]: type = u16; name = hdr_is_catalogue; comment = [[[
+    Header word 2, the discriminator. Zero means read the 16-byte directory next and treat the file as the catalogue; non-zero means decode straight away. Only main.io and four .fic files are zero.
+]]]
+attr[seg_0000:2486]: type = [u16; 8]; name = catalogue_counts; comment = [[[
+    The 16-byte directory, read only when hdr_is_catalogue is zero. Eight counts that size the sub-arrays load_container carves: [0] sizes one region, [1] counts 6-byte elements, [4] a region rounded to paragraphs, [6] counts 0x26-byte records.
+]]]
 end

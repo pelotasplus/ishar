@@ -162,6 +162,41 @@ Names group by content: `text*.io` and `message*.io` are per-language text
 `zombi`, `minotor`) look like sprite sets, `cont1..6.fic` are six identical-sized
 (4860 B) files.
 
+### 3.0 The 6-byte header
+
+Every asset starts with three little-endian words, read to `ss:2480` before anything
+else. Each is named by the code that consumes it, at `seg_0000:7801` (catalogue path)
+and `seg_0000:793a` (direct path).
+
+| bytes | name | meaning |
+|---|---|---|
+| 0-1 | `hdr_size` | total size, headers included. 22 is subtracted on the catalogue path (6 + 16), 6 on the direct path |
+| 2-3 | `hdr_mode` | high byte `and 0feh` becomes the decoder's mode at `ss:[0b57]`: `0x80` one pass, `0xa0` two, anything else eight. Low byte is a parameter used when the mode's sign bit is set |
+| 4-5 | `hdr_is_catalogue` | **the discriminator.** Zero → read the 16-byte directory next; non-zero → decode straight away |
+
+Measured over all 106 `.io`/`.fic` files:
+
+```
+blancpc.io   2100 bytes   34 08 00 00 01 00   size 2100 = file size, mode 0x00
+logo.io     14420 bytes   be 9e 00 a1 01 00   size 40638, mode 0xa0
+main.io     11240 bytes   26 67 00 a1 00 00   size 26406, mode 0xa0, catalogue
+```
+
+- `hdr_is_catalogue == 0` in exactly **5** files: `main.io` and four `.fic`
+  (`cont1`, `cont2`, `cont6`, `en1`) — and those four have an all-zero header, so they
+  are probably not this format at all.
+- `hdr_mode` is `0xa0` in **97** of 106; the rest are `0x00`, `0x02` or `0xcc`.
+- `hdr_size >= file size` in 93 of 106, consistent with a decompressed size.
+  `blancpc.io` is the one asset seen to load uncompressed, and there the two are equal —
+  which is also why it is read whole in a single call instead of in chunks.
+
+This replaces the earlier guess of "an 11-byte signature at offset 2". There is no
+signature: `a1 01 00` is simply the high byte of `hdr_mode` followed by
+`hdr_is_catalogue`, and it looks constant because almost every asset shares one mode.
+
+**Verified by:** the annotated disassembly of both header readers, and the field values
+tabulated across every asset file.
+
 ### 3.1 How the game reads one
 
 Traced with `tools/gdbtrace.py` from a paused start:
