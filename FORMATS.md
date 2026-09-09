@@ -729,7 +729,7 @@ even, and a table of N entries holds N/2 opcodes:
 
 | table | image offset | entries | what it dispatches |
 |---|---|---|---|
-| `vm_statement_table` | `0x0060` | 201 words, 195 distinct | statements, control flow, engine primitives |
+| `vm_statement_table` | `0x0060` | 201 words, 195 distinct | statements, control flow, engine primitives -- **indexing unverified**, see below |
 | `vm_opcode_table` | `0x01f2` | ~120 | **load**: value -> accumulator |
 | `vm_store_table` | `0x029c` | ~56 | **store**: accumulator -> variable |
 | add-assign table | `0x02d8` | ~84 | **`+=`**: accumulator into variable |
@@ -773,6 +773,13 @@ vm_prim_5args (seg_0000:296b)
 So a primitive's **arity and argument widths are readable straight off its handler**, and
 the 195 distinct statement targets are an upper bound on the engine's script-visible API
 -- which is the list a rewrite has to reimplement.
+
+**Caveat on the statement table.** `0x0060`-`0x01f2` is a verified contiguous run of 201
+words that all point at real handlers (`0x62` -> `vm_stmt_eval`, `0x198` -> `vm_prim_5args`,
+and so on). What is *not* established is how it is indexed: no `jmp cs:[reg+0060]` exists
+in the image, and 201 entries is more than an unscaled opcode byte can reach (128). So it
+may be word-indexed, reached by a different instruction form, or be two adjacent tables.
+Treat "195 opcodes" as an upper bound on handler count, not as a measured opcode count.
 
 **Status:** encoding established; individual primitives not yet identified.
 **Verified by:** all four tables read from the static image and cross-checked against live

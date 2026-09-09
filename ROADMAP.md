@@ -452,6 +452,16 @@ Compose rewrite has to do.
       so **the VM is cooperatively multitasked** -- scripts suspend and resume.
       `tools/vmops.py` classifies any table's handlers mechanically. FORMATS.md section 6.*
 
+- [ ] **T29b · How is vm_statement_table indexed?**
+      `0x0060`-`0x01f2` is a contiguous run of 201 words pointing at real handlers, but no
+      `jmp cs:[reg+0060]` exists in the image and 201 entries exceeds what an unscaled opcode
+      byte can reach. So either it is word-indexed, or reached by an instruction form
+      `tools/vmseed.py` does not match, or it is two adjacent tables.
+      *Method: break on `vm_prim_5args` (`seg_0000:296b`) and read the return address -- that
+      names the dispatcher, and its instruction says how the index is formed.*
+      **Done when:** the dispatch instruction is named in `ishar.chani` and FORMATS.md states
+      the true opcode range.
+
 - [ ] **T29 · Name the engine primitives**
       `vm_statement_table` (image `0x0060`) has 195 distinct targets and each is an engine
       primitive or a statement; their arity is already readable from the handlers
