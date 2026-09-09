@@ -753,7 +753,7 @@ Compose rewrite has to do.
       **constructs** (disk has `iboishar.io`, `itaverne.io`), some decodes are French prompts
       left in the script, and one region is data. See T30c.*
 
-- [ ] **T30c · The parts of `main.io` that are not code**
+- [~] **T30c · The parts of `main.io` that are not code**
       The listing is sound where the script runs, but three things sit inside it that a
       linear walk cannot handle (FORMATS.md 7.1): a data region around 17205-20193; French
       prompts such as `" DE CONTREE ?"`, `" DE REGION ?"`, `"TER TABLEAU ?"` -- developer or
@@ -766,6 +766,19 @@ Compose rewrite has to do.
       which is the name after any prefixing.*
       **Done when:** FORMATS.md says which byte ranges of `main.io` are data, quotes the
       prompts in full, and states the rule that turns `boishar.IO` into `iboishar.io`.
+      *Two of three met (FORMATS.md 7.2). Byte ranges: editor prompts 2313-2698, odd
+      extensions 16620-16827, disk prompts 17046-17172, **the language menu** 17299-17396,
+      a `PROG:/VAR:/SPT:` memory display 19954-19990, binary data 20200-21180.
+      The prompts in full -- and they are the find: `POSITION X/Y`, `NUMERO DE CONTREE ?`,
+      `NUMERO DE REGION ?`, `NUMERO DE ZONE ?`, `EDITER TABLEAU ?`. **A level editor shipped
+      with the game**, naming the world hierarchy in the developers' words: contree ->
+      region -> zone -> tableau. `cont*.fic` is *contree*, six of them, which gives T11g3 a
+      named structure to fill in rather than a guess.
+      Not met: the name rule. The script asks for `boishar.IO`/`taverne.IO`/`tableau.IO` and
+      the bytes are literal (`45 3d 00 "boishar.IO" 00`), so it is not a disassembly artefact;
+      disk has `iboishar.io`, `itaverne.io`, no `tableau.io`. `i` for *interieur* fits
+      `intmais`/`inville`/`incave` but is a reading, not a measurement. One breakpoint settles
+      it: `load_asset_by_name` builds the name at `ss:2480` before opening.*
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

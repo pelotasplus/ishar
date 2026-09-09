@@ -1096,3 +1096,47 @@ boundaries still reproduced.
   `" DE ZONE ?"`, `"TER TABLEAU ?"` -- fragments of questions like *"ENTRER TABLEAU ?"*,
   i.e. developer or level-editor text left in the shipped file.
 - **A data region** around offsets 17205-20193 that is not code at all.
+
+### 7.2 What else is inside `main.io` (T30c)
+
+Beyond the asset-loading program, `main.io` carries text and data that a linear
+disassembly walks into. Byte ranges, from a scan for printable runs:
+
+| range | contents |
+|---|---|
+| 2313-2698 | **level-editor prompts** (below) |
+| 16620-16827 | `main.co`, `main.ao`, `foret.co`, `foret.ao` -- extensions that exist nowhere on disk |
+| 17046-17172 | `"  DISK A"` .. `"  DISK D"` -- disk-swap prompts, matching the drive-select `int 21h ah=0eh` in `load_asset_by_name`'s path |
+| 17299-17396 | `"1 - ENGLISH"`, `"2 - FRANCAIS"`, `"3 - DEUTSCH"`, `"4 - ITALIANO"` -- **the language menu** |
+| 19954-19990 | `"PROG :"`, `" VAR :"`, `" SPT :"` -- a memory-usage display |
+| 20200-21180 | binary data, high-entropy, not code |
+
+#### The level editor left in the shipped game
+
+```
+POSITION X :
+POSITION Y :
+NUMERO DE CONTREE ?
+NUMERO DE REGION ?
+NUMERO DE ZONE ?
+EDITER TABLEAU ?
+```
+
+These name **the world's hierarchy in the developers' own words**: *contrée* (region/land),
+*région*, *zone*, *tableau* (screen/board), addressed by X/Y position. `cont1.fic` ...
+`cont6.fic` are **contrées** -- six of them, one file each (3.12) -- which turns T11g3 from
+guesswork into filling in a named structure. `PROG:/VAR:/SPT:` alongside is a memory
+display, so this is a development build's tooling, shipped.
+
+#### Names the game asks for that are not on disk
+
+The script requests `boishar.IO`, `taverne.IO` and `tableau.IO`. The bytes are literal --
+`45 3d 00 "boishar.IO" 00` -- so this is not a disassembly artefact. The disk holds
+`iboishar.io` and `itaverne.io`, and no `tableau.io` at all.
+
+`tableau.io` is presumably the editor's own file, absent from the release. For the other
+two the loader must prepend a letter; `intmais.io`, `inville.io` and `incave.io` suggest
+`i` for *intérieur*, but that is a reading of the names, **not a measurement**, and the
+rule is not established. The test is one breakpoint: `load_asset_by_name` builds the name
+into a buffer at `ss:2480` before opening it, so breaking on the DOS open and reading that
+buffer gives the name actually requested.
