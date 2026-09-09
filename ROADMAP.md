@@ -867,6 +867,39 @@ Compose rewrite has to do.
       boundaries match program counters observed live, the same check that validated
       `main.io` (7.1).
 
+- [ ] **T34 · The two unidentified regions in a monster asset**
+      `zombi.io` is 49% unaccounted for: 1,934 bytes before the sprite chain and 3,586 after
+      (FORMATS.md 9.4). The tail's byte values are symmetric about zero -- `+1..+16` occurs
+      818 times against 822 for `-1..-16`, where the file's own sprite pixels are 2.54:1 --
+      which is what signed per-frame offsets look like for a 21-frame monster.
+      This is not specific to `zombi`: most sprite banks have the same two regions.
+      *Method: the animation reading is testable. Break on the sprite blitter while a zombie
+      is on screen, record the draw position `ss:[0c2c]/[0c2e]` per frame, and check the
+      differences against the tail's bytes. If they match, the region is the animation table
+      and its record size falls out of the frame count.*
+      *Also: retire the byte-distribution test. It scores `zombi`'s sprite pixels 0.86
+      against known code, higher than its own header region, so it cannot separate code from
+      data and should not be cited -- including in 8.2, where it currently is.*
+      **Done when:** FORMATS.md says what at least one of the two regions holds, with a
+      measurement rather than a histogram.
+
+- [ ] **T35 · Tabulate the per-asset facts a reader cannot derive**
+      Writing `java/IsharSprites.java` from FORMATS.md alone proved the *format* sections are
+      implementable -- 21 of 21 sprites byte-identical to the reference (FORMATS.md 9.6). It
+      also showed exactly what is missing: two facts per asset that no reader can derive from
+      the file itself.
+      **Where the sprite chain starts** (1950 for `zombi.io`), which nothing in the container
+      or asset header points to, and **which asset's palette to borrow** (`fville.io` @1352
+      for `zombi.io`), which comes from load order and currently lives only in
+      `.ish/asset-scene.json`.
+      *Method: both are already computed -- `tools/ioscan.py` finds the chain start and the
+      pairing comes from the `main.io` disassembly. Emit them as a table in FORMATS.md, one
+      row per asset, rather than leaving them in a scratch JSON the document does not
+      mention.*
+      **Done when:** FORMATS.md carries a table of chain start and palette source for every
+      asset that has sprites, and a reader written from the document alone can extract any
+      of them, not just `zombi.io`.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.

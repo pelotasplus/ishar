@@ -434,6 +434,48 @@ and the bucket name should not be read as a finding.
 **Verified by:** regenerated from the files themselves; the full per-file table with byte
 counts, header modes, sprite modes and counts is `.ish/file-classification.json`.
 
+### 3.15 Every decoded asset opens with a 16-byte header
+
+| offset | size | value | meaning |
+|---|---|---|---|
+| 0 | 2 | word | **asset id** |
+| 2 | 6 | `16 00 00 17 00 00` | constant across **89 of 97** decoded assets — a format signature |
+| 8 | 8 | varies per asset | **not identified** |
+
+**Why "id" and not just "a number".** The value appears in two independent places and they
+agree. Neither on its own would justify the name.
+
+The id is **not present in the file on disk** -- it appears only after decompression. The
+first bytes of `zombi.io` are `0e 2c 00 a1 01 00 0b 09 0a 0b ...`, which is the 6-byte
+container header followed by the LZ77 offset-width table. Decompressed, the payload opens:
+
+```
+4b 00 | 16 00 00 17 00 00 | 00 00 16 00 00 00 be 02
+^^^^^
+word 0 = 0x004b = 75
+```
+
+And `main.io`'s script, at offset 10401, loads the file with:
+
+```
+45 | 4b 00 | 7a 6f 6d 62 69 2e 49 4f 00        ("zombi.IO\0")
+^^   ^^^^^
+|    id operand = 0x004b = 75
+opcode 0x45 = vm_op_load_asset (section 7)
+```
+
+So the file **declares** 75 and the script **asks for** 75 by name. Across the game
+**85 of 94 assets match** this way. The 9 that differ are all language variants:
+`messaged/e/i` all carry `0x0e`, `sosd/e/i` carry `0x56`, `textind/e` carry `0x2f` -- so the
+header id names the *content* while the script asks for a language-specific id.
+
+For a reader this matters twice: the id is only readable after decompressing, and it is the
+key the game uses to find an already-loaded asset (3.4), not merely a label.
+
+**Verified by:** word 0 compared against the id operand of every `vm_op_load_asset`
+instruction in `main.io` (section 7), across all 94 assets the script loads.
+
+
 ### 3.7 What is inside a decoded asset (T11b)
 
 **Established, byte for byte.** A decoded asset holds **8-bit palette indices, one byte
@@ -1315,3 +1357,180 @@ from a listing of the wrong alignment. See T33.
 residue); the four negative results above each from the tool that would have found the
 structure; the distribution comparison against regions of `main.io` whose status is
 independently known.
+
+## 9. `zombi.io`, byte by byte — and how to write a reader
+
+7,868 bytes on disk, 11,272 decoded. Asset **id 75 (`0x4b`)**. A monster sprite bank: the
+zombie's 21 animation frames.
+
+### 9.1 The file on disk (7,868 bytes)
+
+| offset | size | field | value here | meaning |
+|---|---|---|---|---|
+| 0 | 2 | `hdr_size` | 11278 | decoded length **including** this 6-byte header |
+| 2 | 2 | `hdr_mode` | `0xa100` | `(mode >> 8) & 0xfe` = `0xa0` -> bit-packed LZ77 (3.0, 3.2) |
+| 4 | 2 | `hdr_is_catalogue` | 1 | non-zero, so no 16-byte directory follows |
+| 6 | 7862 | payload | | LZ77 stream -> 11,272 bytes |
+
+`hdr_size - 6` is exactly the decoded length, which is the check that the decode worked.
+
+### 9.2 The decoded 11,272 bytes
+
+| range | size | contents |
+|---|---|---|
+| 0..15 | 16 | asset header |
+| 16..1949 | 1934 | **unidentified** |
+| 1950..7685 | 5736 | **the sprite chain** — 21 sprites |
+| 7686..11271 | 3586 | **unidentified** |
+
+#### The 16-byte asset header
+
+Every decoded asset opens with one, and it is a **general** part of the container, not
+something peculiar to this file -- see **3.15**. For `zombi.io` it reads:
+
+| offset | size | value | meaning |
+|---|---|---|---|
+| 0 | 2 | `0x004b` | asset id, 75 |
+| 2 | 6 | `16 00 00 17 00 00` | format signature |
+| 8 | 8 | `00 00 16 00 00 00 be 02` | not identified |
+
+#### The sprite chain
+
+Sprites are stored back to back with no gaps. Every one here is mode `0x10` and carries
+`word3 = 0x0040`, so all 21 use **palette group 4** (`0x40 >> 4`).
+
+| # | offset | size | word 0 | word 3 | record bytes |
+|---|---|---|---|---|---|
+| 0 | 1950 | 32x53 | `0x0010` | `0x0040` | 856 |
+| 1 | 2806 | 80x27 | `0x0010` | `0x0040` | 1088 |
+| 2 | 3894 | 16x30 | `0x0010` | `0x0040` | 248 |
+| 3 | 4142 | 48x15 | `0x0010` | `0x0040` | 368 |
+| 4 | 4510 | 16x21 | `0x0010` | `0x0040` | 176 |
+| 5 | 4686 | 32x12 | `0x0010` | `0x0040` | 200 |
+| 6 | 4886 | 16x21 | `0x0010` | `0x0040` | 176 |
+| 7 | 5062 | 32x26 | `0x0910` | `0x0040` | 424 |
+| 8 | 5486 | 32x15 | `0x0f10` | `0x0040` | 248 |
+| 9 | 5734 | 32x19 | `0x0b10` | `0x0040` | 312 |
+| 10 | 6046 | 16x12 | `0x0310` | `0x0040` | 104 |
+| 11 | 6150 | 32x17 | `0x0d10` | `0x0040` | 280 |
+| 12 | 6430 | 16x11 | `0x0510` | `0x0040` | 96 |
+| 13 | 6526 | 16x19 | `0x0510` | `0x0040` | 160 |
+| 14 | 6686 | 16x12 | `0x0810` | `0x0040` | 104 |
+| 15 | 6790 | 16x17 | `0x0110` | `0x0040` | 144 |
+| 16 | 6934 | 16x11 | `0x0710` | `0x0040` | 96 |
+| 17 | 7030 | 16x17 | `0x0510` | `0x0040` | 144 |
+| 18 | 7174 | 16x11 | `0x0910` | `0x0040` | 96 |
+| 19 | 7270 | 32x19 | `0x0a10` | `0x0040` | 312 |
+| 20 | 7582 | 16x12 | `0x0210` | `0x0040` | 104 |
+
+The chain runs 1950 -> 7686 with **zero gap between records**, so `next = offset + record
+size` is exact for this file.
+
+### 9.3 Writing a reader
+
+```
+1  read the 6-byte file header
+     hdr_size, hdr_mode, hdr_is_catalogue      (three little-endian words)
+2  payload starts at 6, or at 22 when hdr_is_catalogue == 0 (a 16-byte directory follows)
+3  decompress:  mode = (hdr_mode >> 8) & 0xfe
+     0xa0 -> bit-packed LZ77          (97 of 106 files; 3.2)
+     0x00 -> stored, copy verbatim    (blancpc.io only; 3.11)
+     other -> byte-oriented RLE, stride = 1 for 0x80, else 8
+   expect exactly hdr_size - 6 bytes out; anything else means the decode is wrong
+4  decoded[0..1] is the asset id; decoded[2..7] should be 16 00 00 17 00 00
+5  walk the sprite chain.  At a sprite record:
+     word 0 = flags<<8 | mode      word 1 = width-1
+     word 2 = height-1             word 3 = palette group * 16
+     mode (word 0 & 0xff) decides the rest:
+       0x00 -> header 6, 4bpp, palette base 0
+       0x10 -> header 8, 4bpp, palette base = word 3 & 0xff
+       0x12 -> header 8, 4bpp, palette base = word 3 & 0xff
+       0x14 -> header 8, 8bpp, colour 0 transparent
+       0x16 -> header 8, 8bpp, opaque
+     stride = width for 8bpp, else (width + 1) / 2
+     record = header + stride * height, and the next sprite begins right after
+6  decode pixels.  4bpp is two per byte, HIGH nibble first, and is OPAQUE --
+   only mode 0x14 treats index 0 as transparent (3.13)
+     index = palette_base + nibble
+7  colour it -- see 9.4, because zombi.io carries no palette of its own
+```
+
+**Finding the chain start is the part a reader cannot do naively.** It is at 1950 here and
+nothing in the header points to it. `tools/ioscan.py` finds it by trying every offset and
+keeping the one whose chain is longest, then dropping records under 150 pixels — bytecode
+and pixel data both produce short bogus chains (T11s).
+
+### 9.4 The palette
+
+`zombi.io` contains no palette: no `fe ff 00 00` record and no 768-byte run that passes the
+group signature (3.9). It borrows one, and every sprite in the file carries
+`word3 = 0x0040`, so all 21 use **group 4** -- entries 64..79 of whichever 256-colour
+palette is loaded.
+
+The palette it borrows is **`fville.io`'s, the record at offset 1352** of that file's
+decoded payload. That comes from `main.io`'s load order: a palette-carrying scene is loaded
+and the assets drawn against it follow, and `zombi.io` follows `fville.io` (3.9, "Which
+palette an asset borrows"). Group 4 of that palette is:
+
+```
+64: ff ff ff   65: 00 00 00   66: 33 13 00   67: 47 1f 07
+68: 5b 2f 0b   69: 6f 3f 17   70: 83 4f 23   71: 97 67 2f
+72: ab 7f 3f   73: 33 2b 1b   74: 4b 43 2b   75: 63 5b 3f
+76: 7f 77 57   77: 97 93 73   78: af af 8f   79: cb cb b3
+```
+
+so a nibble of 6 in a zombi sprite is `33 13 00`, a nibble of 12 is `7f 77 57`, and so on.
+Two browns ramps -- which is what a zombie should be.
+
+**Status:** the pairing is inference from load order, not a measurement. It has not been
+checked against the framebuffer, and 27 assets in the game follow more than one scene and
+are resolved by majority (T11m2). For `zombi.io` the load order is unambiguous.
+
+
+### 9.6 The spec, validated by an independent implementation
+
+`java/IsharSprites.java` reads `zombi.io` and returns 21 bitmaps. It was written **only
+from this document** -- no access to `tools/io.py` or `tools/ioscan.py` -- and its output is
+**byte-identical to the reference extraction for all 21 sprites**, colours included.
+
+That exercises 3.0 (container header), 3.2 (bit-packed LZ77, including reading zeros past
+the end of the stream), 3.15 (the asset header, which reports id 75 as documented), 3.10
+(sprite records and the mode table), 3.13 (4bpp opaque, high nibble first) and 9.4 (the
+borrowed palette). Those sections are therefore implementable as written.
+
+**Two things had to come from section 9 rather than from the general spec, and a reader
+for an arbitrary asset would be stuck without them:**
+
+1. **Where the sprite chain starts.** 1950 for `zombi.io`. Nothing in the container or
+   asset header points to it, and 9.3 says as much -- the extractor finds it by trying every
+   offset and keeping the longest chain. Any per-asset reader needs that search or a table.
+2. **Which palette to borrow.** `fville.io`'s record at 1352, from load order (T11m2). The
+   pairing for the other ~100 assets is not in this document; it lives in
+   `.ish/asset-scene.json`.
+
+So: the *format* is documented well enough to implement. The *per-asset facts* -- chain
+start and palette source -- are documented for `zombi.io` only. See T35.
+
+### 9.5 What is not known — 5,520 bytes, 49% of the file
+
+Two regions are unidentified, and this section does not pretend otherwise.
+
+**16..1949 (1,934 bytes).** Not sprites: no valid chain starts anywhere in it. Not a
+palette: no record marker, no group signature. 425 zero bytes, 168 distinct values.
+
+**7686..11271 (3,586 bytes).** Same negatives, plus one positive measurement: the byte
+values are **symmetric about zero**. Counting small magnitudes, `+1..+16` occurs 818 times
+and `-1..-16` (i.e. 240..255) occurs 822 — a ratio of 1.00. The sprite pixels in the same
+file are 2.54 and the head is 1.51. Symmetric small signed bytes are what per-frame offsets
+or movement deltas look like, which would suit an animation table for a monster with 21
+frames — but that is a reading of a histogram, **not** a decode.
+
+A distribution comparison against `main.io`'s known code was tried and is worthless here:
+zombi's own *sprite pixels* score 0.86 against "code", higher than its head does. It cannot
+tell code from pixels, so it says nothing about these regions — and by the same token the
+0.83 that section 8.2 leans on for `affobj.io` is weaker evidence than it appears there.
+See T34.
+
+**Verified by:** header fields against `tools/io.py` (11,272 out, zero residue); the id
+against `main.io`'s load instruction and across 94 assets; the chain walked with zero gaps;
+the symmetry counts above.

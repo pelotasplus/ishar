@@ -26,3 +26,5 @@ __pycache__/
 # `tools/ioscan.py --all captures/assets/`. The small reference sheets are kept.
 captures/assets/
 captures/blit4/
+# Scratch: the Java reader written to validate FORMATS.md (see 9.6)
+java/
