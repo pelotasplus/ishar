@@ -436,3 +436,48 @@ targets; the table-to-opcode mapping follows from the dispatch reading
 **Coverage:** seeding every jump table in the image (`tools/vmseed.py`, 8 tables, 256
 distinct targets) plus the executed-function import took the listing from **38.1% to
 45.3%**, and `seg_0e97` from 786 decoded instructions to 1,602.
+
+### 6.2 How Ishar's VM compares to Eye of the Beholder's INF scripts
+
+Worth writing down because it sets the size of the rewrite. EOB2's level scripts
+(`../eob/eye-of-the-beholder-file-formats`, `eob.inf`) are a **command list**: about 30
+opcodes numbered downward from `0xff`, each one a game verb --
+
+```
+0xff Set wall   0xfb Create monster  0xfa Teleport   0xf8 Message   0xf7 Set flag
+0xf4 Heal       0xf3 Damage          0xf2 Jump       0xf1 End       0xf0 Return
+0xef Call       0xee Conditions      0xec Change level  0xeb Give experience
+0xea New item   0xe6 Encounters      0xe5 Wait      0xe3 Text menu
+```
+
+Operands are literal bytes, state is a global flag array, and control flow is
+Jump/Call/Return/Conditions. There is no expression evaluator, no local variables and no
+stack: it is a data format that happens to be executable.
+
+| | EOB2 INF | Ishar |
+|---|---|---|
+| opcodes | ~30 game verbs | ~460 handlers across 4 tables |
+| operands | literal bytes | evaluated expressions |
+| variables | global flags only | locals (`ES:BP` frame) **and** globals (`ss:[0bf6]`) |
+| arrays | none | yes (`vm_index_byte` / `_word` / `_far`) |
+| types | none | byte and word, sign- and zero-extended |
+| eval stack | none | yes, `BX` reset to `0x277c` per statement |
+| branches | absolute | **PC-relative**, so scripts are position-independent |
+| concurrency | none | **cooperative multitasking**, task stack at `ss:[0c56]` |
+
+Three of Ishar's four tables are the same addressing-mode matrix repeated for load, store
+and `+=`. Nobody hand-writes that: it is **a compiler's output**. Silmarils had an
+in-house language; Westwood had a level editor emitting commands.
+
+**What it costs the rewrite.** For EOB, reading the INF gives you the game logic and a
+30-verb interpreter is trivial. For Ishar there is a whole language in the way: either
+implement the VM (expressions, frames, arrays, coroutines) or decompile the bytecode back
+to source. The verbs actually wanted -- combat, magic, quests -- are not opcodes at all
+but **engine primitives called from compiled script**, which is the reason T21-T24 have
+never been locatable in the disassembly.
+
+The compensating advantage is regularity: the encoding is uniform enough that a
+decompiler is tractable once the primitives are named (T29).
+
+**Evidence:** EOB opcode list from the file-format wiki in `../eob`; Ishar's structure
+from FORMATS.md section 6, which was measured from the image and live memory.
