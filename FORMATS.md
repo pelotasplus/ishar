@@ -389,6 +389,39 @@ emulator's buffer byte for byte on several files.
 
 ---
 
+### 3.7 What is inside a decoded asset (T11b, partial)
+
+**Established, byte for byte.** A decoded asset holds **8-bit palette indices, one byte
+per pixel, laid out linearly** — the same values the game writes to VGA memory. Proven
+by capturing the emulator's framebuffer while the Silmarils logo was on screen and
+finding those exact bytes inside decoded `logo.io`:
+
+| what | value | how |
+|---|---|---|
+| bit depth | 8 bpp | decoded bytes equal VRAM bytes exactly |
+| planes | one, linear | no interleaving needed to make them line up |
+| row stride | 144 bytes for `logo.io` | fitted across 15 rows, all agreeing on 144 |
+| image width | 144 px | the same 144, since 1 byte = 1 pixel |
+| draw position | around x=88 | where the agreement starts on the widest row |
+| transparency | yes | agreement ends mid-row where the screen shows background `0x05`, so those pixels are not written |
+
+`captures/asset-logo-verified.png` is the verified region rendered at 144 px wide with
+the DAC palette captured at the same moment — it is a recognisable piece of the logo.
+
+**Not established.** Height, because a file holds **more than one image**: 40,632 bytes
+is 282 rows of 144, far more than a 200-line screen, and rendering the whole file at 144
+shows the logo followed by other content. And the width is **not** a plain word in the
+header — `144`, `88` and `110` appear nowhere in the first 300 bytes. Where the palette
+comes from is also open: we used the DAC as the emulator had it, which does not show
+whether the file supplies it.
+
+`tools/io2png.py` renders any asset to PNG, taking the width as an argument because of
+exactly that gap; a wrong width shears the image diagonally, which makes it easy to
+judge by eye but is not proof.
+
+**Verified by:** `.ish/logo-vram.bin` (the emulator's 64,000-byte framebuffer) against
+the decode of `logo.io`, captured by `tools/t11b-capture.py`.
+
 ## 4. Video
 
 **Status:** unknown

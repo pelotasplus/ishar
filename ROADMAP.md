@@ -193,6 +193,23 @@ Compose rewrite has to do.
       **Done when:** FINDINGS.md says when it triggers, what it accepts, and where the
       check lives in the code — and whether a measurement session can get past it.
 
+- [ ] **T11i · Where an asset's geometry comes from**
+      The width is not a word in the decoded header (checked for `logo.io`: 144, 88 and
+      110 appear nowhere in the first 300 bytes), yet the game knows how wide to draw.
+      Read the routine that blits a decoded asset — it takes the geometry from
+      somewhere, and that is the authoritative answer rather than a width guessed until
+      the picture stops shearing.
+      **Done when:** FORMATS.md states where width, height and draw position come from,
+      and `tools/io2png.py` derives them instead of taking `--width`.
+
+- [ ] **T11j · Where the palette comes from**
+      `captures/asset-logo-verified.png` used the DAC as the emulator had it, which
+      proves nothing about whether the file carries a palette. Ishar-era assets often
+      ship indices only, with the palette loaded separately — the gunboat work was
+      caught out by exactly this.
+      **Done when:** FORMATS.md says whether a palette travels with an asset, and if not,
+      which file or code supplies it, with the DAC writes traced to their source.
+
 - [ ] **T11h · What consumes the catalogue's `0a` prefix**
       Each language variant in `main.io` is preceded by `0a <u16> 00 00` and carries its
       own asset id (FORMATS §3.5). Something reads that stream and decides which id to
@@ -202,7 +219,7 @@ Compose rewrite has to do.
       how the language choice selects among four ids, with a live check that picking
       English and French requests different ids for the same content.
 
-- [ ] **T11b · What is actually inside a decoded asset**
+- [~] **T11b · What is actually inside a decoded asset**
       Decoding gives bytes; the rewrite needs to know what they *mean*. The 6-byte
       header and the decoder's plane count (`ss:[0b57]`: `0x80`→1, `0xa0`→2, else 8)
       are the colour-depth story, but nothing yet says the dimensions, the plane
@@ -212,6 +229,12 @@ Compose rewrite has to do.
       bit depth, plane order, and whether the palette travels with the file or comes
       from elsewhere — each derived from the code or from a byte-for-byte comparison,
       not from the picture looking right.
+      *Partly done (FORMATS §3.7): 8 bpp, one linear plane, and the decoded bytes are
+      byte-identical to what the game writes to VGA memory — logo.io's image is 144 px
+      wide, drawn near x=88, with transparency. Still open: height, because a file holds
+      several images; where the palette comes from; and the geometry's source, since the
+      width is not a plain word in the header. `tools/io2png.py` renders assets now,
+      taking the width as an argument.*
       *Thread from T09b: `cfg_video` distinguishes CGA, EGA, VGA and Hercules, and the
       decoder's plane count is 1, 2 or 8. Those two sets probably line up — 1 plane for
       Hercules, 2 for CGA, 8 for VGA — which would mean a file carries several
