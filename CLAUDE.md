@@ -487,6 +487,28 @@ And when a model cannot be checked directly, render the alternatives and look. T
 identified the right group by eye from a 16-cell sheet in seconds, after two sessions of
 failing to prove it from the machine.
 
+### Spice86's GDB stub reports IP as a LINEAR address
+
+`registers()["ip"]` is not the segment offset. At a breakpoint on `seg_0000:93a6` with
+`CS = 017d`, the stub reports `ip = 0xab76` -- the linear address the breakpoint was
+armed with, not `0x93a6`.
+
+This produced **silent false negatives that were nearly written up as findings**. A probe
+comparing `r["ip"] & 0xffff` against a segment offset never matches, so the run reports
+zero hits and reads exactly like "this routine never executes". Five such runs in T27,
+plus the conclusion in T29d that Spice86 never invokes the mouse callback, all rested on
+it. It also silently corrupts address arithmetic: computing `cs*16 + ip` adds the load
+segment a second time and puts every reported site `0x17d0` too high, which is where
+T11p's list of framebuffer writers came from.
+
+Two rules:
+
+- Compare `r["ip"]` **unmasked** against the linear address passed to `add_breakpoint`.
+  Never mask it, and never add `cs*16` to it.
+- **A zero-hit result is a claim about the instrument until proven otherwise.** Before
+  reporting that a routine does not execute, arm the same probe on something known to run
+  -- `seg_0000:93a6` runs thousands of times a second -- and check it reports hits.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

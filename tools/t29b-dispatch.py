@@ -34,7 +34,7 @@ while time.time() - t0 < BUDGET and sum(seen.values()) < 8:
     g.cont()
     if g.wait_stop(timeout=max(1, BUDGET-(time.time()-t0))) is None: break
     r = g.registers()
-    if (r["ip"] & 0xffff) != (entry - load*16): continue
+    if r["ip"] != entry: continue   # stub reports IP linear (T27b)
     ret = int.from_bytes(g.read_mem(r["ss"]*16 + (r["sp"] & 0xffff), 2), "little")
     seen[(ret, r["di"] & 0xffff, r["si"] & 0xffff)] += 1
 mcp("clear_breakpoints")

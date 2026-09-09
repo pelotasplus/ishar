@@ -36,7 +36,7 @@ while time.time()-t0 < 60 and len(seen) < 6:
     seen[key]=1
     seg = 'seg_0000' if rel<0x941 else 'seg_0941' if rel<0xe97 else 'seg_0e97' if rel<0x13d7 else 'seg_13d7'
     base = {'seg_0000':0,'seg_0941':0x941,'seg_0e97':0xe97,'seg_13d7':0x13d7}[seg]
-    off = (rel-base)*16 + (ip & 0xffff)
+    off = (rel-base)*16 + (ip & 0xffff)   # NOTE: ip is linear (T27b); see t11p-render
     ret = int.from_bytes(g.read_mem(r["ss"]*16 + (r["sp"] & 0xffff), 2), "little")
     buf_off, buf_seg = w2(0x0bc8), w2(0x0bca)
     src_rel = (ds*16 + si) - (buf_seg*16 + buf_off)

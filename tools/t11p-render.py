@@ -45,8 +45,10 @@ while time.time() - t0 < BUDGET:
     if g.wait_stop(timeout=max(1, BUDGET - (time.time() - t0))) is None:
         break
     r = g.registers()
-    cs, ip = r["cs"] & 0xffff, r["ip"] & 0xffff
-    lin = cs * 16 + ip
+    # The stub reports IP as a LINEAR address, so cs*16 must NOT be added again --
+    # doing so put every site 0x17d0 too high (T27b).
+    cs, ip = r["cs"] & 0xffff, r["ip"]
+    lin = ip
     rel = lin - load * 16
     stk = g.read_mem(r["ss"] * 16 + (r["sp"] & 0xffff), 24)
     ws = tuple(int.from_bytes(stk[i:i + 2], "little") for i in range(0, 24, 2))

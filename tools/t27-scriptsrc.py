@@ -47,7 +47,7 @@ while time.time() - t0 < 30 and len(samples) < 4:
     g.cont()
     if g.wait_stop(timeout=max(1, 30 - (time.time() - t0))) is None: break
     r = g.registers()
-    if (r["ip"] & 0xffff) != OFF: continue
+    if r["ip"] != entry: continue   # stub reports IP linear (T27b)
     ds, si = r["ds"] & 0xffff, r["si"] & 0xffff
     blob = g.read_mem(ds * 16 + si, 48)
     samples.append((ds, si, blob))

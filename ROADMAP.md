@@ -612,7 +612,7 @@ Compose rewrite has to do.
       **Done when:** the routine is named in `ishar.chani` and one sprite's drawn pixels match
       `(word3 >> 4) * 16 + nibble` against the framebuffer.
 
-- [~] **T27 · Where the scripts live**
+- [x] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in
       the image or in the assets, and either way it is the thing a Compose rewrite has to
       reimplement -- this is probably where combat, magic and quest logic actually are
@@ -630,11 +630,13 @@ Compose rewrite has to do.
       takes the NUL-terminated filename inline from the script and calls the loader -- which
       is exactly `45 40 00 "logo.IO" 00`, with 64 being logo.IO's catalogue id from 3.5. So
       the catalogue is a program, not a table. FORMATS.md section 7.
-      Live half not done: five probe runs returned zero breakpoint hits, including an
-      instrument check on `seg_0000:93a6` which runs thousands of times a second, so the
-      breakpoints were not firing at all. See T27b.*
+      Live half now done too, once T27b fixed the probe: breaking on `seg_0000:69ab` and
+      reading `DS:SI` gives `1cf3:144e`, `1cf3:0cc6`, `1cf3:0cc7`, `1cf3:0cca`, and those
+      bytes sit in decoded `main.io` at offsets 5198, 3270, 3271 and 3274 -- SI stepping
+      3270 -> 3271 -> 3274 is a program counter walking instructions of different lengths.
+      The script running during play is `main.io`, executed in place in its decode buffer.*
 
-- [ ] **T27b · Execution breakpoints stopped firing**
+- [x] **T27b · Execution breakpoints stopped firing***
       Five runs of `tools/t27-scriptsrc.py` recorded zero hits, and so did an instrument
       check on `seg_0000:93a6` -- a routine the call-count diff shows running thousands of
       times a second. So it is the harness, not the game. Earlier working probes today
@@ -645,6 +647,28 @@ Compose rewrite has to do.
       delivers stops. Check whether `ish start` reports the GDB port in both cases.*
       **Done when:** `tools/ish` documents the launch sequence that makes breakpoints fire,
       and a probe on `seg_0000:93a6` reports hits.
+      *Met, and the premise was wrong: the launch flags were never the problem. Breakpoints
+      were firing all along -- 225 stops in 12s, every one of them at the armed address.
+      **Spice86's GDB stub reports `IP` as a LINEAR address**, not a segment offset, so a
+      probe comparing `r["ip"] & 0xffff` against a segment offset never matches and reports
+      zero hits, which reads exactly like "this routine never executes". `tools/bphits.py`
+      is the minimal probe; comparing unmasked against the linear address gives 5 hits in
+      8s. CLAUDE.md carries the rule and the instrument check that catches it.
+      Consequences: T27's live half now works; T29d's "the callback never fires" was
+      re-run with the correct comparison and **still zero, with the instrument verified in
+      the same conditions**, so that conclusion stands on real evidence now. T11p's list of
+      framebuffer writers was computed as `cs*16 + ip` and is `0x17d0` too high -- see
+      T11p2.*
+
+- [ ] **T11p2 · Recheck T11p's framebuffer writer addresses**
+      `tools/t11p-render.py` computed the writer's address as `cs*16 + ip`, but the stub
+      already reports `ip` as linear (T27b), so every address it printed is `0x17d0` too
+      high. The sites recorded in FINDINGS as `seg_0000:5534`, `:817b`, `:82e5`, `:84af`,
+      `:850c`, `:ab76` are therefore wrong; `0x5534 - 0x17d0 = 0x3d64`, which is the idle
+      loop the status line always shows, so at least one was pure artefact.
+      *The tool is fixed; just re-run it while walking.*
+      **Done when:** the corrected writer addresses are in FINDINGS.md and the stale ones are
+      struck out.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

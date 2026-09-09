@@ -953,11 +953,15 @@ table, and the "catalogue" is a program that loads the game's assets. That also 
 why `.fic` filenames appear in `main.io` and nowhere in the executable (3.11): nothing in
 the code names them, a script does.
 
-**Status:** established statically. The intended live confirmation -- break on the
-interpreter, read `DS:SI`, and match those bytes into a named asset -- could not be run:
-execution breakpoints did not fire in the emulator instance available, verified by an
-instrument check on `seg_0000:93a6`, a routine the call-count diff shows running thousands
-of times a second. See T27b.
+**Confirmed live.** Breaking on the interpreter's fetch (`seg_0000:69ab`) while the game
+runs and reading `DS:SI` gives `1cf3:144e`, `1cf3:0cc6`, `1cf3:0cc7`, `1cf3:0cca` -- and
+those bytes are found **in decoded `main.io` at offsets 5198, 3270, 3271 and 3274**. SI
+advancing 3270 -> 3271 -> 3274 is a program counter stepping through instructions of
+different lengths.
+
+So the script the game is executing during play *is* `main.io`, held in its decode buffer
+at segment `1cf3`. Scripts are stored in `.io` assets, decompressed by the normal
+container path (section 3), and executed in place.
 
 **Verified by:** the handler read from `ishar-listing.txt` against the byte pattern in
 decoded `main.io`, with the asset id matching the catalogue id independently established
