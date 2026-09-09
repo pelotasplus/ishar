@@ -831,6 +831,28 @@ Compose rewrite has to do.
       known 4bpp sprite is on screen and compare pixel for pixel, including the zeros.*
       **Done when:** one 4bpp sprite matches the framebuffer with colour 0 drawn, not keyed.
 
+- [ ] **T31 · FORMATS.md's section numbering is broken**
+      Sections run 3.0, 3.1, 3.2, 3.5, 3.4, 3.3, 3.6, 3.7 ... then 4, 5, 6, 7, and **3.11
+      through 3.14 appear after section 7**. The `.io` container is described in eleven
+      places across two ranges, which is why "is the file classification written down?" had
+      no answer -- it was in five of them and complete in none.
+      *Method: renumber into one ordered chapter for the container -- header, decoders,
+      classification, sprites, palettes, scripts -- and leave a redirect line where a number
+      moved, since FINDINGS.md and ROADMAP entries cite the old ones.*
+      **Done when:** section numbers ascend monotonically, every `3.x` reference elsewhere in
+      the repo still resolves, and the container chapter reads in one pass.
+
+- [ ] **T32 · Identify the seven unclassified assets**
+      `preson.io`, `saub.io`, `scave.io`, `scomb.io`, `samb.io`, `param.io` and `souris.io`
+      decode cleanly but hold no sprite chain and no palette, and are bucketed as
+      "text"/"data" by a printable-run heuristic that is not a finding (FORMATS.md 3.6).
+      Together they are ~180KB of the game nobody can account for.
+      *Method: they are named in `main.io`'s script (T30), so the opcode that loads each one
+      says what it is for -- read the surrounding instructions rather than the bytes.
+      `souris.io` is French for mouse and the cursor sprite was found in `main.io`, so that
+      name is a lead, not a conclusion.*
+      **Done when:** FORMATS.md says what each of the seven holds, with the evidence.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.
