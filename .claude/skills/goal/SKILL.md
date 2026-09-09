@@ -84,6 +84,11 @@ how a session produces confident nonsense.
 Tick the task in `ROADMAP.md` (`[x]`, or `[!]` with one line on the blocker) as part of
 finishing, not afterwards.
 
+Then sweep for what the work revealed and add it to `ROADMAP.md` before reporting: a
+question the task raised, a lead worth following, a task that just became cheaper or
+harder, a tool that needs fixing. Ask "what do I know now that the roadmap does not?"
+every time — the answer is rarely nothing, and it is lost the moment the session ends.
+
 End with: what was established (and its evidence), what changed on disk, what failed,
 and what the next task should be. Assume the reader has not watched any of it.
 

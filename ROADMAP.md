@@ -133,6 +133,10 @@ Compose rewrite has to do.
       options, ENTER to validate", so the launcher has a setup UI nobody has seen.
       **Done when:** FINDINGS.md says how it is reached (a key, a switch, a missing
       file), with a screenshot in `captures/` if it can be reached at all.
+      *Lead from T09b: `load_settings` jumps to `0x0fde` and sets `settings_invalid`
+      (`seg_13d7:0b90`) whenever START.STP is missing, unreadable, or fails the key-letter
+      check. The setup UI's text sits in the same segment. Try it with the file renamed
+      or a byte corrupted — copy it aside first, it is the game's own file.*
 
 - [x] **T09d · ~~Why the scancode table differs on disk and in memory~~** — *withdrawn:
       there was no difference.* The listing was reading 0x250 bytes off, because
@@ -179,6 +183,11 @@ Compose rewrite has to do.
       bit depth, plane order, and whether the palette travels with the file or comes
       from elsewhere — each derived from the code or from a byte-for-byte comparison,
       not from the picture looking right.
+      *Thread from T09b: `cfg_video` distinguishes CGA, EGA, VGA and Hercules, and the
+      decoder's plane count is 1, 2 or 8. Those two sets probably line up — 1 plane for
+      Hercules, 2 for CGA, 8 for VGA — which would mean a file carries several
+      representations, or the loader picks a variant. Check before assuming: the game
+      ships configured for VGA and we have only ever watched it in that mode.*
 
 - [ ] **T11c · Decode the 6-byte header field by field**
       Every asset starts with it; `load_container` reads it to `ss:2480` before
@@ -186,6 +195,14 @@ Compose rewrite has to do.
       from it.
       **Done when:** each of the six bytes is named in FORMATS.md with the code that
       reads it, and the values for `main.io`, `logo.IO` and `blancpc.io` are tabulated.
+
+- [ ] **T11d · Where the settings actually take effect**
+      T09b named `cfg_video`, `cfg_sound`, `cfg_keyboard` and the rest, but only where
+      they are *written*. What reads them is the interesting half: `cfg_keyboard` should
+      lead to the code that builds `scancode_to_char`, and `cfg_video` to the mode set.
+      **Done when:** each `cfg_*` has its readers listed in `ishar.chani`, and the
+      keyboard one is followed as far as the table build — which is what a rewrite needs
+      in order to offer layouts at all.
 
 - [ ] **T11 · `tools/io.py`**
       Port the decoder offline.
