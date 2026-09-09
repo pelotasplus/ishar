@@ -75,7 +75,7 @@ def extract(data):
     return walk(data, starts[0])
 
 
-def palette_score(data, off):
+def palette_score(data, off, floor=0):
     """A VGA palette here is 16 sub-palettes of 16, and groups 1..15 each start
     with white then black. That signature is what makes this a detector rather
     than a guess: it was validated against three offsets established
@@ -88,6 +88,8 @@ def palette_score(data, off):
             s += 1
         if data[b + 3] < 6 and data[b + 4] < 6 and data[b + 5] < 6:
             s += 1
+        if s + 2 * (15 - k) < floor:      # cannot still reach the bar
+            return s
     return s
 
 
@@ -99,18 +101,25 @@ def find_palette(data, chain_end=0):
     # scores just as well -- fond.io came back 48 early and geren.io 144 early.
     # Entry 0 of a real palette is black (index 0 is the transparent colour),
     # while a shifted candidate starts on some group's white, which pins it.
+    # Entry 0 is exactly black in every palette established so far, so bytes.find
+    # jumps between candidates instead of testing all ~50k offsets per file.
     cands = []
-    for off in range(0, len(data) - 768):
-        if data[off] > 8 or data[off + 1] > 8 or data[off + 2] > 8:
-            continue
-        s = palette_score(data, off)
+    limit = len(data) - 768
+    pos = data.find(b"\x00\x00\x00")
+    while 0 <= pos <= limit:
+        s = palette_score(data, pos, 24)
         if s >= 24:
-            cands.append((off, s))
+            cands.append((pos, s))
+        pos = data.find(b"\x00\x00\x00", pos + 1)
     if not cands:
-        starts = [o for o in range(len(data) - 768)
-                  if data[o] < 8 and data[o + 1] < 8 and data[o + 2] < 8]
-        best = max(starts, key=lambda o: palette_score(data, o), default=None)
-        if best is None or palette_score(data, best) < 8:
+        best, bs = None, 0
+        pos = data.find(b"\x00\x00\x00")
+        while 0 <= pos <= limit:
+            s = palette_score(data, pos, bs)
+            if s > bs:
+                best, bs = pos, s
+            pos = data.find(b"\x00\x00\x00", pos + 1)
+        if best is None or bs < 8:
             return None
         cands = [(best, palette_score(data, best))]
     # Overlapping candidates 48 or 144 bytes early still satisfy the black-start

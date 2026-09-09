@@ -298,19 +298,25 @@ Compose rewrite has to do.
       **Done when:** `tools/ioscan.py` reproduces the emulator's framebuffer colours for one
       sprite it did not take the palette from, checked pixel by pixel.
 
-- [ ] **T11m2 · Which of a file's several palettes belongs to a sprite**
-      Assets carry more than one 768-byte palette: `fond.io` at 556 and 12108, `geren.io` at
-      6684 and 12268, `logo.io` at 992 and an identical copy at 20172. For `fond.io` the live
-      one sat just past the sprite chain; that rule picks the wrong block for `geren.io`.
-      Word 0's *low* byte (0x12, 0x17, 0x10, 0x0f, 0x14, 0x00) is unexplained and is the
-      obvious suspect.
-      **Done when:** for three files with multiple palettes, the rule picks the block that
-      matches the DAC captured while that file's art is on screen.
+- [ ] **T11m2 · Sprites borrow a palette from the scene, so which scene?**
+      Only **9 of ~110 assets carry a palette at all**: `fond.io`, `fcave.io`, `fcave2.io`,
+      `frise.io`, `ftemple.io`, `fville.io`, `itaverne.io`, `geren.io`, `gerdep.io`. The `f`
+      prefix is *fond* -- French for background -- so scene files own the palette and every
+      monster, object and character sprite is drawn against whatever the current scene loaded.
+      That, not a bad detector, is why most extractions have right shapes and wrong colours:
+      `tools/ioscan.py` falls back to the best-scoring block in a file that has none.
+      *Method: T10b already recorded which files the game reads and when. Pair each sprite
+      asset with the scene palette that is live when it is drawn -- or just break on the
+      blitter and record the DAC alongside each sprite, which gives the pairing directly.*
+      **Done when:** `tools/ioscan.py` renders a monster asset with the scene palette the game
+      uses for it, and the result matches the framebuffer pixel for pixel.
 
-- [ ] **T11m3 · `tools/ioscan.py` palette search is O(n) per byte**
-      The white/black signature is tested at every offset of every file, so a full extraction
-      no longer finishes inside ten minutes.
-      **Done when:** `tools/ioscan.py --all` completes in under 60s.
+- [x] **T11m3 · `tools/ioscan.py` palette search is O(n) per byte**
+      Entry 0 of every palette established so far is exactly black, so `bytes.find` jumps
+      between candidates instead of testing all ~50k offsets per file, and `palette_score`
+      exits as soon as it cannot still reach the bar. A full `--all` run went from over ten
+      minutes (killed) to **2.7s**, picking the same offsets for the three validated files.
+      **Done when:** `tools/ioscan.py --all` completes in under 60s. *Met.*
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

@@ -561,7 +561,14 @@ find a palette in a file without being told where it is, which is what
 decoded asset for the DAC as captured in-game gives exact hits:
 `fond.io @ 12108` and `geren.io @ 6684`, both **768/768 bytes**.
 
-**Files carry more than one palette.** `fond.io` has valid blocks at 556 and 12108,
+**Only scene files carry a palette.** Nine of about 110 assets contain one: `fond.io`,
+`fcave.io`, `fcave2.io`, `frise.io`, `ftemple.io`, `fville.io`, `itaverne.io`, `geren.io`
+and `gerdep.io`. The `f` prefix is *fond*, French for background. Every other asset --
+monsters, objects, characters -- carries none and is drawn against whatever palette the
+current scene loaded. Extracting one of those in isolation therefore cannot get its
+colours right without knowing the scene (T11m2).
+
+**A scene file can carry more than one palette.** `fond.io` has valid blocks at 556 and 12108,
 `geren.io` at 6540-ish, 6684 and 12268, `logo.io` at 992 and an identical copy at
 20172. The one in use for a given scene is *not* determined yet -- for `fond.io` the
 live one sat just past the end of the sprite chain, but that heuristic picks the
