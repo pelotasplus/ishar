@@ -486,4 +486,37 @@ attr[seg_0000:6f62]: type = code; name = find_asset; comment = [[[
 attr[seg_0000:06d3]: type = code; name = load_small_file; comment = [[[
     Read blancpc.io whole -- 2500 bytes in one call, no chunking.
 ]]]
+attr[seg_13d7:0386]: type = [u8; 14]; name = stp_settings; comment = [[[
+    The 14 bytes of START.STP, read here by the code at 0x0eb4 (T07 trace).
+    On disk: "RBVVSAP1J0M1KQ".
+]]]
+// T09b: START.STP and the settings it sets. All in seg_13d7, addressed
+// through CS by the parser itself.
+attr[seg_13d7:0e96]: type = code; name = load_settings; comment = [[[
+    Opens START.STP (AL=0x82, name at 0x036c), reads 14 bytes to stp_settings, closes, then validates and parses. On any DOS error it jumps to 0x0fde and sets settings_invalid.
+]]]
+attr[seg_13d7:036c]: type = cstr; name = fname_start_stp; comment = [[[
+    'START.STP', the name passed to INT 21h AH=3D.
+]]]
+attr[seg_13d7:03a6]: type = u8; name = cfg_video; comment = [[[
+    Video: 0 CGA, 1 EGA, 2 VGA, 3 Hercules. From the letter at stp_settings+3 (C/E/V/H); anything else gives 3. Values >= 4 are replaced from the default at 0x03ef.
+]]]
+attr[seg_13d7:05fc]: type = u8; name = cfg_sound; comment = [[[
+    Sound device from the letter at stp_settings+5: I=0, A=1 (AdLib), B=2, N=3, G=4, C=4 (and also sets 0x0b8e to 8, so C and G share a value and are told apart by that byte). Values >= 5 are replaced from the default at 0x0657.
+]]]
+attr[seg_13d7:066a]: type = u8; name = cfg_port; comment = [[[
+    Port, from the digit at stp_settings+7 minus '1'. Values >= 4 replaced from the default at 0x06b3.
+]]]
+attr[seg_13d7:0402]: type = u8; name = cfg_joystick; comment = [[[
+    Joystick, from the digit at stp_settings+9 minus '0'. Range-checked against 3.
+]]]
+attr[seg_13d7:048a]: type = u8; name = cfg_mouse; comment = [[[
+    Mouse, from the digit at stp_settings+11 minus '0'. Values >= 2 replaced from the default at 0x0523.
+]]]
+attr[seg_13d7:0574]: type = u8; name = cfg_keyboard; comment = [[[
+    Keyboard layout from the letter at stp_settings+13: A=0 (AZERTY), Q=1 (QWERTY), Z=2 (QWERTZ); anything else gives 0. This is the setting behind the scancode table in FINDINGS 2.1.
+]]]
+attr[seg_13d7:0b90]: type = u8; name = settings_invalid; comment = [[[
+    Set to 1 when START.STP cannot be opened, read, closed, or fails the key-letter check; the parser then leaves every cfg_* at its default.
+]]]
 end

@@ -94,26 +94,43 @@ file matches memory byte for byte and the verifier's length check stays exact.
 
 ## 2. `start.stp` — launcher settings
 
-**Status:** partial
+**Status:** specified
+**Verified by:** reading the parser at `seg_13d7:0e96` (`load_settings`), which opens
+the file, reads 14 bytes, and validates and consumes them byte by byte. Every mapping
+below is a `cmp`/`jz` in that routine, not an inference from the string.
 
-14 bytes, ASCII, no separators: `RBVVSAP1J0M1KQ`.
+14 bytes, ASCII, no separators — **seven key/value pairs**, key at even offsets, value
+at odd. The parser checks all seven key letters and rejects the file if any is wrong:
 
-Reads as letter-keyed pairs:
+```
+offset  0  1  2  3  4  5  6  7  8  9 10 11 12 13
+        R  ?  V  v  S  s  P  p  J  j  M  m  K  k
+```
 
-| pair | guess |
-|---|---|
-| `RB` | ? |
-| `VV` | video |
-| `SA` | sound = Adlib |
-| `P1` | port 1 |
-| `J0` | joystick off |
-| `M1` | mouse on |
-| `KQ` | keyboard = QWERTY |
+The shipped file is `RBVVSAP1J0M1KQ`.
 
-**Verified by:** nothing. The pairing is inferred from the string alone; the launcher's
-parser has not been read. Do not act on this until it has.
+| pair | value | meaning | stored at |
+|---|---|---|---|
+| `R` | *(never read)* | key checked, value ignored by this parser | — |
+| `V` | `C`=0 `E`=1 `V`=2 `H`=3, else 3 | video: CGA, EGA, VGA, Hercules | `cfg_video` `seg_13d7:03a6` |
+| `S` | `I`=0 `A`=1 `B`=2 `N`=3 `G`=4 `C`=4 | sound device; `A` is AdLib. `C` also sets `seg_13d7:0b8e` to 8, so `C` and `G` share a value and are told apart by that byte | `cfg_sound` `seg_13d7:05fc` |
+| `P` | digit − `'1'` | port | `cfg_port` `seg_13d7:066a` |
+| `J` | digit − `'0'` | joystick | `cfg_joystick` `seg_13d7:0402` |
+| `M` | digit − `'0'` | mouse | `cfg_mouse` `seg_13d7:048a` |
+| `K` | `A`=0 `Q`=1 `Z`=2, else 0 | keyboard layout: AZERTY, QWERTY, QWERTZ | `cfg_keyboard` `seg_13d7:0574` |
 
----
+After parsing, each value is range-checked and replaced from a default if out of range:
+video against 4, sound against 5, port against 4, mouse against 2, joystick against 3.
+Any DOS failure — or a wrong key letter — jumps to `0x0fde`, which sets
+`settings_invalid` (`seg_13d7:0b90`) and leaves every setting at its default.
+
+So the shipped file means: VGA, AdLib, port 1, no joystick, mouse on, QWERTY. The
+earlier guess-table read `SA` as "sound = Adlib" and `KQ` as "keyboard = QWERTY" and was
+right about those two, but it also invented a meaning for `R` that the code never reads,
+and guessed `VV` as one field when `V` is the key and the second `V` is its value.
+
+`cfg_keyboard` is the setting behind FINDINGS §2.1: the game ships QWERTY letter rows
+with a French number row, and this is the byte that selected them.
 
 ## 3. `.io` / `.fic` — the asset container
 

@@ -118,11 +118,15 @@ Compose rewrite has to do.
       entry, every guess marked as one, and the three traced files agreeing with what
       the decoder says they are.
 
-- [ ] **T09b · Read the `START.STP` parser** — *static; needs no emulator, good filler*
+- [x] **T09b · Read the `START.STP` parser**
       `seg_13d7:0e9f` opens it and `seg_13d7:0eb4` reads 14 bytes to `1554:0386`; the
       parser is right there, and the same segment holds the setup screen's text.
       **Done when:** FORMATS.md §2 stops saying "Verified by: nothing" — each letter
       pair is named from the code that reads it, or explicitly marked unread.
+      *Done: §2 is **specified**. Seven key/value pairs, all seven key letters validated
+      by the parser; video/sound/keyboard decode to named enums, port/joystick/mouse are
+      digits minus '0'. `R`'s value is never read — recorded as such. The old guess-table
+      had two of seven right and invented a field.*
 
 - [ ] **T09c · The launcher's setup screen**
       The `START.STP` buffer is followed by `VIDEO`, `CGA`, `EGA` and "to select
