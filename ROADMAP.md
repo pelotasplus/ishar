@@ -599,6 +599,19 @@ Compose rewrite has to do.
       **Done when:** at least eight cell values are identified in FINDINGS.md, each with the
       observation that established it.
 
+- [ ] **T11r2 · Find the code that applies the palette group**
+      Word 3 holds the group (FORMATS.md 3.10, T11r) but **no code site is known**: `[si+6]`
+      does not appear anywhere in `seg_0e97`, so the blitter never reads it and the group is
+      applied by whoever sets up the draw. Until that routine is found the finding lives in
+      prose only, with nothing in `ishar.chani` -- and it is also what would give T11m its
+      pixel-exact confirmation.
+      *Method: the group must become a base added to each nibble, or a DAC sub-range select.
+      Break on the palette copier `seg_0000:74b5` and on `seg_0e97:0d5f` (the DAC writer) and
+      look for `word3 >> 4` arriving; or search the listing for `shr` by 4 near a sprite
+      pointer.*
+      **Done when:** the routine is named in `ishar.chani` and one sprite's drawn pixels match
+      `(word3 >> 4) * 16 + nibble` against the framebuffer.
+
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in
       the image or in the assets, and either way it is the thing a Compose rewrite has to
