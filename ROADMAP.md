@@ -204,6 +204,17 @@ Compose rewrite has to do.
       keyboard one is followed as far as the table build — which is what a rewrite needs
       in order to offer layouts at all.
 
+- [ ] **T11e · Decode main.io's catalogue and answer the language question**
+      Assets are fetched by numeric id through an index in `main.io` (FORMATS §3.4), so
+      the id→file mapping lives in its data, not in the code. The per-language files
+      (`textin`/`textind`/`textine`/`textini`, `sos`/`sosd`/`sose`/`sosi`,
+      `messagee`/`messagei`) are presumably separate ids, or one id whose record varies
+      — and the language menu picks between them somehow.
+      **Done when:** the catalogue's record layout is in FORMATS.md, the id of at least
+      one known file is confirmed against a live load, and FINDINGS.md states how the
+      language selection reaches a different file — with the code or the trace that
+      shows it, not the filename pattern.
+
 - [ ] **T11 · `tools/io.py`**
       Port the decoder offline.
       **Done when:** it reproduces the emulator's decoded buffer byte for byte for ≥4

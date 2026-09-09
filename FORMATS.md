@@ -209,6 +209,30 @@ Plane count comes from `ss:[0b57]`: `0x80` → 1 plane, `0xa0` → 2 (with a spe
 at `0x7b85`), anything else → 8. A control byte below `0x80` is a literal run of `c+1`
 bytes; `c >= 0x80` takes the branch at `0x7aa3`, not yet read.
 
+### 3.4 Assets are addressed by id, not by name
+
+Only **three** filenames exist anywhere in the 88 KB image: `blancpc.io`, `main.io` and
+`MAIN.IO`. Every other file — `logo.IO` included, which we have watched load — is
+reached without its name appearing in the code.
+
+`load_asset_by_id` (`seg_0000:78f9`) takes an id in `ss:[0b04]`. Zero means `main.io`
+itself. Anything else goes to `find_asset_record` (`seg_0000:8106`), which walks an
+index of far pointers — base `ss:[0bc2]`, count `ss:[0bce]`, four bytes per entry — and
+compares the wanted id against the first word of each record it points at. It returns
+the record's far address, or `0xffff` for an id that is not there.
+
+So **`main.io` is the catalogue**: loaded first, it carries the index and the records
+that every later load goes through. That explains its extra 16-byte directory, which
+sizes exactly this kind of thing — an array of 6-byte elements and an array of
+`0x26`-byte records among them.
+
+For the rewrite this is the shape that matters: the game does not open files by name,
+it asks for asset *N*. Any port needs the catalogue decoded before a single sprite can
+be found, which makes `main.io` the first thing `tools/io.py` has to read.
+
+**Verified by:** the annotated disassembly of both routines, plus the string search that
+found only three filenames in the image.
+
 ### 3.3 Who reads what (T10b)
 
 Reading one word past the interrupt frame names the routine that wanted the file, not
