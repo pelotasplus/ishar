@@ -287,13 +287,17 @@ Compose rewrite has to do.
       **Done when:** given a sprite header, `tools/io2png.py` picks the right depth on its
       own and reproduces the emulator's framebuffer for at least one sprite of each depth.
 
-- [ ] **T11o · `ish dis` resolves seg:off to the wrong bytes**
+- [x] **T11o · `ish dis` resolves seg:off to the wrong bytes**
       `tools/ish dis 0e97:0380` printed data where `ishar-listing.txt` and both the live
       memory and the static image agree there is code. The live bytes at `seg_0e97:038b`
       match the image at file offset `0xef4b` exactly, so the listing is right and the
       command is wrong -- probably the same 0x250 MZ-header bias that bit `addr.py`.
       It cost a wrong turn during T11k.
       **Done when:** `ish dis 0e97:038b` prints the same instructions as the listing does.
+      *Met. It passed the listing segment straight to Spice86 as a runtime segment, so
+      `0e97` read bytes 0xe97 paragraphs from zero rather than from the program. A listing
+      segment is an image paragraph, so the runtime segment is `load + seg`; `--runtime`
+      now forces the old behaviour when a genuine runtime address is meant.*
 
 - [~] **T11m · Why the colours are wrong on extracted sprites**
       **Answered, not yet proven to the acceptance bar.** The DAC is 16 sub-palettes of 16
@@ -399,7 +403,7 @@ Compose rewrite has to do.
       alignment across that whole region, so they cannot be read until it is re-seeded.
       Remaining for this task: name the drawing routine those writes sit in, and the scale.*
 
-- [ ] **T26 · Decode the VM opcode set**
+- [~] **T26 · Decode the VM opcode set**
       `vm_dispatch` (`seg_0000:69a6`) dispatches 120 handlers through `vm_opcode_table` at
       `seg_0000:01f2`, and `vm_dispatch_2` (`seg_0000:2937`) another 56 through `029c`
       (FINDINGS.md section 6). Nothing is known about what any opcode does. Each handler is a
@@ -412,6 +416,10 @@ Compose rewrite has to do.
       **Done when:** every handler is a named `code` seed in `ishar.chani`, coverage moves
       from 38.1% to over 45%, and at least ten opcodes have a documented meaning in
       FINDINGS.md.
+      *Started: 135 handler addresses read out of the **static image** (both tables agree with
+      live memory), seeded as `vm_op_xxxx` code attrs. No chani panic. Coverage 38.1% -> 41.4%
+      and seg_0000's undecoded bytes 10,239 -> 7,370. Remaining: reach 45%, and read the
+      handlers to document what ten of them do.*
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

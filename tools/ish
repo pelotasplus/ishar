@@ -272,9 +272,20 @@ def cmd_mem(argv):
 
 
 def cmd_dis(argv):
+    """`dis 0e97:038b` means the *listing* address, not a runtime segment.
+
+    It used to pass 0x0e97 straight to Spice86 as a segment, which reads bytes
+    0xe97 paragraphs from zero instead of from the program -- so it printed data
+    where the listing correctly showed code, and cost a wrong turn during T11k.
+    A listing segment is an image paragraph, so the runtime segment is
+    `load + seg`. Pass `--runtime` for a genuine runtime seg:off.
+    """
     seg, off = argv[0].split(":")
-    n = int(argv[1]) if len(argv) > 1 else 20
-    d = mcp("read_disassembly", {"segment": int(seg, 16), "offset": int(off, 16),
+    n = int(argv[1]) if len(argv) > 1 and not argv[1].startswith("-") else 20
+    seg = int(seg, 16)
+    if "--runtime" not in argv:
+        seg += mcp("read_dos_program_state")["CurrentProgramSegmentPrefix"] + 0x10
+    d = mcp("read_disassembly", {"segment": seg, "offset": int(off, 16),
                                  "instructionCount": n})
     for i in d["Instructions"]:
         a = i["Address"]

@@ -418,6 +418,18 @@ rendering it with the captured DAC reproduces the screen exactly, so "is my inst
 lying?" can always be settled in one command before blaming the data
 (`captures/t11m2-vram.png`).
 
+### A listing segment is not a runtime segment
+
+`tools/ish dis 0e97:038b` passed `0x0e97` to Spice86 as a segment register value, so it
+disassembled bytes 0xe97 paragraphs from address zero instead of from the program. It
+printed plausible-looking rubbish -- `aas`, `ret 0e2f7h` -- while `ishar-listing.txt` had
+the correct instructions all along, and the disagreement was read as the *listing* being
+wrong. That cost a wrong turn in T11k.
+
+A listing segment name is an **image paragraph**; the runtime segment is `load + seg`.
+When a tool and the listing disagree about the same address, dump the bytes from the
+image as a third opinion before believing either.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

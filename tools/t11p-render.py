@@ -48,11 +48,14 @@ while time.time() - t0 < BUDGET:
     cs, ip = r["cs"] & 0xffff, r["ip"] & 0xffff
     lin = cs * 16 + ip
     rel = lin - load * 16
-    ret = int.from_bytes(g.read_mem(r["ss"] * 16 + (r["sp"] & 0xffff), 2), "little")
-    seen[(cs, ip, rel, ret)] += 1
+    stk = g.read_mem(r["ss"] * 16 + (r["sp"] & 0xffff), 24)
+    ws = tuple(int.from_bytes(stk[i:i + 2], "little") for i in range(0, 24, 2))
+    chain = tuple(w for w in ws if 0x100 <= w <= 0x9410)[:4]
+    seen[(cs, ip, rel, chain)] += 1
 
 mcp("clear_breakpoints")
 print(f"\n{sum(seen.values())} writes from {len(seen)} sites:")
-for (cs, ip, rel, ret), n in seen.most_common(14):
-    print(f"  {cs:04x}:{ip:04x}  image+{rel:#07x}  caller-ret {ret:#06x}  x{n}")
+for (cs, ip, rel, chain), n in seen.most_common(14):
+    ch = " <- ".join(f"{c:04x}" for c in chain)
+    print(f"  {cs:04x}:{ip:04x}  x{n}   stack: {ch}")
 g.cont()
