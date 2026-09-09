@@ -1074,3 +1074,25 @@ where it is out of step, which makes the drift self-locating.
 
 **Verified by:** instruction boundaries reproducing four independently captured live
 program counters, and 101 decoded filenames matching real assets on disk.
+
+#### Operand lengths, and the trap in deriving them (T30b)
+
+Reading each handler's `lodsb`/`lodsw` sequence gives operand widths, but a handler whose
+`ret` is not decoded in the listing is walked straight *out of*, into the next routine,
+whose own `lodsb` is then counted as an operand. Five opcodes came out **exactly one byte
+too long** that way -- `0x00` (a no-op, given one operand), `0x4f`, `0x1d`, `0x70`, `0x78`.
+
+Every handler start is known from the table, so stopping the scan on reaching one fixes it.
+The effect is large: of 219 places in `main.io` where a valid `45 <id> "name\0"` sits, the
+walk landed on **96 before the fix and 217 after**, with the four live program-counter
+boundaries still reproduced.
+
+**The 2 sites still missed, and 18 decodes with non-filenames, are not drift:**
+
+- **Names the game constructs.** The script asks for `boishar.IO`, `taverne.IO` and
+  `tableau.IO`; the disk holds `iboishar.io` and `itaverne.io`. A letter is prepended at
+  load time -- the same mechanism as the language suffixes on `message*.io` and `textin*.io`.
+- **French prompts sitting in the script**: `" DE CONTREE ?"`, `" DE REGION ?"`,
+  `" DE ZONE ?"`, `"TER TABLEAU ?"` -- fragments of questions like *"ENTRER TABLEAU ?"*,
+  i.e. developer or level-editor text left in the shipped file.
+- **A data region** around offsets 17205-20193 that is not code at all.

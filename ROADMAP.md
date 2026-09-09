@@ -733,7 +733,7 @@ Compose rewrite has to do.
       opcode's operand length is wrong. Names that fail `[A-Za-z0-9_]+\.(IO|FIC)` mark where,
       which makes it self-locating -- see T30b.*
 
-- [ ] **T30b · Fix the operand length that makes the listing drift**
+- [x] **T30b · Fix the operand length that makes the listing drift**
       `tools/vmdis.py` loses a byte in places: `temple.IO` decodes as `emple.IO` and a few
       loads carry nonsense names, so at least one opcode consumes a different number of
       operand bytes than its handler's `lodsb`/`lodsw` count suggests. Handlers that read
@@ -744,6 +744,28 @@ Compose rewrite has to do.
       is the one mis-measured. Repeat until every decoded name is a real asset.*
       **Done when:** every `vm_op_load_asset` in `main.io` decodes to a filename that exists
       on disk, and the boundary check against the four live PCs still holds.
+      *Met in substance. The fault was general, not one opcode: a handler whose `ret` is not
+      decoded gets walked out of, into the next routine, whose `lodsb` is counted as an
+      operand -- five opcodes were exactly one byte too long, `0x00` (a no-op!) among them.
+      Stopping the scan at any known handler start fixes it: valid load sites hit went
+      **96 -> 217 of 219**, and the four live PC boundaries still reproduce.
+      The remainder are not drift: `boishar.IO`/`taverne.IO`/`tableau.IO` are names the game
+      **constructs** (disk has `iboishar.io`, `itaverne.io`), some decodes are French prompts
+      left in the script, and one region is data. See T30c.*
+
+- [ ] **T30c · The parts of `main.io` that are not code**
+      The listing is sound where the script runs, but three things sit inside it that a
+      linear walk cannot handle (FORMATS.md 7.1): a data region around 17205-20193; French
+      prompts such as `" DE CONTREE ?"`, `" DE REGION ?"`, `"TER TABLEAU ?"` -- developer or
+      level-editor text left in the shipped file; and asset names the game **constructs**,
+      since the script asks for `boishar.IO` and `taverne.IO` while the disk holds
+      `iboishar.io` and `itaverne.io`.
+      *Method: the prompts are worth reading in full -- they hint at a level editor and may
+      name concepts (contree, region, zone, tableau) that map onto the `cont*.fic` grids of
+      T11g2. For the prefix, break on `load_asset_by_name` (`seg_0000:78f9`) and read DS:DX,
+      which is the name after any prefixing.*
+      **Done when:** FORMATS.md says which byte ranges of `main.io` are data, quotes the
+      prompts in full, and states the rule that turns `boishar.IO` into `iboishar.io`.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

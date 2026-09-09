@@ -45,6 +45,9 @@ for ln in open(os.path.join(HERE, "ishar-listing.txt")):
         NAME[int(m2.group(1), 16)] = m2.group(2)
 
 
+HANDLERS = set()          # filled after TABLE is built; every handler start
+
+
 def operands(addr, limit=40):
     """Operand widths a handler reads, in order: 'b' for lodsb, 'w' for lodsw.
 
@@ -67,9 +70,16 @@ def operands(addr, limit=40):
         if not nxt:
             break
         off = min(nxt)
+        # A handler whose `ret` is not decoded in the listing would otherwise be
+        # walked straight out of, into the next routine, whose own lodsb gets
+        # counted as an operand -- which made five opcodes exactly one byte too
+        # long (T30b). Every handler start is known, so stop on reaching one.
+        if off in HANDLERS and off != addr:
+            break
     return out
 
 
+HANDLERS.update(TABLE.values())
 OPS = {opc: operands(addr) for opc, addr in TABLE.items()}
 # vm_op_load_asset reads `lodsw` for the id and then loops `lodsb` to skip the
 # inline name. operands() cannot tell that trailing lodsb from a fixed operand, so
