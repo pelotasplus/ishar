@@ -507,7 +507,7 @@ Compose rewrite has to do.
       magic and inventory stay unreachable. `tools/t29c-action.py` and its idle baseline
       work correctly -- see T29d.*
 
-- [ ] **T29d · Find how Ishar reads the mouse**
+- [!] **T29d · Find how Ishar reads the mouse**
       T29c is blocked because the game hooks no mouse interrupt: INT 33h is never called and
       INT 0Bh/0Ch/74h are untouched BIOS stubs (FINDINGS.md 6.4). Yet `souris.io` -- French
       for mouse -- is one of the assets, and the ACTION menu cannot be worked from the
@@ -518,6 +518,29 @@ Compose rewrite has to do.
       -- it is hot in every diff.*
       **Done when:** the routine that reads mouse state is named in `ishar.chani`, and the
       harness can move the pointer and click well enough to select an ACTION menu entry.
+      *Half met, then blocked in the emulator. The game **does** use the mouse -- the earlier
+      "no mouse" reading came from a trace that started after boot. From a cold boot it
+      installs an INT 33h event handler (`AX=0x0c`, mask 0x3f) at `seg_0000:1249`, after
+      setting the ratio, position and 0..319/0..199 ranges. `mouse_event_handler`,
+      `mouse_read_state` and the three variables are named in `ishar.chani` (FINDINGS 6.5).
+      **Spice86 never invokes that callback**: a breakpoint on it records zero hits across a
+      dozen `send_mouse_move` calls. Writing the three variables directly (`tools/mouse.py`)
+      also fails -- pointer move and ACTION click both leave the screen byte-identical -- so
+      `ss:[0ca3]` or an event flag gates the read as well. See T29e.*
+
+- [ ] **T29e · Make the pointer usable, one way or another**
+      Every pointer-driven part of Ishar -- ACTION, ATTACK, and therefore combat, magic and
+      inventory -- is unreachable while Spice86 drops INT 33h `AX=0x0c` callbacks
+      (FINDINGS.md 6.5). Three routes, cheapest first:
+      *(a) Find the rest of the gate. `mouse_read_state` checks `ss:[0ca3]` before reading;
+      set that and any event flag alongside the three variables `tools/mouse.py` already
+      writes. Break on `seg_0000:1259` and watch what a real keyboard-driven UI action does
+      to those bytes.
+      (b) Call the handler directly -- force `CS:IP` to `seg_0000:1249` with BX/CX/DX set,
+      let it return, which is precisely what the callback would do.
+      (c) Fix Spice86: it is a local checkout at `../Spice86`, and INT 33h function 0x0c is a
+      small amount of code. This also helps every other DOS game.*
+      **Done when:** clicking an ACTION menu entry from the harness changes the screen.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

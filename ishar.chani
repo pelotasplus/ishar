@@ -1288,4 +1288,25 @@ attr[seg_0000:35cf]: type = code; name = menu_draw_item; comment = [[[
     Engine helper called by vm_op_draw_menu, once per menu entry -- 30 calls per draw,
     matching the primitive exactly.
 ]]]
+
+// Mouse input, established by tracing INT 33h from boot (T29d).
+attr[seg_0000:1249]: type = code; name = mouse_event_handler; comment = [[[
+    The INT 33h event callback the game installs at startup (AX=0x0c, mask 0x3f). It only
+    stores its arguments and returns far:
+        mov cs:[11c1], bx   ; button state
+        mov cs:[11bd], cx   ; x, range 0..319
+        mov cs:[11bf], dx   ; y, range 0..199
+    Spice86 never invokes it -- a breakpoint here records zero hits while send_mouse_move
+    is called repeatedly -- which is why the pointer-driven UI cannot be driven from the
+    harness. FINDINGS.md 6.5.
+]]]
+attr[seg_0000:1259]: type = code; name = mouse_read_state; comment = [[[
+    Reads back what mouse_event_handler stored: checks ss:[0ca3] first and, when it is
+    zero, loads cx from cs:[11bd] and bx from cs:[11c1]. Writing those three words directly
+    was not sufficient to simulate a click, so ss:[0ca3] or a separate event flag also
+    gates it -- still open.
+]]]
+attr[seg_0000:11bd]: type = u16; name = mouse_x
+attr[seg_0000:11bf]: type = u16; name = mouse_y
+attr[seg_0000:11c1]: type = u16; name = mouse_buttons
 end

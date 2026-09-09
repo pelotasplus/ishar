@@ -566,3 +566,47 @@ is sound -- it is the *actions* that are unreachable, not the measurement.
 
 **Evidence:** INT 33h breakpoint (0 hits/20s); interrupt vector dump; five action diffs
 with the idle baseline; screenshots `captures/t29c-before.png`, `t29c-f1.png`.
+
+### 6.5 Ishar's mouse, and why the harness cannot use it (T29d)
+
+The game **does** use a mouse -- an earlier reading that it did not was drawn from a trace
+taken after startup. Breaking on the INT 33h handler from boot catches the whole setup:
+
+| call | meaning |
+|---|---|
+| `AX=0x00` | reset / detect (twice: at 0.1s and 4.1s) |
+| `AX=0x0f` | set mickey-to-pixel ratio |
+| `AX=0x04` | set cursor position to (160, 100) -- screen centre |
+| `AX=0x07` | set horizontal range 0..319 |
+| `AX=0x08` | set vertical range 0..199 |
+| `AX=0x0c` | install event handler, mask `0x3f`, at `017d:1249` |
+
+So the pointer is **event-driven, not polled** -- which is why a trace taken mid-game sees
+zero INT 33h traffic and looks like a game with no mouse support.
+
+`mouse_event_handler` (`seg_0000:1249`) does nothing but record its arguments:
+
+```
+mov cs:[11c1], bx      ; buttons
+mov cs:[11bd], cx      ; x
+mov cs:[11bf], dx      ; y
+retf
+```
+
+and `mouse_read_state` (`seg_0000:1259`) reads them back, gated on `ss:[0ca3]` being zero.
+
+**Spice86 does not deliver INT 33h function 0x0c callbacks.** A breakpoint on
+`seg_0000:1249` records **zero hits** across a dozen `send_mouse_move` calls. That is an
+emulator limitation, not a gap in the game's behaviour, and it is what makes every
+pointer-driven part of Ishar -- the ACTION and ATTACK buttons, and therefore combat, magic
+and inventory -- unreachable from the harness.
+
+**The obvious workaround does not work either.** `tools/mouse.py` writes the three
+variables directly, which should be exactly equivalent to the callback firing. Moving the
+pointer changes no pixels, and a click on the ACTION button changes none: the screen is
+byte-identical before and after. So `ss:[0ca3]`, or an event flag the handler's caller
+sets, also gates the read.
+
+**Evidence:** INT 33h trace from a cold boot (8 calls, all during startup); a breakpoint
+on `seg_0000:1249` during `send_mouse_move` (0 hits); two screenshot comparisons at 0
+pixels changed.

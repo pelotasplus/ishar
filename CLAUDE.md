@@ -430,6 +430,18 @@ A listing segment name is an **image paragraph**; the runtime segment is `load +
 When a tool and the listing disagree about the same address, dump the bytes from the
 image as a third opinion before believing either.
 
+### A trace taken mid-game cannot see what startup did
+
+Ishar was recorded as not using the mouse because a breakpoint on the INT 33h handler
+caught zero calls in 20 seconds of play. It uses the mouse: it installs an *event
+handler* during startup (`AX=0x0c`) and never calls INT 33h again. The trace was right
+and the conclusion was wrong.
+
+Before concluding a program does not use a facility, trace it **from a cold boot**.
+Anything configured once at startup -- interrupt handlers, palettes, modes, device setup
+-- is invisible to a trace that begins later, and the absence looks exactly like a
+feature that was never there.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their
