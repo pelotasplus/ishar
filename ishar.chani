@@ -219,11 +219,17 @@ attr[seg_0000:271b]: type = code
 attr[seg_0000:2723]: type = code
 attr[seg_0000:2736]: type = code
 attr[seg_0000:273f]: type = code
-attr[seg_0000:2744]: type = code
-attr[seg_0000:27b9]: type = code
+attr[seg_0000:2744]: type = code; name = vm_op_jump_rel8; comment = [[[
+    Relative jump, signed byte displacement: lodsb / cbw / jmp vm_branch_take.
+]]]
+attr[seg_0000:27b9]: type = code; name = vm_op_jump_rel16; comment = [[[
+    Relative jump, word displacement.
+]]]
 attr[seg_0000:2808]: type = code
 attr[seg_0000:2828]: type = code
-attr[seg_0000:2837]: type = code
+attr[seg_0000:2837]: type = code; name = vm_op_loop; comment = [[[
+    Loop: saves the program counter to ss:[0c54], runs the body via vm_stmt_assign, and on a non-zero result restores SI from ss:[0c54] to go round again.
+]]]
 attr[seg_0000:286e]: type = code
 attr[seg_0000:2885]: type = code
 attr[seg_0000:2890]: type = code
@@ -234,17 +240,29 @@ attr[seg_0000:28b4]: type = code
 attr[seg_0000:28c4]: type = code
 attr[seg_0000:2915]: type = code
 attr[seg_0000:291b]: type = code
-attr[seg_0000:2937]: type = code
-attr[seg_0000:293d]: type = code
+attr[seg_0000:2937]: type = code; name = vm_stmt_eval; comment = [[[
+    Statement: set the eval stack (BX = 0x277c) and run the expression evaluator.
+]]]
+attr[seg_0000:293d]: type = code; name = vm_stmt_assign; comment = [[[
+    Statement: evaluate an expression, swap the two string workspace pointers ss:[0c58]/ss:[0c5c], then dispatch an assignment opcode through vm_store_table at cs:[02d8].
+]]]
 attr[seg_0000:2943]: type = code
-attr[seg_0000:295f]: type = code
-attr[seg_0000:296b]: type = code
-attr[seg_0000:2994]: type = code
+attr[seg_0000:295f]: type = code; name = vm_stmt_assign_neg; comment = [[[
+    As vm_stmt_assign with the accumulator negated first.
+]]]
+attr[seg_0000:296b]: type = code; name = vm_prim_5args; comment = [[[
+    Engine primitive taking five script arguments: calls the expression evaluator five times and stores the results into the engine variable block (word, word, byte, byte, word).
+]]]
+attr[seg_0000:2994]: type = code; name = vm_prim_4args; comment = [[[
+    Engine primitive taking four script arguments, stored as word, word, word, byte.
+]]]
 attr[seg_0000:2a27]: type = code
 attr[seg_0000:2a78]: type = code
 attr[seg_0000:2a92]: type = code
 attr[seg_0000:2abe]: type = code
-attr[seg_0000:2afc]: type = code
+attr[seg_0000:2afc]: type = code; name = vm_op_wait_tick; comment = [[[
+    Reads the BIOS tick counter at 40:6c when the accumulator is zero, and stores it -- the script-level wait/timing primitive.
+]]]
 attr[seg_0000:2afe]: type = code
 attr[seg_0000:2b14]: type = code
 attr[seg_0000:2b26]: type = code
@@ -478,7 +496,9 @@ attr[seg_0000:6759]: type = code
 attr[seg_0000:675b]: type = code
 attr[seg_0000:6765]: type = code
 attr[seg_0000:6768]: type = code
-attr[seg_0000:67b5]: type = code
+attr[seg_0000:67b5]: type = code; name = vm_prim_1arg; comment = [[[
+    Engine primitive taking one argument.
+]]]
 attr[seg_0000:6867]: type = code
 attr[seg_0000:6975]: type = code
 attr[seg_0000:699e]: type = code
@@ -960,5 +980,13 @@ attr[seg_13d7:18aa]: type = code
 attr[seg_13d7:18cc]: type = code
 attr[seg_13d7:1933]: type = code
 attr[seg_13d7:1a2f]: type = code
-
+attr[seg_0000:274a]: type = code; name = vm_branch_take; comment = [[[
+    Takes a relative branch -- `add ax, si` applies the displacement to the program counter. Also carries the task bookkeeping: a stack at ss:[0c56] and a frame slot at es:[bp-0ch], so scripts can be suspended and resumed.
+]]]
+attr[seg_0000:0060]: type = u16; name = vm_statement_table; comment = [[[
+    The VM's top-level opcode table: 201 words, 195 distinct targets, indexed by an
+    unscaled opcode byte so opcodes are even. Statements, control flow and the engine
+    primitives all live here; the three tables above it (01f2 load, 029c store, 02d8
+    add-assign) are addressing-mode matrices the statements dispatch into.
+]]]
 end

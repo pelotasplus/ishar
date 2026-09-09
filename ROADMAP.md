@@ -428,7 +428,7 @@ Compose rewrite has to do.
       machine with SI as program counter, DX as accumulator, ES:BP as the variable frame and
       `ss:[0bf6]` as a second base.*
 
-- [ ] **T28 · The VM's control flow and call opcodes**
+- [x] **T28 · The VM's control flow and call opcodes**
       FINDINGS.md 6.1 covers the load opcodes -- the addressing-mode matrix -- which is the
       easy third. What is not identified yet: branches, comparisons, arithmetic, and the
       opcode that calls a native routine. The last one matters most, because it is the bridge
@@ -438,6 +438,31 @@ Compose rewrite has to do.
       the region decodes.*
       **Done when:** the branch, compare and native-call opcodes are named in `ishar.chani`,
       and FORMATS.md describes the script's control-flow encoding.
+      *Met. There is no single "call native" opcode -- **each engine primitive is its own
+      opcode** in a fourth, previously unknown table at image `0x0060`: 201 words, 195
+      distinct targets, sitting just below the three addressing-mode tables. A primitive's
+      handler reads its arguments by calling the expression evaluator once per argument
+      (`vm_prim_5args` at `seg_0000:296b` takes word, word, byte, byte, word), so **arity and
+      argument widths are readable straight off the handler**, and 195 is an upper bound on
+      the engine's script-visible API.
+      Control flow: `vm_op_jump_rel8`/`_rel16` (`0x24`/`0x28`) both land in `vm_branch_take`
+      (`seg_0000:274a`), which does `add ax, si` -- branches are PC-relative, so scripts are
+      position-independent. `vm_op_loop` (`0x1a`) saves the PC to `ss:[0c54]` and restores it.
+      `vm_branch_take` also keeps a task stack at `ss:[0c56]` and a frame slot at `es:[bp-0ch]`,
+      so **the VM is cooperatively multitasked** -- scripts suspend and resume.
+      `tools/vmops.py` classifies any table's handlers mechanically. FORMATS.md section 6.*
+
+- [ ] **T29 · Name the engine primitives**
+      `vm_statement_table` (image `0x0060`) has 195 distinct targets and each is an engine
+      primitive or a statement; their arity is already readable from the handlers
+      (FORMATS.md section 6). Naming them is naming the engine's whole script-visible API,
+      which is exactly the surface a Compose rewrite has to provide -- and it is where
+      combat, magic and quest verbs will be.
+      *Method: `tools/vmops.py --table=0x0060` prints all of them with their first
+      instructions. Group by what engine variable each writes, then confirm a few by
+      breaking on the handler and watching the game while it runs.*
+      **Done when:** at least 30 primitives are named in `ishar.chani` with their arity, and
+      FINDINGS.md lists the ones that touch combat, movement or the party.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

@@ -717,3 +717,64 @@ format, and the scaling rule for the first-person view.
 ## 5. Save games
 
 **Status:** unknown — no save has been produced yet.
+
+## 6. The script VM's instruction encoding (T26, T28)
+
+A script is a byte stream. `SI` is the program counter, `DX` the accumulator, `BX` an
+evaluation stack pointer reset to `0x277c` at every statement, `ES:BP` the local frame
+and `ss:[0bf6]` a second base for globals. Operands follow their opcode inline.
+
+**Four dispatch tables**, all indexed by an *unscaled* opcode byte -- so every opcode is
+even, and a table of N entries holds N/2 opcodes:
+
+| table | image offset | entries | what it dispatches |
+|---|---|---|---|
+| `vm_statement_table` | `0x0060` | 201 words, 195 distinct | statements, control flow, engine primitives |
+| `vm_opcode_table` | `0x01f2` | ~120 | **load**: value -> accumulator |
+| `vm_store_table` | `0x029c` | ~56 | **store**: accumulator -> variable |
+| add-assign table | `0x02d8` | ~84 | **`+=`**: accumulator into variable |
+
+The lower three are the same addressing-mode matrix three times over -- the same access
+repeated once per operand width (byte or word immediate) and once per mode (direct,
+indexed via `vm_index_byte`/`vm_index_word`, far via `vm_index_far`, frame-relative or
+global). That is why 120 handlers describe so few actual operations.
+
+### Control flow
+
+| opcode | handler | encoding |
+|---|---|---|
+| `0x24` | `vm_op_jump_rel8` | `lodsb`, sign-extend, branch |
+| `0x28` | `vm_op_jump_rel16` | `lodsw`, branch |
+| `0x1a` | `vm_op_loop` | saves PC to `ss:[0c54]`, runs the body, restores it while the result is non-zero |
+| `0x18` | `vm_op_wait_tick` | reads the BIOS tick at `40:6c` -- script-level timing |
+
+Both jumps land in `vm_branch_take` (`seg_0000:274a`), which applies the displacement
+with `add ax, si`. **Branches are PC-relative**, so a script is position-independent.
+
+`vm_branch_take` also carries task bookkeeping -- a stack at `ss:[0c56]` and a frame slot
+at `es:[bp-0ch]` -- which means scripts can be **suspended and resumed**, i.e. the VM is
+cooperatively multitasked, not a straight-line interpreter.
+
+### Calling the engine
+
+There is no single "call native" opcode. Instead **each engine primitive is its own
+opcode** in `vm_statement_table`, and its handler reads its arguments by calling the
+expression evaluator once per argument, storing each result into a fixed engine variable:
+
+```
+vm_prim_5args (seg_0000:296b)
+    call vm_dispatch ; mov ss:[0ba8], dx     ; arg 1 (word)
+    call vm_dispatch ; mov ss:[0ba0], dx     ; arg 2 (word)
+    call vm_dispatch ; mov ss:[0ba2], dl     ; arg 3 (byte)
+    call vm_dispatch ; mov ss:[0ba4], dl     ; arg 4 (byte)
+    call vm_dispatch ; mov ss:[0ba6], dx     ; arg 5 (word)
+```
+
+So a primitive's **arity and argument widths are readable straight off its handler**, and
+the 195 distinct statement targets are an upper bound on the engine's script-visible API
+-- which is the list a rewrite has to reimplement.
+
+**Status:** encoding established; individual primitives not yet identified.
+**Verified by:** all four tables read from the static image and cross-checked against live
+memory; handlers classified mechanically by `tools/vmops.py`, and the control-flow ones
+read individually in `ishar-listing.txt`.
