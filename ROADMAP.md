@@ -224,7 +224,11 @@ Compose rewrite has to do.
       which suggests the head of the file is a keyed table.
       **Done when:** `tools/io2png.py` can enumerate every sprite in a file without being
       given an offset, and FORMATS.md describes the directory.
-      *Four static routes ruled out and recorded in FORMATS §3.8: no offset table in the
+      *Progress: breaking on the draw confirmed sprites are reached by a normalised far
+      pointer the caller holds (FORMATS §3.8), and the callers are `seg_0e97:0534` and
+      `:055e`. Those sit mid-function in code the emulator's catalogue does not name, so
+      the next step is to seed their enclosing routine and read where the pointer comes
+      from. Four static routes ruled out and recorded in FORMATS §3.8: no offset table in the
       file head (the monotonic runs there are shading ramps), no offset in the catalogue,
       no general chaining (works for logo.io, fails for presen.io and dragon.io), and no
       palette. **Next attempt should ask the machine instead:** break on the sprite

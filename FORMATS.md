@@ -446,6 +446,16 @@ not repeat them:
 - **Not a palette either** (§3.9): the only 768-byte run of values ≤ 63 in `logo.io` is
   inside the sprite's own pixels.
 
+**How the game does it: a far pointer, passed in.** Breaking on `draw_sprite`
+(`seg_0e97:038b`, 445 calls in a boot) shows `DS:SI` arriving already pointing at a
+sprite's 8-byte header, normalised so `SI` is 8 to 12 — and pointing into *several
+different* loaded buffers, not just the most recent one. Headers seen live: 48x48,
+32x20, 16x1, all matching §3.7's layout. The callers are `seg_0e97:0534` and `:055e`.
+
+So a sprite is found by a far pointer the caller already holds; the question is where
+that table of pointers is built. **Still open**, and the next step is one level further
+up: decode the callers and see where the pointer is loaded from.
+
 **Still open:** how a sprite is located inside a file. Walking from 1856 finds the logo
 and then a 16x13 sprite at 18856, after which the headers degenerate, so there is a
 directory rather than a plain sequence. The file's first word is `64` — `logo.IO`'s own

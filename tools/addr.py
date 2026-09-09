@@ -24,10 +24,19 @@ import urllib.request
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+HDR = 0x250        # the MZ header ishar.chani's segment ranges are biased by
+
+
 def segments():
-    """(name, start, end) for each code segment, read out of ishar.chani."""
+    """(name, start, end) as IMAGE offsets.
+
+    ishar.chani's ranges are file offsets -- chani loads the whole file, header
+    included -- so the header has to come back off here. Without this the tool
+    reports an address 0x250 bytes past the truth and a breakpoint set from it
+    never fires, which is exactly what happened.
+    """
     text = open(os.path.join(HERE, "ishar.chani")).read()
-    segs = [(m.group(1), int(m.group(2), 16), int(m.group(3), 16))
+    segs = [(m.group(1), int(m.group(2), 16) - HDR, int(m.group(3), 16) - HDR)
             for m in re.finditer(r"segment\[(seg_\w+)\]:.*?load\s*=\s*\[0\.\.\]:"
                                  r"exe\[0x([0-9a-f]+)\.\.0x([0-9a-f]+)\]", text, re.S)]
     if not segs:

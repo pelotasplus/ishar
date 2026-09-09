@@ -77,7 +77,10 @@ def renders(body):
 
 def main():
     if "--json" in sys.argv:
-        data = json.load(open(sys.argv[sys.argv.index("--json") + 1]))["result"]["structuredContent"]
+        raw = json.load(open(sys.argv[sys.argv.index("--json") + 1]))
+        # `ish funcs` writes the bare list; a saved MCP reply is wrapped.
+        data = (raw["result"]["structuredContent"] if isinstance(raw, dict) and "result" in raw
+                else raw)
         load = int(sys.argv[sys.argv.index("--load") + 1], 16) if "--load" in sys.argv else 0x017D
     else:
         port = emulator()
