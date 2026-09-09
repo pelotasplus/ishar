@@ -23,16 +23,23 @@ def brk(off, label, budget=90):
         r=g.registers()
         if r["ip"]==lin: return r
     sys.exit(f"never reached {label}")
-r=brk(0x793a, "logo header consumption")
+import sys as _s
+which = _s.argv[1] if len(_s.argv) > 1 else "logo"
+if which == "main":
+    hdr_at, close_at, sub = 0x7801, 0x7839, 22   # catalogue path
+else:
+    hdr_at, close_at, sub = 0x793a, 0x7978, 6    # direct path
+r=brk(hdr_at, "header consumption")
 ss=r["ss"]
 def w(o): return int.from_bytes(g.read_mem(ss*16+o,2),"little")
 hdr=[w(0x2480),w(0x2482),w(0x2484)]
 out_off, out_seg = w(0x0bc8), w(0x0bca)
 print(f"header words: {[hex(x) for x in hdr]}   output {out_seg:04x}:{out_off:04x}  stride sel ss:[0b57]={g.read_mem(ss*16+0x0b57,1)[0]:#04x}")
-r=brk(0x7978, "the close after logo.io")
-n=hdr[0]-6
+r=brk(close_at, "the close")
+n=hdr[0]-sub
 print(f"decoded length should be {n} bytes; dumping")
 data=g.read_mem(out_seg*16+out_off, min(n, 0x10000))
-open(os.path.join(HERE,".ish","logo-decoded.bin"),"wb").write(data)
-print(f"wrote .ish/logo-decoded.bin ({len(data)} bytes)")
+out_path=os.path.join(HERE,".ish",f"{which}-decoded.bin")
+open(out_path,"wb").write(data)
+print(f"wrote {out_path} ({len(data)} bytes)")
 print("first 32:", data[:32].hex(' '))

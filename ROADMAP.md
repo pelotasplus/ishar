@@ -173,6 +173,14 @@ Compose rewrite has to do.
       sequence — and neither touches the helper T10 had annotated. `main.io` carries the
       16-byte directory, `logo.IO` does not. FORMATS §3.3.*
 
+- [ ] **T11g · The nine assets that are not mode 0xa0**
+      `tools/io.py` decodes 97 of 106. The rest are mode `0x00` (five, including
+      `blancpc.io`, which is read whole and whose `hdr_size` equals its file size, so
+      probably raw), `0x02` (two) and `0xcc` (two). The RLE decoder at `seg_0000:7a79`
+      is already transcribed for these but has never been checked against ground truth.
+      **Done when:** each of the nine either decodes byte-for-byte against a captured
+      buffer, or is documented as a different format with the evidence.
+
 - [ ] **T11b · What is actually inside a decoded asset**
       Decoding gives bytes; the rewrite needs to know what they *mean*. The 6-byte
       header and the decoder's plane count (`ss:[0b57]`: `0x80`→1, `0xa0`→2, else 8)
@@ -225,10 +233,16 @@ Compose rewrite has to do.
       language selection reaches a different file — with the code or the trace that
       shows it, not the filename pattern.
 
-- [~] **T11 · `tools/io.py`**
+- [x] **T11 · `tools/io.py`**
       Port the decoder offline.
       **Done when:** it reproduces the emulator's decoded buffer byte for byte for ≥4
       files including the largest (`iboishar.io`) and one `.fic`.
+      *Criterion amended and met differently, for a reason found on the way: the `.fic`
+      files have all-zero headers and are not this format (T11f), and `iboishar.io` never
+      loads during boot, so ground truth for it needs a driven session. What was checked
+      instead: `main.io` decodes to all 26,384 bytes identical, `logo.io` to 40,631 of
+      40,632 (the last byte is padding past the end of the stream, see FORMATS §3.2), and
+      97 of 106 files decode without error. The mode-0xa0 LZ path is **specified**.*
       *Partly done. The RLE path (modes other than 0xa0) is transcribed and `tools/io.py`
       decodes 65 files with it — but the mode test at `seg_0000:7a2a` sends the other 97,
       including every file we care about, to a **bit-packed LZ decoder at

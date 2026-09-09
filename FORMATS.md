@@ -236,11 +236,43 @@ elements, `ss:[248e]` a region rounded up to paragraphs, `ss:[2492]` counts
 anything else falls into the loop at `seg_0000:7a79`. Since 97 of 106 files are mode
 `0xa0`, **the common path is `0x7b85`, not the RLE loop below.**
 
-`0x7b85` is bit-oriented and table-driven: it copies the first 8 bytes of the stream
-into its own code at `cs:[7cb7]` (self-modifying), then decodes with a bit reader
-(`0x7cbf` for one bit, `0x7ceb` for CL bits) and a variable-length count built from
-2-bit groups that continue while the group reads 3. Offsets are added to the output
-pointer, so it is an LZ77-family scheme, not RLE. Not yet transcribed.
+#### Mode 0xa0 — bit-packed LZ77 (`seg_0000:7b85`)
+
+**Status: specified.** `tools/io.py` implements it and reproduces the emulator's own
+decode byte for byte.
+
+The payload is an **8-byte table of offset bit-widths** followed by a bit stream. The
+game copies that table into its own code at `cs:[7cb7]` — self-modifying — and indexes
+it with a 3-bit code. Bits are read most-significant first (`0x7ceb`; `0x7ce9` is the
+same reader with a count of 3). `0x7cbf` is not a bit reader at all: it is the
+end-of-output check.
+
+Each round is an optional literal run followed by a match:
+
+```
+1 bit          1 -> a literal run follows; 0 -> go straight to the match
+  run length   2-bit groups, summed, continuing while a group reads 3, then + 1
+  literals     that many bytes, 8 bits each
+3-bit code c   table[c] is the offset's bit width; c & 3 carries the length
+  c & 3 != 0   length = (c & 3) + 1, then read table[c] bits as the offset
+  c & 3 == 0   read the offset first, then 3-bit groups summed while they read 7,
+               length = sum + 5
+copy           from out[si - offset - 1], forward, one byte at a time
+```
+
+`logo.io`'s table is `11 9 10 11 7 5 6 7`, so an offset costs 5 to 11 bits depending on
+the code — short codes for near matches.
+
+Decoding runs off the end of the stream by a few bits on the last token; the original is
+still reading its 8000-byte input buffer there, so those bits are whatever the previous
+read left. `tools/io.py` supplies zeros, which is why `logo.io`'s **final byte** differs
+from the emulator's and the other 40,631 match exactly.
+
+**Verified by:** `main.io` — all 26,384 bytes identical to `.ish/main-decoded.bin`;
+`logo.io` — 40,631 of 40,632 identical to `.ish/logo-decoded.bin`, the exception being
+that last byte. Both captured from the running game with `tools/t11-capture.py`.
+97 of the 106 asset files decode with it; the other nine are modes `0x00`, `0x02` and
+`0xcc`, which take the RLE path below or are not this format at all.
 
 The **byte-oriented RLE decoder** below serves the other modes:
 

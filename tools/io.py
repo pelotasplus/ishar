@@ -32,6 +32,97 @@ def stride_for(mode):
     return 1 if mode == 0x80 else 2 if mode == 0xA0 else 8
 
 
+class Bits:
+    """MSB-first bit reader.
+
+    The original keeps a 16-bit buffer in BX and loads it with `mov bx,es:[di]`
+    followed by `xchg bh,bl` -- a little-endian word swapped to big-endian, which
+    is just the byte sequence read most-significant-bit first.
+    """
+
+    def __init__(self, data, pos=0):
+        self.data = data
+        self.pos = pos
+        self.acc = 0
+        self.n = 0
+
+    def read(self, count):
+        v = 0
+        for _ in range(count):
+            if self.n == 0:
+                # Past the end the original is still reading its 8000-byte input
+                # buffer, which holds whatever the last read left there. The final
+                # token of a stream needs a few of those bits; zeros serve, and the
+                # byte-for-byte check against the emulator is what says so.
+                self.acc = self.data[self.pos] if self.pos < len(self.data) else 0
+                self.pos += 1
+                self.n = 8
+            v = (v << 1) | ((self.acc >> 7) & 1)
+            self.acc = (self.acc << 1) & 0xFF
+            self.n -= 1
+        return v
+
+
+def decode_lz(payload, out_len):
+    """The mode-0xa0 decoder at seg_0000:7b85.
+
+    Payload is an 8-byte table of offset bit-widths followed by the bit stream.
+    Each round is an optional literal run then a match:
+
+      1 bit   1 -> a literal run follows; 0 -> go straight to the match
+      run     length from 2-bit groups, continuing while a group reads 3, plus 1;
+              then that many 8-bit literals
+      match   a 3-bit code c; table[c] is the offset's bit width, and c & 3 is the
+              length: non-zero gives length c&3 + 1, zero means read the offset and
+              then add 3-bit groups while they read 7, plus 5
+      copy    from out[si - offset - 1], forward, byte by byte
+    """
+    table = payload[:8]
+    bits = Bits(payload, 8)
+    out = bytearray(out_len)
+    si = 0
+    while si < out_len:
+        if bits.read(1):
+            n = 0
+            while True:
+                g = bits.read(2)
+                n += g
+                if g != 3:
+                    break
+            for _ in range(n + 1):
+                if si >= out_len:
+                    break
+                out[si] = bits.read(8)
+                si += 1
+            if si >= out_len:
+                break
+        c3 = bits.read(3)
+        width = table[c3]
+        low = c3 & 3
+        if low:
+            length = low + 1
+            offset = bits.read(width)
+        else:
+            offset = bits.read(width)
+            extra = 0
+            while True:
+                g = bits.read(3)
+                extra += g
+                if g != 7:
+                    break
+            length = extra + 5
+        src = si - offset - 1
+        if src < 0:
+            raise ValueError(f"back-reference before the start at output {si}")
+        for _ in range(length):
+            if si >= out_len:
+                break
+            out[si] = out[src]
+            si += 1
+            src += 1
+    return bytes(out)
+
+
 def decode(data):
     """-> (out, info). Raises ValueError when the stream does not add up."""
     if len(data) < HEADER:
@@ -48,6 +139,11 @@ def decode(data):
         raise ValueError(f"header says {size} bytes with a {header_len}-byte header")
 
     payload = data[header_len:]
+    if mode == 0xA0:
+        out = decode_lz(payload, out_len)
+        info["consumed"] = None
+        info["left_over"] = None
+        return out, info
     stride = info["stride"]
     out = bytearray(out_len)
     src = 0
@@ -97,7 +193,8 @@ def main():
                 bad += 1
                 continue
             ok += 1
-            flag = "" if abs(info["left_over"]) <= 2 else f"  left {info['left_over']}"
+            left = info["left_over"]
+            flag = "" if left is None or abs(left) <= 2 else f"  left {left}"
             print(f"  {name:<14} mode {info['mode']:#04x} stride {info['stride']} "
                   f"-> {len(out):>6} bytes{flag}")
         print(f"\n{ok} decoded, {bad} failed")
