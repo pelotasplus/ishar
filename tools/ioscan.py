@@ -35,9 +35,17 @@ def rec(data, off):
     """Size of the sprite record at `off`, or None if it cannot be one."""
     if off + 8 > len(data):
         return None
-    _, w1, h1, _w3 = struct.unpack_from("<4H", data, off)
+    w0, w1, h1, _w3 = struct.unpack_from("<4H", data, off)
     w, h = w1 + 1, h1 + 1
     if not (2 <= w <= MAX_W and 2 <= h <= MAX_H):
+        return None
+    # Word 0 is `flags | group` in the high byte and a small constant in the low
+    # byte (16 for 742 of ~800 sprites -- the colour count). Across the whole game
+    # the flag nibble is only ever 0x00 (743), 0x10 (9) or 0x20 (50); 0x30, 0x40,
+    # 0x60 and 0xf0 appear a handful of times each and are the chain having lost
+    # sync. Rejecting those here keeps a bad chain from scoring well in the first
+    # place, rather than filtering its output afterwards.
+    if (w0 & 0xff) > 32 or (w0 >> 8) & 0xf0 not in (0x00, 0x10, 0x20):
         return None
     n = 8 + ((w + 1) // 2) * h
     if off + n > len(data):
@@ -129,12 +137,12 @@ def find_palette(data, chain_end=0):
 def render(data, off, w, h, pal):
     """A 4bpp index is `group * 16 + nibble`. The DAC is 16 sub-palettes of 16
     (measured in-game: every group starts white, black, then a ramp), and the
-    group is the high byte of header word 0 -- the values seen live were 0x0012,
-    0x0310, 0x0c14, 0x070f, 0x0b00, 0x0e10, which is a group index and a low byte.
+    group is the low nibble of header word 0's high byte -- the top nibble carries
+    flags (0x20 on 50 sprites across every group, 0x10 on 9).
     Rendering with group 0 for everything is what left the shapes right and the
     colours wrong."""
-    group = struct.unpack_from("<H", data, off)[0] >> 8
-    pbase = (group * 16) if group < 16 else 0
+    group = (struct.unpack_from("<H", data, off)[0] >> 8) & 0x0f
+    pbase = group * 16
     stride = (w + 1) // 2
     base = off + 8
     rows = []

@@ -652,6 +652,30 @@ blitter breakpoint; `captures/blit-sheet.png` renders them 8bpp (unreadable) and
 and the parchment art, all clean). `captures/assets-contact-sheet.png` is the static
 extraction over the whole game.
 
+#### Word 0 is `flags | group`, plus a colour count (T11q)
+
+```
+word 0  low byte   16 for 742 of ~800 sprites -- the colour count (4bpp)
+                   18 and 20 also occur; nothing above 32 is a sprite
+word 0  high byte  bits 0..3  palette group (0..15, see 3.9)
+                   bits 4..7  flags: 0x00 on 743 sprites, 0x20 on 50,
+                              0x10 on 9. Meaning not yet known.
+```
+
+The flag nibble is only ever `0x00`, `0x10` or `0x20` across the whole game; `0x30`,
+`0x40`, `0x60` and `0xf0` turn up a handful of times each and are the chain having lost
+sync. That makes word 0 a **validity test**, and applying it inside the chain walk stops
+a bad chain scoring well rather than filtering its output afterwards: 811 records became
+786, and rendering the 25 rejects shows scanlines and static, no art
+(`captures/t11q-dropped.png`).
+
+Reading the group as the *whole* high byte -- as this file previously did -- silently
+mis-coloured the 50 sprites carrying `0x20`, because their apparent group of 32..47 fell
+outside the 16 the DAC has.
+
+**Verified by:** the flag/group split is a census over every chain record in all 106
+decodable assets; the rejects were rendered and inspected.
+
 **How a 4bpp index becomes a colour (T11m).** The DAC is 16 sub-palettes of 16 (3.9), so
 
 ```

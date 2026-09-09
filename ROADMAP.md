@@ -343,7 +343,7 @@ Compose rewrite has to do.
       **Done when:** the bank's entries can be enumerated from its structure instead of by
       scanning for the white/black signature, and the count is confirmed.
 
-- [ ] **T11q · Reject chain records that cannot be sprites**
+- [x] **T11q · Reject chain records that cannot be sprites**
       Word 0 is `(group << 8) | 16` for 742 of ~800 extracted sprites, and the group is a
       value 0..15 because the DAC has 16 sub-palettes (FORMATS.md 3.9). Yet the chain walk
       emits records reporting groups of 32, 44, 68, 99 and 255, and low bytes other than 16 --
@@ -353,6 +353,12 @@ Compose rewrite has to do.
       difference rather than trusting the drop.
       **Done when:** `tools/ioscan.py` emits no record with group > 15, the sprite count is
       reported before and after, and a sample of the dropped records is confirmed to be noise.
+      *Met -- but the premise was wrong in an instructive way. The "impossible" groups of
+      32..47 were not junk: word 0's high byte is `flags | group`, the flag nibble being 0x20
+      on 50 sprites spanning every group. The filter as first proposed would have discarded
+      all of them. The real test is `low byte <= 32 and flag nibble in (0x00, 0x10, 0x20)`:
+      811 -> 786 records, 0 invalid remaining, rejects confirmed as static
+      (`captures/t11q-dropped.png`). FORMATS.md 3.10.*
 
 - [ ] **T11r · Prove word 0's high byte is the palette group**
       The claim behind every colour in the extraction, and it is inferred, not measured:
