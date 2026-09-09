@@ -442,6 +442,18 @@ Anything configured once at startup -- interrupt handlers, palettes, modes, devi
 -- is invisible to a trace that begins later, and the absence looks exactly like a
 feature that was never there.
 
+### Proposing work in the reply is not filing it
+
+The `main.io` disassembler was offered as "the obvious next step" in three separate
+replies and never written into `ROADMAP.md`. The user eventually asked whether it was on
+the roadmap; it was not. Everything that made it look obvious -- T27 proving main.io is
+the running script, the four dispatch tables, the decoded 0x45 handler -- was recorded,
+and the task those facts pointed at was not.
+
+The rule already in this file says future work goes in the roadmap rather than the chat.
+The failure mode it misses is *this* one: proposing something so often it feels filed.
+**Write the entry in the same step as the recommendation**, not after the user agrees.
+
 ### A regex that edits the database can eat the database
 
 Replacing one annotation with

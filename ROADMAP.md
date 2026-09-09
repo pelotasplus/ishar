@@ -707,6 +707,24 @@ Compose rewrite has to do.
       `rampart.io` keeps 24, `buste.io` 33, `dragon.io` 13 and `logo.io` 4. `gerdep.io` drops
       to 0, correctly -- it is the palette bank's companion. Total 920 -> 803 sprites.*
 
+- [ ] **T30 · Disassemble `main.io`**
+      Everything needed is in place and none of it needs the emulator: `main.io` is the
+      script the game runs (T27), the four dispatch tables are read out of the image
+      (FORMATS.md 6), `vm_run`'s encoding is known -- opcode byte, word-scaled table at
+      image 0x24, operands inline -- and one opcode is fully decoded already
+      (`vm_op_load_asset`, 0x45: word id then a NUL-terminated filename).
+      This is the highest-value offline task on the board. A listing of `main.io` should show
+      which assets are loaded together with which scene, which is the sprite-to-palette
+      pairing T11m2 needs; how maps bind to assets (T11g2/T11g3); and the first real look at
+      event and quest structure (T23).
+      *Method: a table-driven disassembler. Operand widths come from each handler -- how many
+      `lodsb`/`lodsw` it executes before returning, which `tools/vmops.py` already reports as
+      `imm`. Start with the opcodes that actually appear in `main.io`, not all 231; unknown
+      opcodes stop the listing, and where it stops tells you which handler to read next.*
+      **Done when:** `tools/vmdis.py` prints a listing of `main.io` in which over 80% of the
+      bytes are decoded as instructions rather than skipped, and FORMATS.md documents at
+      least ten opcodes' operand layouts.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.
@@ -770,6 +788,9 @@ Compose rewrite has to do.
       the code reads them as assets.
 
 - [ ] **T11e · Decode main.io's catalogue and answer the language question**
+      *Reframed by T27: `main.io` is not a catalogue table, it is a script, and the "entries"
+      are operands of opcode 0x45. So this is not a record-format task any more -- it is
+      answered by reading the listing T30 produces.*
       Assets are fetched by numeric id through an index in `main.io` (FORMATS §3.4), so
       the id→file mapping lives in its data, not in the code. The per-language files
       (`textin`/`textind`/`textine`/`textini`, `sos`/`sosd`/`sose`/`sosi`,
