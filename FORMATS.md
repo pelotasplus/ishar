@@ -966,3 +966,35 @@ container path (section 3), and executed in place.
 **Verified by:** the handler read from `ishar-listing.txt` against the byte pattern in
 decoded `main.io`, with the asset id matching the catalogue id independently established
 in 3.5.
+
+#### The code that applies the palette base (T11r2)
+
+`sprite_base_from_word3` (`seg_0e97:0b4c` for mode `0x10`, `seg_0e97:0aca` for `0x12`):
+
+```
+mov al, [si+6]      ; word 3's LOW BYTE
+shr bx, 1 / add si, bx
+add si, 8           ; past the header
+mov bh, al          ; BH = palette base
+...
+lodsb / mov ah, al
+shr al,1 x4         ; high nibble
+add al, bh          ; + base
+and ah, 0fh         ; low nibble
+add ah, bh          ; + base
+stosw               ; two 8-bit pixels
+```
+
+So the base is **word 3's low byte, added directly** -- and that byte is already
+`group * 16` (`buste.io` carries `0x60` = group 6). The two readings agree; the machine
+uses the byte, and `group = byte >> 4` is the human view.
+
+**Word 0's low byte is a pixel-format selector, not a colour count.** `sprite_mode_dispatch`
+(`seg_0e97:0a30`) switches on it over `0x10, 0x12, 0x14, 0x16, 0`. Mode `0x10` -- which
+742 of ~800 sprites use -- and mode `0x12` both take the base from word 3 with an 8-byte
+header. Mode `0x00` (`seg_0e97:0b40`) sets the base to **zero** and uses a **6-byte**
+header instead.
+
+**Verified by:** the instructions themselves. `add al, bh` with `bh` loaded from `[si+6]`
+is a stronger statement than a pixel comparison, and it independently confirms T11r, which
+was established by rendering alone.

@@ -599,7 +599,7 @@ Compose rewrite has to do.
       **Done when:** at least eight cell values are identified in FINDINGS.md, each with the
       observation that established it.
 
-- [ ] **T11r2 · Find the code that applies the palette group**
+- [x] **T11r2 · Find the code that applies the palette group**
       Word 3 holds the group (FORMATS.md 3.10, T11r) but **no code site is known**: `[si+6]`
       does not appear anywhere in `seg_0e97`, so the blitter never reads it and the group is
       applied by whoever sets up the draw. Until that routine is found the finding lives in
@@ -611,6 +611,14 @@ Compose rewrite has to do.
       pointer.*
       **Done when:** the routine is named in `ishar.chani` and one sprite's drawn pixels match
       `(word3 >> 4) * 16 + nibble` against the framebuffer.
+      *Met, by something better than the pixel comparison the criterion asked for: the
+      instructions say it outright. `sprite_base_from_word3` (`seg_0e97:0b4c` for mode 0x10,
+      `:0aca` for 0x12) does `mov al,[si+6]` then `mov bh,al`, and `expand_4bpp`
+      (`seg_0e97:0ad1`) adds BH to every nibble. So the base is **word 3's low byte added
+      directly**, and that byte is already group*16. All five routines are named in
+      `ishar.chani`. It also corrects a second thing: word 0's low byte is a **pixel-format
+      selector** (`sprite_mode_dispatch`, `seg_0e97:0a30`, switching on 0x10/0x12/0x14/0x16/0),
+      not a colour count -- and mode 0 uses a **6-byte header** with base zero. FORMATS.md 3.10.*
 
 - [x] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in
@@ -660,7 +668,7 @@ Compose rewrite has to do.
       framebuffer writers was computed as `cs*16 + ip` and is `0x17d0` too high -- see
       T11p2.*
 
-- [ ] **T11p2 · Recheck T11p's framebuffer writer addresses**
+- [x] **T11p2 · Recheck T11p's framebuffer writer addresses**
       `tools/t11p-render.py` computed the writer's address as `cs*16 + ip`, but the stub
       already reports `ip` as linear (T27b), so every address it printed is `0x17d0` too
       high. The sites recorded in FINDINGS as `seg_0000:5534`, `:817b`, `:82e5`, `:84af`,
@@ -669,6 +677,14 @@ Compose rewrite has to do.
       *The tool is fixed; just re-run it while walking.*
       **Done when:** the corrected writer addresses are in FINDINGS.md and the stale ones are
       struck out.
+      *Met. Corrected: `ip - 0x17d0` gives `seg_0000:3d64`, `seg_0000:93c4`, `seg_0000:7153`
+      and `seg_0e97:0192`. Only the last writes memory -- it is **`rep movsw`, the block copy
+      that puts a finished frame into VGA memory**, now named `blit_to_screen`. The other
+      three are a wait loop, a PIC end-of-interrupt and a jmp: wherever the CPU happened to
+      be when the stop was reported, exactly as the "any pause reaches the GDB client" scar
+      warns. So the old list was not merely off by 0x17d0, it was mostly artefact.
+      The game renders offscreen and blits, matching the destination far pointer at
+      `ss:[1dbf]` the sprite path already used.*
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

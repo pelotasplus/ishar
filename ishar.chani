@@ -877,7 +877,9 @@ attr[seg_0e97:098b]: type = code
 attr[seg_0e97:0a4b]: type = code
 attr[seg_0e97:0a70]: type = code
 attr[seg_0e97:0a74]: type = code
-attr[seg_0e97:0aca]: type = code
+attr[seg_0e97:0aca]: type = code; name = sprite_base_from_word3; comment = [[[
+    The mode 0x12 path: `mov al,[si+6]` takes **word 3's low byte** and `mov bh,al` at 0ad4 makes it the palette base added to every nibble. This is the code site for T11r -- the group really is in word 3, and the low byte is already group*16 (buste.io carries 0x60 = group 6 * 16).
+]]]
 attr[seg_0e97:0b01]: type = code
 attr[seg_0e97:0b78]: type = code
 attr[seg_0e97:0bbc]: type = code
@@ -1457,5 +1459,44 @@ attr[seg_0000:2dbd]: type = code; name = vm_op_load_asset; comment = [[[
 ]]]
 attr[seg_0000:78f9]: type = code; name = load_asset_by_name; comment = [[[
     Called by vm_op_load_asset with DS:DX pointing at a NUL-terminated asset filename.
+]]]
+
+// The actual framebuffer write, found by T11p2 after the IP bug was fixed.
+attr[seg_0e97:0192]: type = code; name = blit_to_screen; comment = [[[
+    `rep movsw` -- the block copy that puts a finished frame into VGA memory. A write
+    breakpoint on a viewport pixel lands here, and this is the only one of the four
+    reported sites that writes memory at all; the others are a wait loop (seg_0000:3d64),
+    a PIC end-of-interrupt (seg_0000:93c4) and a jmp, i.e. wherever the CPU happened to be
+    when the stop was reported.
+    The game therefore renders offscreen and blits, which matches the far pointer the
+    sprite path takes its destination from (ss:[1dbf]).
+]]]
+attr[seg_0000:3d64]: type = code; name = wait_loop; comment = [[[
+    `cmp al, ss:[0c9a] / ja` -- a spin the CPU sits in when idle, which is why the status
+    line so often reports 017d:3d64 and why it turns up in stop reports that have nothing
+    to do with it.
+]]]
+attr[seg_0e97:0a30]: type = code; name = sprite_mode_dispatch; comment = [[[
+    Switches on the sprite's word 0 low byte -- 0x10, 0x12, 0x14, 0x16 or 0 -- read as `mov al,[si]` just above. It selects the pixel-format variant, which is what that byte is for; it is not a colour count.
+]]]
+attr[seg_0e97:0ad1]: type = code; name = expand_4bpp; comment = [[[
+    Expands 4bpp to 8bpp two pixels at a time: `lodsb`, high nibble via four `shr`, low nibble via `and 0fh`, `add` the palette base in BH to each, `stosw`. This is where `vga_index = base + nibble` actually happens.
+]]]
+attr[seg_0e97:0a2c]: type = code; name = spr_0a2c
+attr[seg_0e97:0a37]: type = code; name = spr_0a37
+attr[seg_0e97:0a3e]: type = code; name = spr_0a3e
+attr[seg_0e97:0a42]: type = code; name = spr_0a42
+attr[seg_0e97:0a46]: type = code; name = spr_0a46
+attr[seg_0e97:0b4c]: type = code; name = sprite_base_from_word3_m10; comment = [[[
+    The mode 0x10 path, and the one nearly every sprite takes: identical to sprite_base_from_word3 -- `mov al,[si+6]` then `mov bh,al` -- with an 8-byte header.
+]]]
+attr[seg_0e97:0aa0]: type = code; name = spr_0aa0
+attr[seg_0e97:0b4c]: type = code; name = sprite_base_from_word3_m10; comment = [[[
+    The mode 0x10 path, and the one nearly every sprite takes: identical to sprite_base_from_word3 -- `mov al,[si+6]` then `mov bh,al` -- with an 8-byte header.
+]]]
+attr[seg_0e97:0a84]: type = code; name = spr_mode_0a84
+attr[seg_0e97:0a5b]: type = code; name = spr_mode_0a5b
+attr[seg_0e97:0b40]: type = code; name = sprite_base_zero; comment = [[[
+    The mode 0 path: `mov bh, 0`, so the base is zero, and `add si,6` -- a **6-byte** header rather than 8.
 ]]]
 end
