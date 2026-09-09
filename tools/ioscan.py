@@ -97,13 +97,22 @@ def walk(data, start):
     return out
 
 
+# Sprites smaller than this are dropped from the OUTPUT -- never from the walk
+# itself, because the chain has to step over them to stay in sync. main.io is a
+# script (T27) and its bytecode reads as 36 slivers of 80px plus one real sprite,
+# the mouse cursor at 256px. 150 is the least aggressive cut that removes the
+# slivers while keeping every genuine small sprite: rampart.io stays at 24 wall
+# tiles, dragon.io at 13, logo.io at 4 (T11s).
+MIN_AREA = 150
+
+
 def extract(data):
     """The chain that explains the most of the file wins."""
     best = chains(data)
     starts = sorted(best, key=lambda o: (-best[o], o))
     if not starts or best[starts[0]] < 2:
         return []
-    return walk(data, starts[0])
+    return [s for s in walk(data, starts[0]) if s[1] * s[2] >= MIN_AREA]
 
 
 def palette_score(data, off, floor=0):

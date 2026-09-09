@@ -686,7 +686,7 @@ Compose rewrite has to do.
       The game renders offscreen and blits, matching the destination far pointer at
       `ss:[1dbf]` the sprite path already used.*
 
-- [ ] **T11s · The chain walker invents sprites in script files**
+- [x] **T11s · The chain walker invents sprites in script files**
       `main.io` is a script (T27), yet `tools/ioscan.py` reports 37 sprites in it. Rendered
       (`captures/sheets/main.png`) all but one are tiny slivers a few pixels tall -- bytecode
       being read as headers. The exception is a real find: the last is the **orange mouse
@@ -698,6 +698,14 @@ Compose rewrite has to do.
       check it against `rampart.io` (must keep 24) and `main.io` (should keep about 1).*
       **Done when:** `main.io` yields no sliver sprites while `rampart.io`, `buste.io` and
       `dragon.io` keep their current counts.
+      *Met with a per-sprite minimum area of 150 px, applied to the walk's **output** rather
+      than inside it -- the chain still has to step over the slivers to stay in sync.
+      Chain coverage looked like the natural discriminator (main 9% against buste 95%) but is
+      a continuum: `objet` sits at 13% with 21 real sprites, so a coverage cut would have
+      destroyed them. Area separates cleanly. 150 is the least aggressive value that works:
+      `main.io` 37 -> 1, and that survivor is the 16x16 mouse cursor at offset 25760, while
+      `rampart.io` keeps 24, `buste.io` 33, `dragon.io` 13 and `logo.io` 4. `gerdep.io` drops
+      to 0, correctly -- it is the palette bank's companion. Total 920 -> 803 sprites.*
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

@@ -988,6 +988,21 @@ Teaching `tools/ioscan.py` the table took the extraction from **786 sprites to 9
 sprites were ones that should not have had them: `geren.io` (the palette bank),
 `message*.io` (text), `map.io` (a picture, not a chain), `blancpc.io` (raw data).
 
+#### Reading a chain out of a file that is not sprites (T11s)
+
+A chain walk finds sprite headers wherever the bytes happen to look like one, so a file
+that is *not* a sprite bank still yields a chain. `main.io` is a script (section 7) and
+produced 37 "sprites", 36 of them slivers of about 80 pixels -- bytecode read as headers.
+
+Chain coverage looks like the discriminator and is not: `main.io` explains 9% of its file
+against `buste.io`'s 95%, but `objet.io` sits at 13% with 21 genuine sprites, so cutting
+on coverage destroys real data. **Area separates cleanly.** A minimum of 150 pixels
+removes every sliver while keeping the smallest genuine sprites, and it must be applied to
+the walk's *output* -- the chain still has to step across the slivers to stay in sync.
+
+The 37th sprite in `main.io` is real and worth keeping: a **16x16 mouse cursor** at offset
+25760.
+
 #### The code that applies the palette base (T11r2)
 
 `sprite_base_from_word3` (`seg_0e97:0b4c` for mode `0x10`, `seg_0e97:0aca` for `0x12`):
