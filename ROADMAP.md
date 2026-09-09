@@ -342,13 +342,18 @@ Compose rewrite has to do.
       minutes (killed) to **2.7s**, picking the same offsets for the three validated files.
       **Done when:** `tools/ioscan.py --all` completes in under 60s. *Met.*
 
-- [ ] **T11m4 · The palette bank's own record structure**
+- [x] **T11m4 · The palette bank's own record structure**
       `geren.io`'s 12 palettes sit at 6684, 7408, 7456, 9180, 9904, 9952, 10724, 11448,
       11496, 12172, 12220, 12268 -- recurring `+724` and `+48` steps, so the bank has a
       layout rather than being a loose pile, and `+48` pairs may be detector artefacts
       rather than distinct palettes.
       **Done when:** the bank's entries can be enumerated from its structure instead of by
       scanning for the white/black signature, and the count is confirmed.
+      *Met. A palette record is `fe ff 00 00` + 768 bytes = 772, so `fe ff 00 00`
+      enumerates them structurally (FORMATS.md 3.9). Count confirmed: **7 in `geren.io`,
+      not 12** -- the five extras each sat 48 bytes, one palette group, before a real one.
+      `tools/ioscan.py` now uses the marker and picks the verified 6684 where the old
+      heuristic picked 12268.*
 
 - [x] **T11q · Reject chain records that cannot be sprites**
       Word 0 is `(group << 8) | 16` for 742 of ~800 extracted sprites, and the group is a

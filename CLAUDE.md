@@ -458,6 +458,19 @@ Edit the database **line by line**, never with a multi-line regex, and after any
 check `grep -c '^attr\[' ishar.chani` against what it was. A count that falls when you
 meant to add is the whole check.
 
+### A structural marker still needs corroboration
+
+Palette records turned out to start with `fe ff 00 00`, which looked like the end of the
+guessing: a real header, not a heuristic. Searching for it across the game gives **80
+hits, of which 17 are palettes** -- the sequence occurs freely inside 4bpp pixel data.
+Used on its own it would have given 20 assets a "palette" made of picture bytes, and the
+only symptom would have been colours that look wrong, which is exactly the symptom the
+marker was introduced to fix.
+
+Two independent signals agreeing is the check: the marker *and* the white/black group
+signature. When a structural discovery replaces a heuristic, run both over the whole
+corpus and count the disagreements before deleting the heuristic.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

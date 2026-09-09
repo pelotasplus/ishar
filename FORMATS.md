@@ -794,3 +794,44 @@ bytes -- no-ops.
 **Verified by:** all four tables read from the static image and cross-checked against live
 memory; handlers classified mechanically by `tools/vmops.py`, and the control-flow ones
 read individually in `ishar-listing.txt`.
+
+#### Palette records carry a 4-byte header (T11m4)
+
+A palette in a file is not loose bytes: it is a record.
+
+```
+fe ff 00 00        4-byte marker
+<768 bytes>        256 entries of 8-bit R,G,B
+```
+
+so a bank record is **772 bytes**. Searching for `fe ff 00 00` enumerates palettes from
+the file's structure rather than from its content -- **but the marker alone is not
+sufficient**: the sequence occurs freely inside pixel data, and of 80 raw hits across the
+game only **17 are palettes**. Each candidate has to be confirmed against the independent
+white/black group signature. Taking the marker on its own would have handed 20 assets a
+palette made of picture bytes, with nothing to show it was wrong except the colours. That recovers
+exactly the offsets established independently against the live DAC -- `geren.io` 6684,
+`fond.io` 12108, `ftemple.io` 16244, `frise.io` 34700, `fcave.io` 1310 -- and it settles
+the count: **`geren.io` holds 7 palettes, not the 12 a white/black signature scan
+reported.** The five extras each sat exactly 48 bytes -- one palette group -- before a
+real one, which is the signature repeating rather than a second palette.
+
+Strides between records are a uniform 772 apart from one 1,724 gap in `geren.io`, so
+something else is stored between two of the records there.
+
+| asset | palettes |
+|---|---|
+| `geren.io` | 7 (6684, 7456, 9180, 9952, 10724, 11496, 12268) |
+| total | **17 palettes across 9 assets** |
+| `gerdep.io` | 3 |
+| `itaverne.io` | 2 |
+| `fond.io`, `fcave.io`, `fcave2.io`, `ftemple.io`, `fville.io`, `frise.io` | 1 each |
+
+**`logo.io` is the exception**: its palette at 992 is verified byte-for-byte against the
+framebuffer yet carries no marker, while an identical copy at 20172 does. That fits the
+rest of what makes `logo.io` odd -- it is the 8bpp asset (3.10) and does not go through
+the 4bpp path.
+
+**Verified by:** the marker scan reproduces every palette offset previously established
+by matching the emulator's DAC, and `tools/ioscan.py` now uses it -- which also corrected
+`geren.io`, where the old heuristic picked 12268 over the verified 6684.

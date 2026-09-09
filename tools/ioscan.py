@@ -101,6 +101,35 @@ def palette_score(data, off, floor=0):
     return s
 
 
+PAL_MARK = b"\xfe\xff\x00\x00"
+
+
+def palettes(data):
+    """Every palette in the file, found by its 4-byte record header (T11m4).
+
+    A bank record is `fe ff 00 00` followed by 768 bytes of 8-bit RGB, so palettes
+    can be enumerated from the structure instead of guessed at by signature. This
+    recovers exactly the offsets established independently against the live DAC --
+    geren.io 6684, fond.io 12108, ftemple.io 16244, frise.io 34700 -- and it drops
+    the artefacts the signature scan produced: geren.io has 7 palettes, not the 12
+    a white/black scan reported, the extra five each sitting 48 bytes (one group)
+    before a real one.
+
+    The marker alone is NOT sufficient: `fe ff 00 00` occurs freely inside pixel
+    data, and of 80 raw hits across the game only 17 are palettes. Each candidate is
+    therefore confirmed against the independent white/black group signature, which
+    is what makes this an enumerator rather than another guess.
+    """
+    out, pos = [], data.find(PAL_MARK)
+    while pos >= 0:
+        o = pos + 4
+        if o + 768 <= len(data) and data[o] < 8 and data[o + 1] < 8 and data[o + 2] < 8 \
+                and palette_score(data, o) >= 20:
+            out.append(o)
+        pos = data.find(PAL_MARK, pos + 1)
+    return out
+
+
 def find_palette(data, chain_end=0):
     """Files carry more than one palette -- fond.io has a valid block at 556 and
     another at 12108, and the live one was 12108. The one in use sits just past
@@ -109,8 +138,14 @@ def find_palette(data, chain_end=0):
     # scores just as well -- fond.io came back 48 early and geren.io 144 early.
     # Entry 0 of a real palette is black (index 0 is the transparent colour),
     # while a shifted candidate starts on some group's white, which pins it.
-    # Entry 0 is exactly black in every palette established so far, so bytes.find
-    # jumps between candidates instead of testing all ~50k offsets per file.
+    marked = palettes(data)
+    if marked:
+        after = [o for o in marked if o >= chain_end]
+        off = (after or marked)[0]
+        c = data[off:off + 768]
+        return off, [tuple(c[i:i + 3]) for i in range(0, 768, 3)]
+    # Fallback for files whose palette carries no record header -- logo.io keeps one
+    # at 992 that is verified against the framebuffer but unmarked.
     cands = []
     limit = len(data) - 768
     pos = data.find(b"\x00\x00\x00")
@@ -122,6 +157,11 @@ def find_palette(data, chain_end=0):
     # No weak fallback: a file with no palette of its own borrows one from the
     # bank, which is what the game does. Guessing at the best-scoring block in
     # such a file is what produced the arbitrary colours.
+    # Nothing that had a marker reaches here. Lowering this bar to catch logo.io's
+    # unmarked palette (992, verified against the framebuffer, but only 16/30) was
+    # tried and made things worse: 71 files matched instead of 9, mostly noise.
+    # logo.io is the 8bpp asset ioscan cannot render correctly anyway (3.10), so it
+    # falls back to the bank and its real palette is documented in 3.9.
     if not cands:
         return None
 
