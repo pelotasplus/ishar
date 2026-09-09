@@ -1034,3 +1034,43 @@ header instead.
 **Verified by:** the instructions themselves. `add al, bh` with `bh` loaded from `[si+6]`
 is a stronger statement than a pixel comparison, and it independently confirms T11r, which
 was established by rendering alone.
+
+### 7.1 Disassembling a script (T30)
+
+`tools/vmdis.py` decodes a script with a table built from the handlers themselves: the
+statement table at image `0x24` gives each opcode's routine, and the routine's own
+`lodsb`/`lodsw` sequence gives its operand widths. Nothing is guessed.
+
+**The check that matters is not the percentage decoded.** 219 of 231 byte values are valid
+table entries, so a linear walk "decodes" noise as readily as code and reports 98%
+regardless. The real check is the live program counter: the interpreter was caught at
+`SI = 3270, 3271, 3274` and `5198` (section 7), and disassembling from 3270 produces
+instruction boundaries at **exactly those offsets**. The operand lengths are right because
+the CPU agrees with them.
+
+`main.io` starts with data, not code -- disassembly from offset 0 is noise. Execution runs
+in the region the live samples came from.
+
+**What the listing shows.** 101 clean `vm_op_load_asset` instructions, each an asset id and
+a filename, grouped in runs:
+
+| offset | what loads together |
+|---|---|
+| 1540 | `presen`, `preson`, `presti` -- the presentation screens |
+| 2812 | `geren` (**the palette bank**), `affobj`, `encont`, `dplt`, `message*`, `sos*` |
+| 6115 | `rplaine`, `inville`, `temple`, `telep`, `mcave`, `ville`, `pabo` -- places |
+| 8508 | `orc`, `bormin`, `kiriela`, `loup`, `azal`, `wardog`, `barbare`, `wiz1`, `naim`, `morgu`, `dealer`, `sorcier`, `predator`, `momo` |
+| 10253 | `spider`, `geant`, `skelet`, `spectre`, `dragon`, `medus`, `goul`, `darkm`, `darkwiz`, `gaz`, `zombi`, `dwarrior`, `knight` |
+| 11386 | `village`, `incave`, `intmais`, `stage`, `taverne`, `marchand`, `saub`, `buste` |
+| 12708 | `boishar`, `dead`, `theend` -- the endgame |
+
+The palette bank loading early with the common set fits it being global rather than
+per-scene (3.9).
+
+**Known limitation.** The walk drifts by a byte in places -- `temple.IO` comes out as
+`emple.IO`, and a handful of "loads" carry nonsense names -- so at least one opcode's
+operand length is still wrong. Names that do not match `[A-Za-z0-9_]{2,11}\.(IO|FIC)` are
+where it is out of step, which makes the drift self-locating.
+
+**Verified by:** instruction boundaries reproducing four independently captured live
+program counters, and 101 decoded filenames matching real assets on disk.
