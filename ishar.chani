@@ -347,158 +347,6 @@ attr[seg_0000:3a47]: type = code
 attr[seg_0000:3a4a]: type = code
 attr[seg_0000:3a52]: type = code
 attr[seg_0000:3a7a]: type = code
-attr[seg_0000:3a84]: type = code
-attr[seg_0000:3a9b]: type = code
-attr[seg_0000:3ad1]: type = code
-attr[seg_0000:3adb]: type = code
-attr[seg_0000:3aec]: type = code
-attr[seg_0000:3afa]: type = code
-attr[seg_0000:3b2c]: type = code
-attr[seg_0000:3b52]: type = code
-attr[seg_0000:3b6c]: type = code
-attr[seg_0000:3b6d]: type = code
-attr[seg_0000:3b86]: type = code
-attr[seg_0000:3c05]: type = code
-attr[seg_0000:3c76]: type = code
-attr[seg_0000:3c97]: type = code
-attr[seg_0000:3ceb]: type = code
-attr[seg_0000:3cfe]: type = code
-attr[seg_0000:3d3a]: type = code
-attr[seg_0000:3d3c]: type = code
-attr[seg_0000:3e3c]: type = code
-attr[seg_0000:3e55]: type = code
-attr[seg_0000:3e89]: type = code
-attr[seg_0000:3ec5]: type = code
-attr[seg_0000:3edd]: type = code
-attr[seg_0000:3f20]: type = code
-attr[seg_0000:3f47]: type = code
-attr[seg_0000:3f4e]: type = code
-attr[seg_0000:4028]: type = code
-attr[seg_0000:40a5]: type = code
-attr[seg_0000:40cf]: type = code
-attr[seg_0000:40d9]: type = code
-attr[seg_0000:410f]: type = code
-attr[seg_0000:4115]: type = code
-attr[seg_0000:412d]: type = code
-attr[seg_0000:4170]: type = code
-attr[seg_0000:4197]: type = code
-attr[seg_0000:41ab]: type = code
-attr[seg_0000:41fe]: type = code
-attr[seg_0000:4256]: type = code
-attr[seg_0000:4278]: type = code
-attr[seg_0000:42e5]: type = code
-attr[seg_0000:42f5]: type = code
-attr[seg_0000:431f]: type = code
-attr[seg_0000:4358]: type = code
-attr[seg_0000:43fb]: type = code
-attr[seg_0000:4453]: type = code
-attr[seg_0000:44d3]: type = code
-attr[seg_0000:4535]: type = code
-attr[seg_0000:4557]: type = code
-attr[seg_0000:455a]: type = code
-attr[seg_0000:4665]: type = code
-attr[seg_0000:4723]: type = code
-attr[seg_0000:4746]: type = code
-attr[seg_0000:478d]: type = code
-attr[seg_0000:48b5]: type = code
-attr[seg_0000:493f]: type = code
-attr[seg_0000:498d]: type = code
-attr[seg_0000:4a48]: type = code
-attr[seg_0000:4b08]: type = code
-attr[seg_0000:4b8f]: type = code
-attr[seg_0000:4c4b]: type = code
-attr[seg_0000:4d4e]: type = code
-attr[seg_0000:4ebf]: type = code
-attr[seg_0000:4f49]: type = code
-attr[seg_0000:4f5f]: type = code
-attr[seg_0000:510f]: type = code
-attr[seg_0000:51af]: type = code
-attr[seg_0000:51fe]: type = code
-attr[seg_0000:5452]: type = code
-attr[seg_0000:54bb]: type = code
-attr[seg_0000:54c3]: type = code
-attr[seg_0000:54e8]: type = code
-attr[seg_0000:5518]: type = code
-attr[seg_0000:5548]: type = code
-attr[seg_0000:5559]: type = code
-attr[seg_0000:555a]: type = code
-attr[seg_0000:5560]: type = code
-attr[seg_0000:5571]: type = code
-attr[seg_0000:5589]: type = code
-attr[seg_0000:563a]: type = code
-attr[seg_0000:5651]: type = code
-attr[seg_0000:565d]: type = code
-attr[seg_0000:5663]: type = code
-attr[seg_0000:567e]: type = code
-attr[seg_0000:5685]: type = code
-attr[seg_0000:56ce]: type = code
-attr[seg_0000:570b]: type = code
-attr[seg_0000:5713]: type = code
-attr[seg_0000:5738]: type = code
-attr[seg_0000:573e]: type = code
-attr[seg_0000:5758]: type = code
-attr[seg_0000:5768]: type = code
-attr[seg_0000:57b0]: type = code
-attr[seg_0000:57c1]: type = code
-attr[seg_0000:57d9]: type = code
-attr[seg_0000:5854]: type = code
-attr[seg_0000:588a]: type = code
-attr[seg_0000:58a1]: type = code
-attr[seg_0000:58ad]: type = code
-attr[seg_0000:58b3]: type = code
-attr[seg_0000:58ce]: type = code
-attr[seg_0000:58d5]: type = code
-attr[seg_0000:591e]: type = code
-attr[seg_0000:593e]: type = code
-attr[seg_0000:5942]: type = code
-attr[seg_0000:59a8]: type = code
-attr[seg_0000:59b8]: type = code
-attr[seg_0000:5a3e]: type = code
-attr[seg_0000:5b92]: type = code
-attr[seg_0000:5c08]: type = code
-attr[seg_0000:5c57]: type = code
-attr[seg_0000:5cb1]: type = code
-attr[seg_0000:5ea6]: type = code
-attr[seg_0000:5ea7]: type = code
-attr[seg_0000:5f01]: type = code
-attr[seg_0000:5f51]: type = code
-attr[seg_0000:5fc9]: type = code
-attr[seg_0000:604b]: type = code
-attr[seg_0000:6067]: type = code
-attr[seg_0000:606b]: type = code
-attr[seg_0000:60f6]: type = code
-attr[seg_0000:6129]: type = code
-attr[seg_0000:612f]: type = code
-attr[seg_0000:6158]: type = code
-attr[seg_0000:61a1]: type = code
-attr[seg_0000:61b8]: type = code
-attr[seg_0000:6219]: type = code
-attr[seg_0000:629b]: type = code
-attr[seg_0000:62b7]: type = code
-attr[seg_0000:62bb]: type = code
-attr[seg_0000:6379]: type = code
-attr[seg_0000:637f]: type = code
-attr[seg_0000:63a8]: type = code
-attr[seg_0000:63bd]: type = code
-attr[seg_0000:6408]: type = code
-attr[seg_0000:640c]: type = code
-attr[seg_0000:6478]: type = code
-attr[seg_0000:64bd]: type = code
-attr[seg_0000:6565]: type = code
-attr[seg_0000:660d]: type = code
-attr[seg_0000:665c]: type = code
-attr[seg_0000:6664]: type = code
-attr[seg_0000:66c8]: type = code
-attr[seg_0000:670d]: type = code
-attr[seg_0000:674e]: type = code
-attr[seg_0000:6756]: type = code
-attr[seg_0000:6759]: type = code
-attr[seg_0000:675b]: type = code
-attr[seg_0000:6765]: type = code
-attr[seg_0000:6768]: type = code
-attr[seg_0000:67b5]: type = code; name = vm_prim_1arg; comment = [[[
-    Engine primitive taking one argument.
-]]]
 attr[seg_0000:6867]: type = code
 attr[seg_0000:6975]: type = code
 attr[seg_0000:699e]: type = code
@@ -1428,5 +1276,16 @@ attr[seg_0000:3142]: type = code; name = vm_stmt_e5; comment = [[[
 ]]]
 attr[seg_0000:58e5]: type = code; name = vm_stmt_e6; comment = [[[
     Opcode 230 (0xe6) of vm_statement_table. arity 0.
+]]]
+attr[seg_0000:3a84]: type = code; name = vm_op_draw_menu; comment = [[[
+    Opcode 0x4b of vm_statement_table. Arity 1, writes ss:[0c0e] as a byte, and calls the
+    engine helper at 35cf. Attributed by measurement (T29c): it runs 30-46 times whenever
+    the character ACTION menu is drawn and never in the idle baseline -- confirmed across
+    five different triggers (F1, F2, F6, menu navigation, letter keys), each producing the
+    same pair of counts. The first VM primitive tied to a visible game behaviour.
+]]]
+attr[seg_0000:35cf]: type = code; name = menu_draw_item; comment = [[[
+    Engine helper called by vm_op_draw_menu, once per menu entry -- 30 calls per draw,
+    matching the primitive exactly.
 ]]]
 end

@@ -488,7 +488,7 @@ Compose rewrite has to do.
       per second, so the game loop is script-driven. Domain verbs fire once per event and a
       walk diff cannot see them. See T29c.*
 
-- [ ] **T29c · Attribute primitives to combat, magic and the party**
+- [!] **T29c · Attribute primitives to combat, magic and the party**
       T29 named every statement handler's signature but not its meaning. Domain verbs fire
       once per event, so the walk diff that worked for the language core cannot see them.
       *Method: `tools/t11p-diff.py` takes a call-count snapshot, runs an action, and diffs --
@@ -498,6 +498,26 @@ Compose rewrite has to do.
       first target: it runs only while walking and is not an operand-skip helper.*
       **Done when:** at least ten primitives are attributed to combat, magic, inventory or
       the party, each with the action whose diff revealed it, and named in `ishar.chani`.
+      *Blocked on input, not on method. One primitive attributed -- `vm_op_draw_menu`
+      (opcode 0x4b, `seg_0000:3a84`) with its helper `menu_draw_item` -- confirmed across
+      five triggers. The blocker: **the game uses no mouse the harness can reach.** INT 33h
+      records 0 calls in 20s and the COM/PS-2 IRQ vectors are untouched BIOS stubs; only
+      INT 09h and INT 08h are hooked. F1 opens the ACTION menu (FINDINGS 6.4) but its
+      entries cannot be selected by arrow keys, Return, Escape or first letters, so combat,
+      magic and inventory stay unreachable. `tools/t29c-action.py` and its idle baseline
+      work correctly -- see T29d.*
+
+- [ ] **T29d · Find how Ishar reads the mouse**
+      T29c is blocked because the game hooks no mouse interrupt: INT 33h is never called and
+      INT 0Bh/0Ch/74h are untouched BIOS stubs (FINDINGS.md 6.4). Yet `souris.io` -- French
+      for mouse -- is one of the assets, and the ACTION menu cannot be worked from the
+      keyboard, so a pointer exists.
+      *Method: it must be polled rather than interrupt-driven. Break on IO reads of the COM1
+      data/status ports (0x3f8-0x3fd) and the PS/2 controller (0x60/0x64), or search the
+      listing for those port numbers. The timer ISR at `seg_0000:93a6` is the likely poller
+      -- it is hot in every diff.*
+      **Done when:** the routine that reads mouse state is named in `ishar.chani`, and the
+      harness can move the pointer and click well enough to select an ACTION menu entry.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

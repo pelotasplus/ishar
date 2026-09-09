@@ -529,3 +529,40 @@ across the specific action, and the attack UI is mouse-driven (T29c).
 **Evidence:** signatures generated mechanically from the listing by the same pass that
 wrote the annotations; the walking attribution is `.ish/t11p-walk.json` cross-referenced
 against the table read from the static image.
+
+### 6.4 Attributing opcodes to actions, and why input is the blocker (T29c)
+
+**The game does not use the BIOS mouse.** A breakpoint on the INT 33h handler records
+**zero calls in 20 seconds** of the game running, and the mouse IRQ vectors are all still
+the BIOS stub -- INT 0Bh (COM2), INT 0Ch (COM1) and INT 74h (PS/2) point at `f000:00xx`.
+The only vectors the game hooks are **INT 09h** (keyboard, `017d:1072`) and **INT 08h**
+(timer). So `send_mouse_move` / `send_mouse_button` reach nothing, and any UI that needs
+pointer selection cannot be driven from the harness yet.
+
+**F1 opens character 1's ACTION menu**, which is the party verb list:
+
+```
+GIVE ITEM     PICK LOCK
+GIVE MONEY    ORIENTATION
+KILL          FIRST AID
+DISMISS       MAP
+RECRUIT       EXIT
+```
+
+`captures/t29c-f1.png`. Menu *entries* could not be selected: arrow keys, Return, Escape
+and first-letter keys (`f` for FIRST AID, `m` for MAP) all redraw the menu and change
+nothing, so selection is presumably pointer-driven.
+
+**One primitive attributed.** `vm_op_draw_menu` -- opcode `0x4b`, `seg_0000:3a84`, arity 1,
+writes `ss:[0c0e]` -- runs 30 to 46 times whenever that menu is drawn and never in the idle
+baseline, together with its engine helper `menu_draw_item` (`seg_0000:35cf`) at exactly one
+call per entry. Confirmed across five separate triggers.
+
+**Method that works, for whoever continues this.** `tools/t29c-action.py` snapshots
+Spice86's per-function call counts, performs one action, snapshots again, and reports only
+routines absent from an idle control run (`.ish/t29c-idle.json`). The control matters: the
+language core runs 40,000-60,000 times either way and buries anything rarer. The technique
+is sound -- it is the *actions* that are unreachable, not the measurement.
+
+**Evidence:** INT 33h breakpoint (0 hits/20s); interrupt vector dump; five action diffs
+with the idle baseline; screenshots `captures/t29c-before.png`, `t29c-f1.png`.
