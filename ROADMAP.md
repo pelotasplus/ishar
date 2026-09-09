@@ -320,7 +320,7 @@ Compose rewrite has to do.
       instruction that adds the base is a stronger statement than a pixel comparison, and it
       is not subject to the sprite scaling that made the framebuffer check fail.
 
-- [ ] **T11m2 · Sprites borrow a palette from the scene, so which scene?**
+- [~] **T11m2 · Sprites borrow a palette from the scene, so which scene?**
       Only 9 of ~110 assets carry a palette (FORMATS.md 3.9); the rest borrow one, and
       `tools/ioscan.py` defaults them to `bank#0` as a placeholder.
       **There is no safe subset.** Measured across the 16 bank palettes, every one of the 16
@@ -339,6 +339,15 @@ Compose rewrite has to do.
       T26/T28's opcode work the road to the colours rather than a detour from them.*
       **Done when:** `tools/ioscan.py` renders a monster asset with the scene palette the game
       uses for it, and the result matches the framebuffer pixel for pixel.
+      *Pairing built and applied. `main.io`'s load order groups a palette-carrying scene with
+      the assets drawn against it, so the disassembly (T30) yields the mapping directly: 52
+      assets follow exactly one scene, 27 follow several and take the majority.
+      `tools/ioscan.py` now uses it -- **79 of 88 borrowers get a real scene palette**, 9 carry
+      their own, 10 still fall back to the bank.
+      For most ambiguous assets the choice is immaterial: over the indices each actually uses,
+      the candidates differ by under 20 per channel. Nine are genuinely contested and are in
+      `captures/palette-choice.png` for a human call. FORMATS.md 3.9.
+      Still not met: the pixel-for-pixel framebuffer check, which needs a live scene.*
 
 - [x] **T11m3 · `tools/ioscan.py` palette search is O(n) per byte**
       Entry 0 of every palette established so far is exactly black, so `bytes.find` jumps

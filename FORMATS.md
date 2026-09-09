@@ -561,6 +561,22 @@ find a palette in a file without being told where it is, which is what
 decoded asset for the DAC as captured in-game gives exact hits:
 `fond.io @ 12108` and `geren.io @ 6684`, both **768/768 bytes**.
 
+#### Which palette an asset borrows (T11m2)
+
+`main.io`'s script loads assets in order (section 7), and a palette-carrying scene is
+followed by the assets drawn against it. Reading that order out of the disassembly gives
+the pairing directly: **52 assets follow exactly one scene, 27 follow more than one** and
+are resolved by majority. `tools/ioscan.py` reads it from `.ish/asset-scene.json` and uses
+the scene's palette instead of the bank -- **79 of 88 borrowers now get a real pairing**,
+9 carry their own, and 10 still fall back.
+
+For most of the ambiguous ones the choice does not matter: measured over only the palette
+indices each asset actually uses, the candidate palettes differ by less than 20 per
+channel. **Nine are genuinely contested** and are the ones worth checking by eye:
+`mcave` (170), `rplaine` (126), `ville` (114), `village` (98), `stage` and `intmais` (75),
+`lacustre` (44), `rampart` (30), `inville` (29) -- `captures/palette-choice.png` shows each
+under both candidates.
+
 **Only scene files carry a palette.** Nine of about 110 assets contain one: `fond.io`,
 `fcave.io`, `fcave2.io`, `frise.io`, `ftemple.io`, `fville.io`, `itaverne.io`, `geren.io`
 and `gerdep.io`. The `f` prefix is *fond*, French for background. Every other asset --

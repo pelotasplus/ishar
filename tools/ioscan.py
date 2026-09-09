@@ -14,6 +14,7 @@ first sprite, so it looked as though there were no chain and no directory.
     tools/ioscan.py logo.io out/
     tools/ioscan.py --all out/
 """
+import json
 import os
 import struct
 import sys
@@ -244,6 +245,45 @@ def render(data, off, w, h, pal):
     return rows
 
 
+# Which palette-carrying scene an asset is loaded alongside, read out of main.io's
+# script (T27/T30): the load order groups a scene with the assets that follow it.
+# Assets that carry no palette of their own borrow that scene's, which is what the
+# game does -- bank#0 for everything was only ever a placeholder (T11m2).
+_SCENE = {}
+
+
+def scene_palette_map():
+    if _SCENE:
+        return _SCENE
+    p = os.path.join(HERE, ".ish", "asset-scene.json")
+    if not os.path.exists(p):
+        return _SCENE
+    d = json.load(open(p))
+    _SCENE.update(d.get("certain", {}))
+    for asset, counts in d.get("ambiguous", {}).items():
+        _SCENE[asset] = max(counts.items(), key=lambda kv: kv[1])[0]
+    return _SCENE
+
+
+def palette_of_asset(name):
+    """The 256-entry palette an asset should be drawn with, or None."""
+    scene = scene_palette_map().get(name)
+    if not scene:
+        return None
+    path = os.path.join(GAME, scene)
+    if not os.path.exists(path):
+        return None
+    try:
+        d = decode(open(path, "rb").read())[0]
+    except Exception:
+        return None
+    ps = palettes(d)
+    if not ps:
+        return None
+    c = d[ps[0]:ps[0] + 768]
+    return [tuple(c[i:i + 3]) for i in range(0, 768, 3)]
+
+
 _BANK = []
 
 
@@ -298,9 +338,14 @@ def do_file(path, outdir, bank_index=0):
     if found:
         pal, where = found[1], str(found[0])
     else:
-        pal, where = bank_palette(bank_index), f"bank#{bank_index}"
-        if pal is None:
-            pal, where = [(i * 16 % 256,) * 3 for i in range(256)], "grey"
+        scene = scene_palette_map().get(os.path.basename(path).lower())
+        pal = palette_of_asset(os.path.basename(path).lower())
+        if pal is not None:
+            where = f"from {scene}"
+        else:
+            pal, where = bank_palette(bank_index), f"bank#{bank_index}"
+            if pal is None:
+                pal, where = [(i * 16 % 256,) * 3 for i in range(256)], "grey"
     os.makedirs(outdir, exist_ok=True)
     for off, w, h in sprites:
         png.write(os.path.join(outdir, f"{name}-{off:06d}-{w}x{h}.png"),
