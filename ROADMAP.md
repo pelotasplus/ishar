@@ -377,7 +377,7 @@ Compose rewrite has to do.
       **Done when:** one sprite's pixels are matched to the framebuffer with `group * 16 +
       nibble` at over 95%, and the eight-groups-in-one-file observation is explained.
 
-- [ ] **T11p · The viewport renderer is not the blitter we know**
+- [~] **T11p · The viewport renderer is not the blitter we know**
       `seg_0e97:038b` fires 445 times during the launcher/title/intro and **zero times in
       30s of walking around the game viewport**, so the 3D view is drawn by something else.
       That renderer also **scales** sprites by distance -- which is what header word 3's
@@ -389,6 +389,40 @@ Compose rewrite has to do.
       framebuffer segment while standing still and moving.*
       **Done when:** the viewport's sprite routine is named in `ishar.chani`, a breakpoint on
       it fires while walking, and the scale factor it applies is written up in FORMATS.md.
+      *Partly done, and the answer was not a routine. The call-count diff (`tools/t11p-diff.py`)
+      names 57 routines that run while walking, and the three hottest are a **bytecode
+      interpreter**: `vm_dispatch` at `seg_0000:69a6` fetches an opcode with `lodsb` and jumps
+      through a 120-entry table at `seg_0000:01f2`; a second one at `seg_0000:2937` uses a
+      56-entry table at `029c` and calls the first. The viewport is drawn by interpreted
+      script (FINDINGS.md section 6). Framebuffer writes during a walk come from
+      `seg_0000:5534`, `:817b`, `:82e5`, `:84af`, `:850c`, `:ab76` -- but the listing has lost
+      alignment across that whole region, so they cannot be read until it is re-seeded.
+      Remaining for this task: name the drawing routine those writes sit in, and the scale.*
+
+- [ ] **T26 · Decode the VM opcode set**
+      `vm_dispatch` (`seg_0000:69a6`) dispatches 120 handlers through `vm_opcode_table` at
+      `seg_0000:01f2`, and `vm_dispatch_2` (`seg_0000:2937`) another 56 through `029c`
+      (FINDINGS.md section 6). Nothing is known about what any opcode does. Each handler is a
+      short routine ending in a jump back to the fetch, so they can be read one at a time, and
+      the operand-skip helpers at `seg_0000:2880`-`28b4` say how wide each instruction is.
+      *Method: seed all 176 handler addresses into `ishar.chani` from the tables (they are
+      just words in memory -- `tools/symbols.py` already does this shape of import), rerun
+      `tools/disasm.sh`, and read them. Coverage is a real check here for once: 176 routines
+      that currently sit in the 54,825 undecoded bytes.*
+      **Done when:** every handler is a named `code` seed in `ishar.chani`, coverage moves
+      from 38.1% to over 45%, and at least ten opcodes have a documented meaning in
+      FINDINGS.md.
+
+- [ ] **T27 · Where the scripts live**
+      If the viewport is driven by bytecode, something loads that bytecode. It is either in
+      the image or in the assets, and either way it is the thing a Compose rewrite has to
+      reimplement -- this is probably where combat, magic and quest logic actually are
+      (T21-T24).
+      *Method: break on `vm_dispatch` and read `DS:SI`, the script program counter. Whatever
+      buffer it points into is the script; match those bytes against the decoded assets the
+      same way sprite bytes were matched, or against the image if it is not in an asset.*
+      **Done when:** the script bytes at `DS:SI` are located either at a known image offset or
+      at a known offset in a named asset, and FORMATS.md describes how scripts are stored.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

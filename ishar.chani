@@ -676,4 +676,29 @@ attr[seg_0e97:0463]: type = code; name = sprite_src_advance; comment = [[[
     framebuffer from ss:[0c2c] (x) and ss:[0c2e] (y).
 ]]]
 
+// The bytecode interpreter, found by diffing call counts across a walk (T11p).
+attr[seg_0000:69a6]: type = code; name = vm_dispatch; comment = [[[
+    Bytecode interpreter main loop. SI is the script program counter: `lodsb` fetches an
+    opcode and `jmp cs:[di+01f2]` dispatches through vm_opcode_table. Called 8677 times in
+    15s of walking, with the inner fetch at 69ab running 3.79M times -- the game viewport is
+    driven by interpreted script, not by native drawing code. FINDINGS.md section 6.
+]]]
+attr[seg_0000:01f2]: type = u16; name = vm_opcode_table; comment = [[[
+    Handler table for vm_dispatch: 120 distinct near targets, all inside seg_0000, ascending
+    from 0x69c7. Indexed by the opcode byte, so opcodes are even.
+]]]
+attr[seg_0000:2937]: type = code; name = vm_dispatch_2; comment = [[[
+    A second interpreter, same shape as vm_dispatch, jumping through vm_opcode_table_2 at
+    cs:[029c]. 785731 calls during the same walk.
+]]]
+attr[seg_0000:029c]: type = u16; name = vm_opcode_table_2; comment = [[[
+    Handler table for vm_dispatch_2: 56 distinct targets from 0x715a upward.
+]]]
+attr[seg_0000:2885]: type = code; name = vm_skip_operand_b; comment = [[[
+    Advance SI past a byte-counted operand: lodsb / cbw / add si,ax. One of a family at
+    2880-28b4 that skip the operands of the instruction just dispatched.
+]]]
+attr[seg_0000:2890]: type = code; name = vm_skip_operand_w; comment = [[[
+    Advance SI past a word-counted operand: lodsw / add si,ax.
+]]]
 end

@@ -354,3 +354,42 @@ Both are among the seeds chani cannot lay out, so read them with Spice86's
 `start-unpacked.exe`.
 
 **Evidence:** reproduced independently of the original report, same address both times.
+
+## 6. The game runs on a bytecode virtual machine (T11p)
+
+Diffing Spice86's per-function call counts across 15 seconds of walking around names 57
+routines that run in the viewport, and the three hottest are nested: `seg_0000:69a6`
+(8,677 calls) drives `seg_0000:69a9` (1,306,037) which drives `seg_0000:69ab`
+(3,791,391). That is not a drawing routine, it is a dispatch loop:
+
+```
+seg_0000:69a6   bb 7c 27          mov  bx, 277ch
+seg_0000:69a9   8b ca             mov  cx, dx
+seg_0000:69ab   2b c0             sub  ax, ax
+seg_0000:69ad   ac                lodsb                ; fetch the next opcode
+seg_0000:69ae   8b f8             mov  di, ax
+seg_0000:69b0   2e ff a5 f2 01    jmp  cs:[di+01f2h]   ; through the handler table
+```
+
+`SI` is the script's program counter and `cs:[01f2]` is a jump table of **120 distinct
+handlers**, all landing inside `seg_0000`'s code and starting at `0x69c7`. A second
+interpreter sits at `seg_0000:2937` dispatching through `cs:[029c]` with 56 handlers.
+
+The small routines around `seg_0000:2880`-`28b4` fit the same picture: each is a
+two-or-three instruction "advance SI past this operand" helper (`lodsb/cbw/add si,ax`,
+`lodsw/add si,ax`, `add si,3`), which is operand skipping, not graphics.
+
+**Why this matters more than the routine it was found looking for.** T11p set out to
+find the viewport's sprite blitter. The answer is that the viewport is *driven by
+interpreted script*, so combat, magic, quests and character logic -- T21 to T24, the
+tasks that have never been located in the disassembly -- are plausibly bytecode rather
+than native code. That would explain why 38% instruction coverage has yielded so few
+routines anyone can name: a large part of the game is data this listing never decodes.
+
+**Evidence:** call-count diff across a walk (`tools/t11p-diff.py`, `.ish/t11p-walk.json`);
+the dispatch instructions read out of live memory at `seg_0000:69a6`; and the tables
+dumped from live memory -- 120 of 128 words at `01f2` and 55 of 128 at `029c` fall
+inside the code segment, ascending from the byte after the dispatch itself.
+
+**Not established:** what any opcode does, where the scripts live (in the assets or in
+the image), or which of the two interpreters is which. See T26 and T27.
