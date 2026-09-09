@@ -454,6 +454,35 @@ the same step as recording the new one. And say in the entry that the old versio
 believed: a task that reads as if it were always right teaches nothing about how it went
 wrong.
 
+### A property proved for one asset is not a property of the format
+
+Index 0 was established as transparent from `logo.io`'s sprite -- 4,117 pixels decoded as
+0 against the framebuffer's background, a genuinely byte-for-byte result (FORMATS 3.7).
+It was then applied to every sprite in the game. That sprite is **mode 0x14**, the single
+mode whose handler tests for zero; 4bpp sprites are opaque and write colour 0 like any
+other. Every 4bpp asset was rendered with holes punched through it for weeks, which looks
+like scattered green speckle and reads as a palette fault, not a transparency fault.
+
+The check: when a fact is measured on one asset, look at how many the measurement covers
+before generalising. Here the mode byte was already decoded and said five formats existed
+(3.10) -- the evidence that the rule was narrower than the claim was in the same file.
+
+### Never downsample a dithered image to look at it
+
+`presti.io` was reported as having wrong colours twice while the extraction was correct
+both times: the review sheet scaled 144x35 sprites down by two to fit a cell, and sampling
+a 4bpp dithered image at every second pixel turns it into coloured speckle.
+
+Review sheets are 1:1 or they are lying. Open the actual PNG at full size before chasing a
+colour bug, and if a sheet must scale, upscale by whole pixels -- never sample down.
+
+### When output looks wrong, suspect the viewer before the data
+
+Both of the above presented identically: "the colours are wrong". One was a rendering rule
+applied too widely, one was the contact sheet's scaler, and neither was the palette that
+got investigated first. Before re-deriving a format, render one known-good asset through
+the same path -- `logo.io` has a framebuffer-verified reference for exactly this.
+
 ### Proposing work in the reply is not filing it
 
 The `main.io` disassembler was offered as "the obvious next step" in three separate

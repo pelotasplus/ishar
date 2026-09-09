@@ -809,6 +809,28 @@ Compose rewrite has to do.
       **Done when:** two memory words track the party's X and Y across four steps in each
       direction, and the byte at that grid position is reported alongside a screenshot.
 
+- [ ] **T11m2b · Why `presti.io` needs a palette base the code says is zero**
+      `presti.io`'s sprites are mode `0x00`, whose handler (`seg_0e97:0b40`) sets the palette
+      base to **zero** -- and at base 0 they render mottled under every stored palette, while
+      `logo.io`'s palette at a base of **16** gives clean bronze lettering (FORMATS.md 3.14).
+      No stored palette has that ramp at group 0, and neither does the executable.
+      `tools/ioscan.py` carries an explicit `INDEX_SHIFT` exception so the output is usable,
+      but the contradiction is unexplained and the background comes out white.
+      *Method: capture the DAC **while the title lettering is on screen** -- every palette
+      comparison so far used a DAC sampled at some other moment, which is how `fond` came to
+      look like a 768/768 match for the intro. Break on the DAC writer `seg_0e97:0d5f`, or
+      screenshot the title and match its colours against the file.*
+      **Done when:** either the base of 16 is explained from the code, or the palette the
+      title actually runs is located and `INDEX_SHIFT` is deleted.
+
+- [ ] **T11m2c · Check a 4bpp sprite against the framebuffer**
+      4bpp sprites are opaque (FORMATS.md 3.13), established from `expand_4bpp` writing both
+      nibbles with `stosw` and never testing zero. That is code-reading, not measurement, and
+      the transparency rule it replaces was itself a measurement generalised too far.
+      *Method: the same comparison that proved `logo.io` -- capture the framebuffer while a
+      known 4bpp sprite is on screen and compare pixel for pixel, including the zeros.*
+      **Done when:** one 4bpp sprite matches the framebuffer with colour 0 drawn, not keyed.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.

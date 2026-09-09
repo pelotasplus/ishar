@@ -163,6 +163,23 @@ def palettes(data):
     return out
 
 
+# Palettes that are verified but carry no `fe ff 00 00` record header, so neither
+# the marker scan nor the signature bar finds them. logo.io's at 992 was matched
+# byte-for-byte against the emulator's framebuffer (FORMATS.md 3.9); lowering the
+# bar to reach it matched 71 files instead of 9, so it is pinned here instead.
+VERIFIED = {"logo.io": 992}
+
+# Measured, not derived. presti.io's sprites are mode 0, which the drawing code
+# (seg_0e97:0b40, `mov bh,0`) gives a palette base of zero -- and at base 0 they
+# render as green speckle, while base 16 gives clean stone-and-gold ISHAR
+# lettering under fond.io's palette. No stored palette has the required ramp at
+# group 0 (nearest is 65 per channel away) and the executable has none either, so
+# either the intro builds its palette at runtime or mode 0 takes its base from
+# somewhere not yet found. Recorded as an exception so the extraction is right
+# while the reason stays open (T11m2b).
+INDEX_SHIFT = {"presti.io": 16}
+
+
 def find_palette(data, chain_end=0, need_full=False):
     """Files carry more than one palette -- fond.io has a valid block at 556 and
     another at 12108, and the live one was 12108. The one in use sits just past
@@ -171,6 +188,10 @@ def find_palette(data, chain_end=0, need_full=False):
     # scores just as well -- fond.io came back 48 early and geren.io 144 early.
     # Entry 0 of a real palette is black (index 0 is the transparent colour),
     # while a shifted candidate starts on some group's white, which pins it.
+    if _asset_name[0] in VERIFIED:
+        off = VERIFIED[_asset_name[0]]
+        c = data[off:off + 768]
+        return off, [tuple(c[i:i + 3]) for i in range(0, 768, 3)]
     marked = palettes(data)
     if marked:
         after = [o for o in marked if o >= chain_end]
@@ -226,9 +247,11 @@ def render(data, off, w, h, pal):
     w0, _, _, w3 = struct.unpack_from("<4H", data, off)
     hdr, stride, _ = geometry(w0, w, h)
     bpp = MODES[w0 & 0xff][1]
+    keyed = (w0 & 0xff) == 0x14
     # The base is word 3's LOW BYTE added directly (seg_0e97:0b4c: mov al,[si+6];
     # mov bh,al), and that byte is already group*16. Mode 0 forces it to zero.
     pbase = (w3 & 0xff) if MODES[w0 & 0xff][2] else 0
+    pbase += INDEX_SHIFT.get(_asset_name[0], 0)
     base = off + hdr
     rows = []
     for y in range(h):
@@ -236,11 +259,16 @@ def render(data, off, w, h, pal):
         for x in range(w):
             if bpp == 8:
                 v = data[base + y * stride + x]
-                r.append((0, 255, 0) if v == 0 else pal[v])
+                # Only mode 0x14 tests for zero (seg_0e97:0a84 `lodsb/test al,al/jz`).
+                # Mode 0x16 is `rep movsw` -- opaque.
+                r.append((0, 255, 0) if (v == 0 and keyed) else pal[v])
                 continue
             b = data[base + y * stride + (x >> 1)]
             v = (b >> 4) if (x & 1) == 0 else (b & 15)
-            r.append((0, 255, 0) if v == 0 else pal[(pbase + v) & 0xff])
+            # 4bpp is opaque: expand_4bpp (seg_0e97:0ad1) writes both nibbles with
+            # `stosw` and never tests for zero. Keying index 0 here punched holes
+            # through every 4bpp sprite -- the green speckle inside presti's letters.
+            r.append(pal[(pbase + v) & 0xff])
         rows.append(r)
     return rows
 
@@ -249,6 +277,7 @@ def render(data, off, w, h, pal):
 # script (T27/T30): the load order groups a scene with the assets that follow it.
 # Assets that carry no palette of their own borrow that scene's, which is what the
 # game does -- bank#0 for everything was only ever a placeholder (T11m2).
+_asset_name = [""]
 _SCENE = {}
 
 
@@ -259,6 +288,11 @@ def scene_palette_map():
     if not os.path.exists(p):
         return _SCENE
     d = json.load(open(p))
+    # Assets loaded before the first palette-carrying scene run under logo.IO's
+    # palette -- logo is opened during boot and carries the only real palette in
+    # that phase (the presentation screens carry none of their own).
+    for a in d.get("early_logo", []):
+        _SCENE[a] = "logo.io"
     _SCENE.update(d.get("certain", {}))
     for asset, counts in d.get("ambiguous", {}).items():
         _SCENE[asset] = max(counts.items(), key=lambda kv: kv[1])[0]
@@ -277,7 +311,7 @@ def palette_of_asset(name):
         d = decode(open(path, "rb").read())[0]
     except Exception:
         return None
-    ps = palettes(d)
+    ps = palettes(d) or ([VERIFIED[scene]] if scene in VERIFIED else [])
     if not ps:
         return None
     c = d[ps[0]:ps[0] + 768]
@@ -322,6 +356,7 @@ def bank_palette(n=0):
 
 def do_file(path, outdir, bank_index=0):
     name = os.path.splitext(os.path.basename(path))[0].lower()
+    _asset_name[0] = os.path.basename(path).lower()
     try:
         data = decode(open(path, "rb").read())[0]
     except Exception as e:

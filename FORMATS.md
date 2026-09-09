@@ -1156,3 +1156,47 @@ two the loader must prepend a letter; `intmais.io`, `inville.io` and `incave.io`
 rule is not established. The test is one breakpoint: `load_asset_by_name` builds the name
 into a buffer at `ss:2480` before opening it, so breaking on the DOS open and reading that
 buffer gives the name actually requested.
+
+### 3.13 Transparency belongs to one mode, not to the format (T11m2)
+
+**4bpp sprites are opaque.** `expand_4bpp` (`seg_0e97:0ad1`) splits each byte and writes
+both nibbles with `stosw`, with no test for zero:
+
+```
+lodsb / mov ah,al / shr al,1 x4 / add al,bh / and ah,0fh / add ah,bh / stosw
+```
+
+Only **mode `0x14`** skips zeros -- `seg_0e97:0a84` is `lodsb / test al,al / jz / stosb` --
+and mode `0x16` is `rep movsw`, opaque as well.
+
+This was got wrong for a long time. Index 0 was established as transparent from
+`logo.io`'s sprite at 1856, where 4,117 pixels decoded as 0 against a background of 5 in
+the framebuffer (3.7). That sprite is **mode `0x14`**, the one mode where it is true, and
+the rule was generalised to the whole format. Every 4bpp sprite was rendered with holes
+punched through it wherever a pixel used colour 0 -- which reads as green speckle scattered
+through otherwise correct art, and is easy to mistake for a palette fault.
+
+**Status:** established from the drawing code. Not yet checked against a framebuffer
+capture of a 4bpp sprite.
+
+### 3.14 `presti.io` -- unresolved
+
+The title lettering. Nine sprites, all **mode `0x00`** (6-byte header, and the code at
+`seg_0e97:0b40` sets the palette base to **zero**). What is measured:
+
+- 80% of its pixels use indices 7-10, so the palette needs a smooth ramp there.
+- At base 0 with any scene palette the letters come out mottled green/brown/blue --
+  `fond`'s group 0 puts unrelated colours at 7-10.
+- With **`logo.io`'s palette at 992 and a base of 16** the letters render as a clean
+  bronze ramp. `logo`'s group 1 is `620 730 830 840` at those indices.
+- No stored palette has that ramp at group 0 (nearest is 65 per channel), and the
+  executable contains no palette-shaped block that fits either.
+
+**So the rendering is empirical, not derived**: the code says base 0 and the picture says
+base 16, and that contradiction is unexplained. The background also comes out white,
+because index 0 then lands on palette entry 16, which is white -- either these sprites are
+composited over something that makes that correct, or mode `0x00` keys index 0 somewhere
+not yet found.
+
+`tools/ioscan.py` carries this as an explicit `INDEX_SHIFT` exception so the extraction is
+usable while the reason stays open. **It should not be read as understood.**
