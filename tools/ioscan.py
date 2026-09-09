@@ -30,6 +30,26 @@ decode = _ns["decode"]
 
 MAX_W, MAX_H = 336, 208
 
+# Word 0's low byte is a pixel-format selector, dispatched by sprite_mode_dispatch
+# at seg_0e97:0a30 (FORMATS.md 3.10). It decides the header length, the bit depth and
+# where the palette base comes from -- not a colour count, as it was first read.
+#   mode -> (header bytes, bits per pixel, base from word 3?)
+MODES = {0x00: (6, 4, False),   # seg_0e97:0b40 -- `mov bh,0`, `add si,6`
+         0x10: (8, 4, True),    # seg_0e97:0b4c -- 742 of ~800 sprites
+         0x12: (8, 4, True),    # seg_0e97:0aca
+         0x14: (8, 8, False),   # seg_0e97:0a84 -- lodsb/test/stosb, 0 transparent
+         0x16: (8, 8, False)}   # seg_0e97:0a5b -- rep movsw, opaque
+
+
+def geometry(w0, w, h):
+    """(header, stride, size) for a sprite, or None if word 0 names no known mode."""
+    m = MODES.get(w0 & 0xff)
+    if m is None:
+        return None
+    hdr, bpp, _ = m
+    stride = w if bpp == 8 else (w + 1) // 2
+    return hdr, stride, hdr + stride * h
+
 
 def rec(data, off):
     """Size of the sprite record at `off`, or None if it cannot be one."""
@@ -45,9 +65,12 @@ def rec(data, off):
     # 0x60 and 0xf0 appear a handful of times each and are the chain having lost
     # sync. Rejecting those here keeps a bad chain from scoring well in the first
     # place, rather than filtering its output afterwards.
-    if (w0 & 0xff) > 32 or (w0 >> 8) & 0xf0 not in (0x00, 0x10, 0x20):
+    if (w0 >> 8) & 0xf0 not in (0x00, 0x10, 0x20):
         return None
-    n = 8 + ((w + 1) // 2) * h
+    g = geometry(w0, w, h)
+    if g is None:
+        return None
+    n = g[2]
     if off + n > len(data):
         return None
     return n, w, h
@@ -130,7 +153,7 @@ def palettes(data):
     return out
 
 
-def find_palette(data, chain_end=0):
+def find_palette(data, chain_end=0, need_full=False):
     """Files carry more than one palette -- fond.io has a valid block at 556 and
     another at 12108, and the live one was 12108. The one in use sits just past
     the sprite chain, so prefer that and fall back to the best-scoring block."""
@@ -150,6 +173,10 @@ def find_palette(data, chain_end=0):
     limit = len(data) - 768
     pos = data.find(b"\x00\x00\x00")
     while 0 <= pos <= limit:
+        # Relaxing this bar for 8bpp files was tried, to reach logo.io's unmarked
+        # palette at 992: it picked 34196 instead and inflated "has its own palette"
+        # from 9 files to 21. Precision wins -- logo.io's palette is documented in
+        # FORMATS.md 3.9 and can be passed explicitly.
         s = palette_score(data, pos, 24)
         if s >= 24:
             cands.append((pos, s))
@@ -186,18 +213,24 @@ def render(data, off, w, h, pal):
     # is legible only at group 6, which is 0x60 >> 4. The same field explains the
     # perspective sequence seen live: word3 0xa2, 0xa3, 0xa4, 0xa5 is group 10 with
     # a distance index in the low nibble.
-    w3 = struct.unpack_from("<4H", data, off)[3]
-    group = (w3 >> 4) & 0x0f
-    pbase = group * 16
-    stride = (w + 1) // 2
-    base = off + 8
+    w0, _, _, w3 = struct.unpack_from("<4H", data, off)
+    hdr, stride, _ = geometry(w0, w, h)
+    bpp = MODES[w0 & 0xff][1]
+    # The base is word 3's LOW BYTE added directly (seg_0e97:0b4c: mov al,[si+6];
+    # mov bh,al), and that byte is already group*16. Mode 0 forces it to zero.
+    pbase = (w3 & 0xff) if MODES[w0 & 0xff][2] else 0
+    base = off + hdr
     rows = []
     for y in range(h):
         r = []
         for x in range(w):
+            if bpp == 8:
+                v = data[base + y * stride + x]
+                r.append((0, 255, 0) if v == 0 else pal[v])
+                continue
             b = data[base + y * stride + (x >> 1)]
             v = (b >> 4) if (x & 1) == 0 else (b & 15)
-            r.append((0, 255, 0) if v == 0 else pal[pbase + v])
+            r.append((0, 255, 0) if v == 0 else pal[(pbase + v) & 0xff])
         rows.append(r)
     return rows
 
@@ -245,9 +278,14 @@ def do_file(path, outdir, bank_index=0):
     except Exception as e:
         return f"{name}: decode failed ({e})"
     sprites = extract(data)
-    taken = [(o, o + 8 + ((w + 1) // 2) * h) for o, w, h in sprites]
+    taken = []
+    for o, w, h in sprites:
+        g = geometry(struct.unpack_from("<H", data, o)[0], w, h)
+        taken.append((o, o + g[2]))
     chain_end = taken[-1][1] if taken else 0
-    found = find_palette(data, chain_end)
+    deep = any(MODES[struct.unpack_from("<H", data, o)[0] & 0xff][1] == 8
+               for o, _, _ in sprites)
+    found = find_palette(data, chain_end, need_full=deep)
     if found:
         pal, where = found[1], str(found[0])
     else:

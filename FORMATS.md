@@ -967,6 +967,27 @@ container path (section 3), and executed in place.
 decoded `main.io`, with the asset id matching the catalogue id independently established
 in 3.5.
 
+#### Five sprite formats, selected by word 0's low byte
+
+| mode | header | pixels | palette base | routine |
+|---|---|---|---|---|
+| `0x00` | **6 bytes** | 4bpp | **zero** | `seg_0e97:0b40` |
+| `0x10` | 8 bytes | 4bpp | word 3 low byte | `seg_0e97:0b4c` -- 742 of ~800 sprites |
+| `0x12` | 8 bytes | 4bpp | word 3 low byte | `seg_0e97:0aca` |
+| `0x14` | 8 bytes | **8bpp**, index 0 transparent | n/a | `seg_0e97:0a84` (`lodsb/test/stosb`) |
+| `0x16` | 8 bytes | **8bpp opaque** | n/a | `seg_0e97:0a5b` (`rep movsw`) |
+
+This retires `logo.io`'s status as an exception. Its sprite at 1856 carries
+`word0 = 0x0714`, so **mode `0x14`, 8bpp with index 0 transparent** -- exactly what the
+byte-for-byte framebuffer comparison in 3.7 measured, including the 4,117 transparent
+zeros. It was never a special case; the mode byte said so all along and was being read as
+a colour count.
+
+Teaching `tools/ioscan.py` the table took the extraction from **786 sprites to 920**, and
+`logo.io` now yields its verified 144x118 sprite at the right geometry. Files that lost
+sprites were ones that should not have had them: `geren.io` (the palette bank),
+`message*.io` (text), `map.io` (a picture, not a chain), `blancpc.io` (raw data).
+
 #### The code that applies the palette base (T11r2)
 
 `sprite_base_from_word3` (`seg_0e97:0b4c` for mode `0x10`, `seg_0e97:0aca` for `0x12`):
