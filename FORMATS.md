@@ -663,6 +663,12 @@ values read live were `0x0012, 0x0017, 0x0310, 0x070f, 0x0b00, 0x0c14, 0x0e10` -
 a group index in the high byte and a small low byte. Rendering everything as group 0
 is what left the shapes right and the colours wrong.
 
+**Independent confirmation of the palette work:** reading the framebuffer at `0xA0000`
+over GDB and rendering it with the palette recovered from `fond.io` reproduces the game
+screen exactly, colours included (`captures/t11m2-vram.png` against
+`captures/t11m2-state.png`). That validates 3.9 end to end -- the file's 768 bytes really
+are the DAC the game is running.
+
 **Status:** the mapping is established from the DAC's structure and word 0's shape,
 and it is *not yet* confirmed pixel-by-pixel against the framebuffer -- the one
 attempt matched 32/40 opaque pixels of a 16x4 sprite, which is not enough to call it.

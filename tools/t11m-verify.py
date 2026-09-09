@@ -43,8 +43,8 @@ for fname in sys.argv[1:] or ["fond.io"]:
             rows.append([((data[off + 8 + y * stride + (x >> 1)] >> 4) if (x & 1) == 0
                           else (data[off + 8 + y * stride + (x >> 1)] & 15)) for x in range(w)])
         bestscore, bestpos = 0, None
-        for sy in range(0, 200 - h + 1, 2):
-            for sx in range(0, 320 - w + 1, 2):
+        for sy in range(0, 200 - h + 1):
+            for sx in range(0, 320 - w + 1):
                 hit = tot = 0
                 for y in range(0, h, max(1, h // 12)):
                     r = rows[y]

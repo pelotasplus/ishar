@@ -402,6 +402,22 @@ wrong way. If it looks equally bad, the decoder is not the problem and the layou
 And a heuristic that reproduces the one case you already knew has not been tested —
 `ioscan.py` is kept as a lead-generator, never as a source of truth.
 
+### A routine that fires is not a routine that fires *when you care*
+
+`seg_0e97:038b` was established as "the sprite blitter" by breaking on it and watching
+it run 445 times. It does -- during the launcher, the title screen and the intro. In
+the game viewport it fires **zero times in 30 seconds** of walking around, so
+everything measured through it describes the intro's renderer, not the game's.
+
+The check that costs nothing: after confirming a breakpoint fires, confirm it fires in
+the *phase the question is about*. Count hits with the game in the state you actually
+care about before building on the numbers.
+
+The framebuffer is the cheap oracle for this kind of doubt: reading 0xA0000 over GDB and
+rendering it with the captured DAC reproduces the screen exactly, so "is my instrument
+lying?" can always be settled in one command before blaming the data
+(`captures/t11m2-vram.png`).
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

@@ -330,6 +330,19 @@ Compose rewrite has to do.
       **Done when:** the bank's entries can be enumerated from its structure instead of by
       scanning for the white/black signature, and the count is confirmed.
 
+- [ ] **T11p · The viewport renderer is not the blitter we know**
+      `seg_0e97:038b` fires 445 times during the launcher/title/intro and **zero times in
+      30s of walking around the game viewport**, so the 3D view is drawn by something else.
+      That renderer also **scales** sprites by distance -- which is what header word 3's
+      `162, 163, 164, 165` sequence on shrinking sprites was saying -- so viewport pixels
+      can never match an unscaled extraction, and T11m's pixel-exact check must use a UI
+      sprite or account for the scaling.
+      *Method: `tools/ish funcs` after a walk-about, diffed against the same list taken at
+      the title screen, names the routines that only run in-game. Or break on writes to the
+      framebuffer segment while standing still and moving.*
+      **Done when:** the viewport's sprite routine is named in `ishar.chani`, a breakpoint on
+      it fires while walking, and the scale factor it applies is written up in FORMATS.md.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.
