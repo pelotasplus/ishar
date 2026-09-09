@@ -686,6 +686,19 @@ Compose rewrite has to do.
       The game renders offscreen and blits, matching the destination far pointer at
       `ss:[1dbf]` the sprite path already used.*
 
+- [ ] **T11s · The chain walker invents sprites in script files**
+      `main.io` is a script (T27), yet `tools/ioscan.py` reports 37 sprites in it. Rendered
+      (`captures/sheets/main.png`) all but one are tiny slivers a few pixels tall -- bytecode
+      being read as headers. The exception is a real find: the last is the **orange mouse
+      cursor**, which is worth keeping and supports the pointer being real (T29d).
+      By contrast `rampart.io`'s 24 are all genuine brick-wall tiles at different perspective
+      angles, so the walker is right where there really are sprites.
+      *Method: a minimum plausible area, or a requirement that a chain explain a decent share
+      of the file, or simply not walking assets a script loads as data. Whatever the rule,
+      check it against `rampart.io` (must keep 24) and `main.io` (should keep about 1).*
+      **Done when:** `main.io` yields no sliver sprites while `rampart.io`, `buste.io` and
+      `dragon.io` keep their current counts.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.
