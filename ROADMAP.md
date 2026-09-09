@@ -316,19 +316,22 @@ Compose rewrite has to do.
       sprite it did not take the palette from, checked pixel by pixel.
 
 - [ ] **T11m2 · Sprites borrow a palette from the scene, so which scene?**
-      Only **9 of ~110 assets carry a palette at all**: `fond.io`, `fcave.io`, `fcave2.io`,
-      `frise.io`, `ftemple.io`, `fville.io`, `itaverne.io`, `geren.io`, `gerdep.io`. The `f`
-      prefix is *fond* -- French for background -- so scene files own the palette and every
-      monster, object and character sprite is drawn against whatever the current scene loaded.
-      That, not a bad detector, is why most extractions have right shapes and wrong colours:
-      `tools/ioscan.py` falls back to the best-scoring block in a file that has none.
-      `geren.io` turns out to be the palette **bank** -- 12 unique blocks, and four scene
-      files embed byte-identical copies of entries in it (FORMATS.md 3.9). `tools/ioscan.py`
-      now defaults palette-less assets to `bank#0`, which is a visible improvement and still
-      a placeholder.
-      *Method: T10b already recorded which files the game reads and when. Pair each sprite
-      asset with the scene palette that is live when it is drawn -- or just break on the
-      blitter and record the DAC alongside each sprite, which gives the pairing directly.*
+      Only 9 of ~110 assets carry a palette (FORMATS.md 3.9); the rest borrow one, and
+      `tools/ioscan.py` defaults them to `bank#0` as a placeholder.
+      **There is no safe subset.** Measured across the 16 bank palettes, every one of the 16
+      groups drifts 42-107 per byte from `bank#0`, so **all 786 extracted sprites** depend on
+      getting the scene right -- an early hope that groups 7-13 were scene-independent (only
+      3 distinct variants each) died once the *size* of the difference was measured rather
+      than the count.
+      *Two routes tried and rejected: a file-open trace while walking returns **0 DOS calls in
+      60s** -- the game loads an area's assets up front, so co-occurrence needs a scene
+      transition, not movement; and the boot trace only reaches `logo.IO`, never the game's
+      own scenes.*
+      *Best remaining lead, and it is offline: **`main.io` is a script, not a table.** Its
+      catalogue entries read `45 <id> 00 "name.IO" 00` interleaved with other opcode-shaped
+      bytes (`42 36 3a 14 ...`, `07 ...`, `de 08 68 ...`), and it references `gerdep.IO` --
+      the palette bank itself. If the pairing is anywhere, it is in that stream, which makes
+      T26/T28's opcode work the road to the colours rather than a detour from them.*
       **Done when:** `tools/ioscan.py` renders a monster asset with the scene palette the game
       uses for it, and the result matches the framebuffer pixel for pixel.
 
@@ -446,6 +449,9 @@ Compose rewrite has to do.
       same way sprite bytes were matched, or against the image if it is not in an asset.*
       **Done when:** the script bytes at `DS:SI` are located either at a known image offset or
       at a known offset in a named asset, and FORMATS.md describes how scripts are stored.
+      *Strong candidate already: `main.io` decodes to a byte stream of the same shape --
+      `45 <id> 00 "name.IO" 00` between other opcode-like bytes. Decoding it would answer
+      T11m2 (which palette a sprite is drawn against) at the same time.*
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
