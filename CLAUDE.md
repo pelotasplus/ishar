@@ -199,6 +199,23 @@ anything, break on it and see it fire — and if a breakpoint on the obvious can
 does not fire during an operation that must use it, that is the finding, not a
 malfunction.
 
+### `ss:` and `cs:` variables are not offsets in the code segment
+
+Eight variables were annotated at `seg_0000:2480`, `seg_0000:0b04` and friends because
+that is how they read in the listing — `mov cx, ss:[2480h]`. They are DGROUP offsets:
+SS is `load + 0x0c0b` at runtime, so `ss:2480` is image `0x0c0b0 + 0x2480`, which lands
+in `seg_0941`. The annotations typed *code bytes* in `seg_0000` as data.
+
+The tell was coverage going **down**, 32.0% to 31.6%, after adding annotations that only
+add information. A number moving the wrong way is the thing to look at, not the thing to
+round off.
+
+To place one: get the segment register's runtime value (traces show `SS = 0d88`,
+`DS`/`CS` vary), subtract `load`, and check the paragraph against the data-only list
+`tools/segmap.py` prints — `0x0c0b` is on it, which is the corroboration that it is
+DGROUP and not a coincidence. `cs:`-relative variables inside a routine are the easy
+case: they belong to that routine's own segment.
+
 ### chani loads the FILE, so segment ranges carry the MZ header
 
 `tools/segmap.py` emitted `load = [0..]:exe[0x00000..0x09410]` using *image* offsets,
