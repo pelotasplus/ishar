@@ -837,12 +837,18 @@ Compose rewrite has to do.
       keyboard one is followed as far as the table build — which is what a rewrite needs
       in order to offer layouts at all.
 
-- [ ] **T11f · The four `.fic` files with an all-zero header**
+- [x] **T11f · The four `.fic` files with an all-zero header****
       `cont1`, `cont2`, `cont6` and `en1` have six zero bytes where every asset has a
       header, so they are probably a different format — and `cont1..6` are all exactly
       4860 bytes, which smells like fixed-size records.
       **Done when:** FORMATS.md says what they are, or states plainly that nothing in
       the code reads them as assets.
+      *Met, and the guess in this entry was right: they are not assets at all. Their six
+      "header" bytes are data being misread (FORMATS.md 3.11) -- nothing in the code opens
+      them as containers, and their names appear only in `main.io`, never in the executable.
+      `cont1`, `cont2` and `cont6` are **world maps**: 90x54 grids, one byte per cell, six
+      contrées (3.12, T11g2). `en1.fic` is record-structured rather than a grid -- its
+      autocorrelation peaks at lags 2, 4, 8 and 16 instead of 90.*
 
 - [ ] **T11e · Decode main.io's catalogue and answer the language question**
       *Reframed by T27: `main.io` is not a catalogue table, it is a script, and the "entries"
@@ -876,19 +882,35 @@ Compose rewrite has to do.
       `cs:[7cb7]`. Ground truth for checking it is captured: `.ish/logo-decoded.bin`,
       40,632 bytes, via `tools/t11-capture.py`.*
 
-- [ ] **T12 · Palette**
+- [x] **T12 · Palette**
       Capture the DAC at the language menu; establish where the palette comes from —
       part of the asset, a separate file, or code.
       **Done when:** FORMATS.md states the palette source, and a decoded image rendered
       with it matches the emulator's colours.
       *An asset carries colour indices only; the palette is loaded separately, and the
       wrong one gives a correct picture that looks broken.*
+      *Met. The palette is **part of the asset**: a 772-byte record, `fe ff 00 00` followed
+      by 256 8-bit RGB entries (FORMATS.md 3.9, T11j/T11m4). Only 9 of ~110 assets carry
+      one; the rest borrow. And the match is exact rather than approximate -- reading the
+      framebuffer at 0xA0000 and colouring it with the palette recovered from `fond.io`
+      reproduces the running game's screen, `captures/t11m2-vram.png` against
+      `captures/t11m2-state.png`.*
 
 - [ ] **T13 · The menu's glyphs**
       The language menu's text is drawn in stylised glyphs, so there is a font asset and
       a text routine. Find both.
       **Done when:** the glyph set is decoded to a PNG sheet in `captures/`, and the
       routine that places them is annotated.
+      *Ruled out so far, none of it repeatable: the glyphs are **not a chained sprite bank**
+      -- no asset holds many small same-height sprites, the closest being `buste` (29 at
+      height 44, the portraits) and `frise` (10 at 17). They are **not a 1bpp bitmap** in any
+      of the eight zero-sprite assets (`blancpc`, `dplt`, `affobj`, `encont`, `gaz`, `souris`,
+      `monstre`, `telep`), rendered at 16/32/64 wide. And `blancpc.io` -- the first file the
+      game opens, stored uncompressed, which made it the best candidate -- is a **table of
+      word values** (`04 00 16 00 ... 1a 00 00 20 00 0e 00`), not pixels, at 4bpp or 8bpp.
+      Next: work from the code rather than the files. The menu is drawn by the launcher, so
+      find the routine that walks a string and blits per character -- then its glyph source
+      is whatever it indexes. `captures/menu-language.png` gives the target.*
 
 - [ ] **T14 · Reproduce the language screen offline** ← *the first real proof*
       Compose the screen from the game's own files with `tools/io.py`, the palette from
