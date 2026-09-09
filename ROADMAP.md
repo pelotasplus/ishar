@@ -586,7 +586,7 @@ Compose rewrite has to do.
       different artefact: it autocorrelates at 160, so it is the rendered map picture at
       4bpp, not the grid. FORMATS.md 3.12.*
 
-- [ ] **T11g3 · What the map cell values mean**
+- [~] **T11g3 · What the map cell values mean**
       `cont*.fic` are 90x54 byte grids (FORMATS.md 3.12) with 53-91 distinct values each.
       `0x00` is open, `0xCE` the boundary, `0xCC`/`0xCD` outside; the rest are terrain and
       object types and are undecoded. This is the world's content -- where towns, dungeons
@@ -596,6 +596,15 @@ Compose rewrite has to do.
       Cross-reference cells against the assets a scene loads.*
       **Done when:** at least eight cell values are identified in FINDINGS.md, each with the
       observation that established it.
+      *Partial: five value classes identified, not eight, and by structure rather than by
+      observation (FINDINGS.md 6.7). Connected-component counts split the bytes cleanly into
+      **large-blob values** -- `0x00` open, `0xCC`/`0xCD` outside, `0xCE` the boundary,
+      `0x9D`/`0xE1`/`0xE5`/`0xE6` area classes -- and **scattered single cells** (`0x02`-`0x18`),
+      which is a base terrain with individually-placed markers on top.
+      Ruled out: a cell is not two interleaved bytes; the even/odd planes are statistically
+      identical and both correlate at 45, which is what parity-splitting a 90-wide grid does.
+      The live half failed on the harness twice -- MCP `read_memory` needs ~45s for 4KB, and
+      the GDB path saw no changed words before the emulator stalled at 1% CPU. T11g3b.*
 
 - [x] **T11r2 · Find the code that applies the palette group**
       Word 3 holds the group (FORMATS.md 3.10, T11r) but **no code site is known**: `[si+6]`
@@ -779,6 +788,17 @@ Compose rewrite has to do.
       disk has `iboishar.io`, `itaverne.io`, no `tableau.io`. `i` for *interieur* fits
       `intmais`/`inville`/`incave` but is a reading, not a measurement. One breakpoint settles
       it: `load_asset_by_name` builds the name at `ss:2480` before opening.*
+
+- [ ] **T11g3b · Read the party's grid position**
+      T11g3 classified the map's byte values by shape but cannot name them without ground
+      truth: where the party stands on the grid, against what is on screen. The editor
+      prompts name the coordinates (`POSITION X :`, `POSITION Y :`), so they exist.
+      *Method: snapshot the data segment over **GDB**, not MCP -- `read_memory` takes ~45s
+      for 4KB while `rsp.read_mem` is instant -- take one step, and keep words that changed
+      by one. `tools/t11g3-pos.py` does this; it needs a healthy emulator, which is what beat
+      it (stalled at 1% CPU). Confirm the party actually moves before trusting a null result.*
+      **Done when:** two memory words track the party's X and Y across four steps in each
+      direction, and the byte at that grid position is reported alongside a screenshot.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

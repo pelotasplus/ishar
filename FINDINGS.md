@@ -635,3 +635,35 @@ does say what a correct portrait looks like.
 
 **Evidence:** `captures/buste-all-groups.png` (the same 64x44 sprite under all 16 groups)
 and `captures/buste-bank0-vs-fond.png`.
+
+### 6.7 The map grid's values: two populations (T11g3, partial)
+
+`cont*.fic` is a 90x54 grid of one byte per cell (FORMATS.md 3.12), and the editor
+prompts left in `main.io` name what the world is made of -- *contrée, région, zone,
+tableau* (7.2). Counting connected components of each value separates the byte values
+into two clear populations:
+
+| value | cells (cont1) | components | shape | reading |
+|---|---|---|---|---|
+| `0x00` | 2131 | 252 | large blobs | open / empty ground |
+| `0xCD`, `0xCC` | 524, 255 | 9, 6 | large blobs | outside the playable area (MSC uninitialised fill) |
+| `0xCE` | 232 | 5 | one-cell-wide curves | **the boundary outline** -- mean 1.96-1.99 orthogonal same-value neighbours in all six files |
+| `0x9D`, `0xE1`, `0xE5`, `0xE6` | 130-970 | few | large blobs | area/terrain classes |
+| `0x02`-`0x18` | 58-181 each | ~1 per cell | scattered singletons | per-cell markers -- objects, entrances or encounters |
+
+The split is the finding: **high byte values form a small number of large regions, low
+values are isolated single cells.** A base terrain painted in areas with sparse
+individually-placed markers on top is what that looks like.
+
+**Ruled out: a cell is not two interleaved bytes.** Splitting each file into even and odd
+byte planes gives two planes with statistically identical profiles (52 vs 54 distinct
+values, 30% vs 30% above 100) that both autocorrelate at lag 45 -- which is exactly what
+splitting a 90-wide grid by parity produces, not evidence of two fields.
+
+**Not established:** which value is which tableau. That needs ground truth -- the party's
+position on the grid against what is on screen. Two attempts failed on the harness rather
+than the idea: `read_memory` over MCP takes ~45s for 4KB, and the GDB path returned no
+changed words before the emulator stalled at 1% CPU. See T11g3b.
+
+**Evidence:** connected-component counts over `cont1.fic` and `cont2.fic`; the parity-plane
+comparison over three files.
