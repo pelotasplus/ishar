@@ -464,6 +464,18 @@ Compose rewrite has to do.
       **Done when:** FINDINGS.md answers it from the decoded text or the character
       structure, not from what the genre usually does.
 
+- [ ] **T25 · Where the sound is**
+      `start.stp` selects a sound device (`cfg_sound`: AdLib, SoundBlaster, internal
+      speaker and three others, FORMATS §2) and the game programs the OPL — a boot trace
+      shows writes to port `0x388`. But no sound *asset* has been identified: nothing in
+      the 106 files has been shown to be music or samples, and the catalogue's filenames
+      do not obviously include any.
+      *Method: break on OPL writes (`0x388`/`0x389`) or on the SoundBlaster ports and
+      read where the data being written comes from — that pointer leads to the music
+      format, whether it lives in an .io file or inside the executable.*
+      **Done when:** FORMATS.md says where music and effects are stored and in what
+      shape, or states with evidence that they are generated rather than stored.
+
 - [ ] **T20 · Input map**
       Which keys and mouse actions the game accepts in each state, from the handler
       rather than from experiment alone.
