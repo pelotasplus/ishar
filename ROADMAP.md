@@ -282,25 +282,35 @@ Compose rewrite has to do.
       It cost a wrong turn during T11k.
       **Done when:** `ish dis 0e97:038b` prints the same instructions as the listing does.
 
-- [ ] **T11m · Why the colours are wrong on extracted sprites**
-      Shapes extract correctly (T11k); colours do not. Two candidate causes, and they are
-      not the same task:
-      (a) sprite indices 0..15 are offset or run through a 16-entry LUT into the 256-colour
-      DAC, or (b) `tools/ioscan.py` is simply picking the wrong 768-byte block as the file's
-      palette — its detector is a heuristic and would produce exactly this symptom.
-      *Tried and failed twice: `tools/t11m-palette.py` watches the blitter, then reads the
-      framebuffer at the next stop to pair each nibble with the byte that reached the screen.
-      Run 1 assumed a pitch of 320 and returned the background distribution for every nibble
-      -- the signature of sampling the wrong pixels. Run 2 read the pitch from `ss:[1dd5]`
-      and the clip rect from `ss:[0c2c..0c32]`; the sanity guard then rejected every frame,
-      so at least one of those offsets is not what it was read as. The destination is also
-      an offscreen buffer (`les di, ss:[1dbf]`), not necessarily 320x200.*
-      *Cheaper next: settle (b) first, statically. Capture the DAC while a known asset is on
-      screen and search that file for the same values shifted left by two -- exactly how
-      `logo.io`'s palette was found at 992 (3.9). If the block ioscan picked is not the block
-      that search finds, the bug is the detector and there is no LUT to look for.*
+- [~] **T11m · Why the colours are wrong on extracted sprites**
+      **Answered, not yet proven to the acceptance bar.** The DAC is 16 sub-palettes of 16
+      (FORMATS.md 3.9): 227 non-zero entries in-game, every group from 1 up starting white
+      then black. So `vga_index = (word0 >> 8) * 16 + nibble`, and header word 0 -- the last
+      unexplained field -- carries the group in its high byte. The full 768-byte palette is
+      in the asset, 8-bit RGB: the in-game DAC matched `fond.io @ 12108` and `geren.io @ 6684`
+      768/768 by exhaustive search. `tools/ioscan.py` now finds palettes by the white/black
+      group signature instead of the old heuristic, which had picked 204 for `fond.io`.
+      *Still open: the pixel-by-pixel confirmation the Done-when asks for. `tools/t11m-verify.py`
+      searches the framebuffer for `group*16 + nibble` and found only one weak hit (32/40 opaque
+      pixels of a 16x4 sprite) because the game had returned to the launcher and the blitter
+      stopped firing. Redo it standing in a scene: capture with `tools/t11m-sprites.py`, then
+      run the verifier immediately, before anything redraws.*
       **Done when:** `tools/ioscan.py` reproduces the emulator's framebuffer colours for one
       sprite it did not take the palette from, checked pixel by pixel.
+
+- [ ] **T11m2 · Which of a file's several palettes belongs to a sprite**
+      Assets carry more than one 768-byte palette: `fond.io` at 556 and 12108, `geren.io` at
+      6684 and 12268, `logo.io` at 992 and an identical copy at 20172. For `fond.io` the live
+      one sat just past the sprite chain; that rule picks the wrong block for `geren.io`.
+      Word 0's *low* byte (0x12, 0x17, 0x10, 0x0f, 0x14, 0x00) is unexplained and is the
+      obvious suspect.
+      **Done when:** for three files with multiple palettes, the rule picks the block that
+      matches the DAC captured while that file's art is on screen.
+
+- [ ] **T11m3 · `tools/ioscan.py` palette search is O(n) per byte**
+      The white/black signature is tested at every offset of every file, so a full extraction
+      no longer finishes inside ten minutes.
+      **Done when:** `tools/ioscan.py --all` completes in under 60s.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

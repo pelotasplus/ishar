@@ -75,26 +75,62 @@ def extract(data):
     return walk(data, starts[0])
 
 
-def find_palette(data, taken):
-    """256 8-bit RGB triples (FORMATS.md 3.9), outside the sprite data."""
-    cand = None
-    for off in range(0, len(data) - 768, 2):
-        if data[off] or data[off + 1] or data[off + 2]:
+def palette_score(data, off):
+    """A VGA palette here is 16 sub-palettes of 16, and groups 1..15 each start
+    with white then black. That signature is what makes this a detector rather
+    than a guess: it was validated against three offsets established
+    independently -- fond.io 12108 and geren.io 6684 (both matched the live DAC
+    byte for byte while that scene was on screen) and logo.io 992 (FORMATS 3.9)."""
+    s = 0
+    for k in range(1, 16):
+        b = off + k * 48
+        if data[b] > 250 and data[b + 1] > 250 and data[b + 2] > 250:
+            s += 1
+        if data[b + 3] < 6 and data[b + 4] < 6 and data[b + 5] < 6:
+            s += 1
+    return s
+
+
+def find_palette(data, chain_end=0):
+    """Files carry more than one palette -- fond.io has a valid block at 556 and
+    another at 12108, and the live one was 12108. The one in use sits just past
+    the sprite chain, so prefer that and fall back to the best-scoring block."""
+    # The signature repeats every 48 bytes, so a block shifted by whole groups
+    # scores just as well -- fond.io came back 48 early and geren.io 144 early.
+    # Entry 0 of a real palette is black (index 0 is the transparent colour),
+    # while a shifted candidate starts on some group's white, which pins it.
+    cands = []
+    for off in range(0, len(data) - 768):
+        if data[off] > 8 or data[off + 1] > 8 or data[off + 2] > 8:
             continue
-        if any(off < e and s < off + 768 for s, e in taken):
-            continue
-        chunk = data[off:off + 768]
-        n = len({chunk[i:i + 3] for i in range(0, 768, 3)})
-        if cand is None or n > cand[0]:
-            cand = (n, off)
-    if not cand or cand[0] < 24:
-        return None
-    off = cand[1]
+        s = palette_score(data, off)
+        if s >= 24:
+            cands.append((off, s))
+    if not cands:
+        starts = [o for o in range(len(data) - 768)
+                  if data[o] < 8 and data[o + 1] < 8 and data[o + 2] < 8]
+        best = max(starts, key=lambda o: palette_score(data, o), default=None)
+        if best is None or palette_score(data, best) < 8:
+            return None
+        cands = [(best, palette_score(data, best))]
+    # Overlapping candidates 48 or 144 bytes early still satisfy the black-start
+    # rule (geren.io scored one at 6540 as well as the true 6684), and a shifted
+    # candidate is always the earlier one, so take the last.
+    after = [c for c in cands if c[0] >= chain_end]
+    off = (after or cands)[-1][0]
     c = data[off:off + 768]
     return off, [tuple(c[i:i + 3]) for i in range(0, 768, 3)]
 
 
 def render(data, off, w, h, pal):
+    """A 4bpp index is `group * 16 + nibble`. The DAC is 16 sub-palettes of 16
+    (measured in-game: every group starts white, black, then a ramp), and the
+    group is the high byte of header word 0 -- the values seen live were 0x0012,
+    0x0310, 0x0c14, 0x070f, 0x0b00, 0x0e10, which is a group index and a low byte.
+    Rendering with group 0 for everything is what left the shapes right and the
+    colours wrong."""
+    group = struct.unpack_from("<H", data, off)[0] >> 8
+    pbase = (group * 16) if group < 16 else 0
     stride = (w + 1) // 2
     base = off + 8
     rows = []
@@ -103,7 +139,7 @@ def render(data, off, w, h, pal):
         for x in range(w):
             b = data[base + y * stride + (x >> 1)]
             v = (b >> 4) if (x & 1) == 0 else (b & 15)
-            r.append((0, 255, 0) if v == 0 else pal[v])
+            r.append((0, 255, 0) if v == 0 else pal[pbase + v])
         rows.append(r)
     return rows
 
@@ -116,7 +152,8 @@ def do_file(path, outdir):
         return f"{name}: decode failed ({e})"
     sprites = extract(data)
     taken = [(o, o + 8 + ((w + 1) // 2) * h) for o, w, h in sprites]
-    found = find_palette(data, taken)
+    chain_end = taken[-1][1] if taken else 0
+    found = find_palette(data, chain_end)
     pal = found[1] if found else [(i * 16 % 256,) * 3 for i in range(256)]
     os.makedirs(outdir, exist_ok=True)
     for off, w, h in sprites:

@@ -539,6 +539,41 @@ own palette inside the same compressed file.
 **Verified by:** an IO breakpoint on port `0x3c9` and a memory-write breakpoint on the
 staging buffer, both naming their writers; then the byte-for-byte shift check.
 
+#### The palette is 16 sub-palettes of 16 (T11m)
+
+Dumped in-game, the DAC has 227 non-zero entries laid out as **16 groups of 16**, and
+every group from 1 upward begins with white then black:
+
+```
+  0: 000 000 420 642 964 b96 b00 040 260 692 fb0 046 269 499 9b9 ddb
+ 16: fff 000 520 630 741 962 a73 c95 db7 230 340 460 670 880 990 ba0
+ 32: fff 000 643 754 865 976 a98 ca9 fc0 353 464 574 785 995 dcb 778
+ ...
+240: fff 000 000 000 ...                       (unused tail)
+```
+
+Group 0 is the exception -- it starts black, because index 0 is the transparent
+colour. That white/black boundary every 48 bytes is a strong enough signature to
+find a palette in a file without being told where it is, which is what
+`tools/ioscan.py` now does.
+
+**The whole 768-byte block is stored in the asset, 8-bit RGB.** Searching every
+decoded asset for the DAC as captured in-game gives exact hits:
+`fond.io @ 12108` and `geren.io @ 6684`, both **768/768 bytes**.
+
+**Files carry more than one palette.** `fond.io` has valid blocks at 556 and 12108,
+`geren.io` at 6540-ish, 6684 and 12268, `logo.io` at 992 and an identical copy at
+20172. The one in use for a given scene is *not* determined yet -- for `fond.io` the
+live one sat just past the end of the sprite chain, but that heuristic picks the
+wrong block for `geren.io`. See T11m2.
+
+Two encodings are in play and confusing them cost a session: the game writes the DAC
+with a 6-bit `>> 2`, but Spice86 reports the palette scaled back to 8 bits, so the
+values it returns compare **directly** against the file's bytes -- not shifted.
+
+**Verified by:** `.ish/game-palette.json` (in-game DAC) matched byte for byte against
+`fond.io` at 12108 and `geren.io` at 6684 by exhaustive search over all decoded assets.
+
 ### 3.10 Sprites are 4 bits per pixel, and they chain (T11k, T11l)
 
 **This is the piece that was missing, and it invalidates every "the decoder is broken"
@@ -587,9 +622,21 @@ blitter breakpoint; `captures/blit-sheet.png` renders them 8bpp (unreadable) and
 and the parchment art, all clean). `captures/assets-contact-sheet.png` is the static
 extraction over the whole game.
 
-**Still open:** which 16 of the 256 palette entries a sprite uses. Indices are 0..15 and
-the file carries a 256-entry palette (3.9), so there is a base or sub-palette per sprite;
-the contact sheet has correct shapes and wrong colours because of it.
+**How a 4bpp index becomes a colour (T11m).** The DAC is 16 sub-palettes of 16 (3.9), so
+
+```
+vga_index = group * 16 + nibble        group = header word 0 >> 8
+```
+
+Header word 0 was the last unexplained field, and its high byte is the group: the
+values read live were `0x0012, 0x0017, 0x0310, 0x070f, 0x0b00, 0x0c14, 0x0e10` --
+a group index in the high byte and a small low byte. Rendering everything as group 0
+is what left the shapes right and the colours wrong.
+
+**Status:** the mapping is established from the DAC's structure and word 0's shape,
+and it is *not yet* confirmed pixel-by-pixel against the framebuffer -- the one
+attempt matched 32/40 opaque pixels of a 16x4 sprite, which is not enough to call it.
+See T11m.
 
 
 ## 4. Video
