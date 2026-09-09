@@ -612,7 +612,7 @@ Compose rewrite has to do.
       **Done when:** the routine is named in `ishar.chani` and one sprite's drawn pixels match
       `(word3 >> 4) * 16 + nibble` against the framebuffer.
 
-- [ ] **T27 · Where the scripts live**
+- [~] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in
       the image or in the assets, and either way it is the thing a Compose rewrite has to
       reimplement -- this is probably where combat, magic and quest logic actually are
@@ -625,6 +625,26 @@ Compose rewrite has to do.
       *Strong candidate already: `main.io` decodes to a byte stream of the same shape --
       `45 <id> 00 "name.IO" 00` between other opcode-like bytes. Decoding it would answer
       T11m2 (which palette a sprite is drawn against) at the same time.*
+      *Static half done: **scripts are stored in `.io` assets**, and `main.io` is one.
+      Opcode 0x45's handler (`vm_op_load_asset`, `seg_0000:2dbd`) reads a word asset id then
+      takes the NUL-terminated filename inline from the script and calls the loader -- which
+      is exactly `45 40 00 "logo.IO" 00`, with 64 being logo.IO's catalogue id from 3.5. So
+      the catalogue is a program, not a table. FORMATS.md section 7.
+      Live half not done: five probe runs returned zero breakpoint hits, including an
+      instrument check on `seg_0000:93a6` which runs thousands of times a second, so the
+      breakpoints were not firing at all. See T27b.*
+
+- [ ] **T27b · Execution breakpoints stopped firing**
+      Five runs of `tools/t27-scriptsrc.py` recorded zero hits, and so did an instrument
+      check on `seg_0000:93a6` -- a routine the call-count diff shows running thousands of
+      times a second. So it is the harness, not the game. Earlier working probes today
+      started the emulator `--gdb --pause` and then `ish go`; this one used `--gdb` alone,
+      and adding an explicit `pause_emulator` before the loop did not help.
+      *Method: bisect the launch flags -- `--gdb --pause` + `ish go` against plain `--gdb` --
+      with a breakpoint on a hot routine as the probe, and record which combination
+      delivers stops. Check whether `ish start` reports the GDB port in both cases.*
+      **Done when:** `tools/ish` documents the launch sequence that makes breakpoints fire,
+      and a probe on `seg_0000:93a6` reports hits.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

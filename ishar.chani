@@ -1445,4 +1445,17 @@ attr[seg_0000:1249]: type = code; name = mouse_event_handler; comment = [[[
 attr[seg_0000:072d]: type = code; name = far_target_072d
 attr[seg_0941:1299]: type = code; name = far_target_1299
 attr[seg_0941:1c31]: type = code; name = far_target_1c31
+
+// The script opcode that loads an asset (T27).
+attr[seg_0000:2dbd]: type = code; name = vm_op_load_asset; comment = [[[
+    Opcode 0x45 of vm_statement_table. Reads a word asset id with `lodsw`, stores it at
+    ss:[0b04], points DX at the NUL-terminated filename that follows inline in the script,
+    calls the loader at 78f9, then skips past the name with lodsb/cmp/jnz.
+    This is what `45 40 00 "logo.IO" 00` in main.io is -- opcode, id 0x0040, name -- and 64
+    is logo.IO's catalogue id (FORMATS 3.5). It is the proof that main.io is a script and
+    not a table. FORMATS.md section 7.
+]]]
+attr[seg_0000:78f9]: type = code; name = load_asset_by_name; comment = [[[
+    Called by vm_op_load_asset with DS:DX pointing at a NUL-terminated asset filename.
+]]]
 end

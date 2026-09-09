@@ -920,3 +920,45 @@ the player, not the grid the game walks on.
 **Verified by:** autocorrelation over three files independently agreeing on 90; the
 rendering itself; and the neighbour-count test that isolates `0xCE` as an outline in all
 six files.
+
+## 7. Scripts are stored in `.io` assets (T27, partial)
+
+`main.io` is not a catalogue in the sense of a table. It is **bytecode for the VM of
+section 6**, and opcode `0x45` proves it. Its handler, `vm_op_load_asset` at
+`seg_0000:2dbd`:
+
+```
+call 1624
+lodsw                  ; a word asset id
+test ax,ax / jz ...
+mov  ss:[0b04], ax     ; store the id
+mov  dx, si            ; DX -> the filename, inline in the script
+call load_asset_by_name (78f9)
+lodsb / cmp ax,0 / jnz ; skip past the NUL-terminated name
+ret
+```
+
+which is exactly the shape seen in the decoded bytes of `main.io`:
+
+```
+45  40 00  "logo.IO" 00
+^   ^      ^
+|   |      inline NUL-terminated name, skipped by the handler
+|   asset id 0x0040 = 64, which is logo.IO's catalogue id (3.5)
+opcode 0x45
+```
+
+So an asset id and its filename are **operands of a script instruction**, not rows of a
+table, and the "catalogue" is a program that loads the game's assets. That also explains
+why `.fic` filenames appear in `main.io` and nowhere in the executable (3.11): nothing in
+the code names them, a script does.
+
+**Status:** established statically. The intended live confirmation -- break on the
+interpreter, read `DS:SI`, and match those bytes into a named asset -- could not be run:
+execution breakpoints did not fire in the emulator instance available, verified by an
+instrument check on `seg_0000:93a6`, a routine the call-count diff shows running thousands
+of times a second. See T27b.
+
+**Verified by:** the handler read from `ishar-listing.txt` against the byte pattern in
+decoded `main.io`, with the asset id matching the catalogue id independently established
+in 3.5.
