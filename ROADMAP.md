@@ -569,7 +569,7 @@ Compose rewrite has to do.
       small amount of code. This also helps every other DOS game.*
       **Done when:** clicking an ACTION menu entry from the harness changes the screen.
 
-- [ ] **T11g2 · What the `cont*.fic` files hold**
+- [x] **T11g2 · What the `cont*.fic` files hold**
       `cont1`-`cont6` are each **exactly 4,860 bytes** of small integers with `0xcd`
       uninitialised padding, named in `main.io`'s catalogue but nowhere in the executable
       (FORMATS.md 3.11). Equal-sized grids of small values is the shape of map data, and
@@ -580,6 +580,24 @@ Compose rewrite has to do.
       decodes normally and may hold the same world at a different resolution.*
       **Done when:** FORMATS.md says what a `cont*.fic` record is, with a rendering or a
       field-by-field decode as the evidence.
+      *Met. They are the **world maps**: a 90 x 54 grid, one byte per cell. The width was
+      measured by autocorrelation -- lag 90 peaks in three files independently, with 180,
+      270 and 360 behind it -- and the rendering shows coastlines, a walled settlement in
+      `cont2` and a large structure in `cont5` (`captures/t11g2-cont-grids.png`). `0xCE` is
+      the boundary outline in all six, isolated by a neighbour-count test. `map.io` is a
+      different artefact: it autocorrelates at 160, so it is the rendered map picture at
+      4bpp, not the grid. FORMATS.md 3.12.*
+
+- [ ] **T11g3 · What the map cell values mean**
+      `cont*.fic` are 90x54 byte grids (FORMATS.md 3.12) with 53-91 distinct values each.
+      `0x00` is open, `0xCE` the boundary, `0xCC`/`0xCD` outside; the rest are terrain and
+      object types and are undecoded. This is the world's content -- where towns, dungeons
+      and encounters are -- so it feeds T23 (quests) and any rewrite's map loader.
+      *Method: the party's position is in memory while the game runs; walk a known route,
+      read the coordinates, and index the grid to see which value the party is standing on.
+      Cross-reference cells against the assets a scene loads.*
+      **Done when:** at least eight cell values are identified in FINDINGS.md, each with the
+      observation that established it.
 
 - [ ] **T27 · Where the scripts live**
       If the viewport is driven by bytecode, something loads that bytecode. It is either in

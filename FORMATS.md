@@ -889,3 +889,34 @@ regions. 4,860 factors as 81x60 or 54x90. See T11g2.
 
 **Verified by:** the mode census over all 106 files; `blancpc.io` decoding to exactly its
 declared length with no residue; byte histograms and the catalogue/executable name search.
+
+### 3.12 `cont*.fic` are the world maps (T11g2)
+
+Six files, each **exactly 4,860 bytes**, holding a **90 x 54 grid of one byte per cell**.
+
+The width was measured, not guessed: byte autocorrelation over `cont1`, `cont3` and
+`cont5` peaks at **lag 90**, with 180, 270 and 360 following -- the signature of a row
+stride. 4,860 / 90 = 54 rows.
+
+Rendered at that geometry the files are unmistakably maps (`captures/t11g2-cont-grids.png`):
+closed coastlines, landmasses, a walled settlement in the middle of `cont2`, and a large
+built structure filling most of `cont5`. `cont6` is almost empty -- 4,722 of 4,860 cells
+are zero -- with a single horizontal run, so it is either unfinished or a special area.
+
+What is known about the cell values:
+
+| value | meaning |
+|---|---|
+| `0x00` | empty / open. 26-97% of each grid |
+| `0xCE` (206) | **the boundary outline.** Present in all six, and each cell has a mean of 1.96-1.99 orthogonal neighbours of the same value -- what a one-cell-wide closed curve gives and nothing else does |
+| `0xCC`, `0xCD` | outside the playable area. The MSC uninitialised-memory fill, so the grid was written from a partly-filled buffer |
+| `0x9D` (157) | common and partly line-like; walls or paths, not established |
+| others | 53-91 distinct values per file: terrain and object types, not yet decoded |
+
+**`map.io` is not the same thing.** It decodes normally and autocorrelates at lag 160 --
+160 bytes per row is 320 pixels at 4bpp -- so it is the rendered map *picture* shown to
+the player, not the grid the game walks on.
+
+**Verified by:** autocorrelation over three files independently agreeing on 90; the
+rendering itself; and the neighbour-count test that isolates `0xCE` as an outline in all
+six files.
