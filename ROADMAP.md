@@ -13,28 +13,19 @@ address annotated in `ishar.chani`, not only written up in `FINDINGS.md`.
 
 Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
-**Next up: T11q → T11p → T11r → T11m2 → T11m, then T14/T17.**
+**Next up: T37.**
 
-T10 and T11 are done: the container decodes, sprites are 4bpp and chain end to end, and
-the palette format is confirmed against the running game's framebuffer. What remains on
-graphics is a single missing association -- **which palette is live when a sprite is
-drawn** -- and one unproven claim underneath it.
+The graphics and text formats are solved -- 803 sprites extract with correct geometry, the
+palettes are located, the strings are readable in four languages, and a reader written from
+FORMATS.md alone reproduces the extraction byte for byte (9.6).
 
-- **T11q** first because it costs nothing and needs no emulator: drop the ~50 chain
-  records that report impossible palette groups.
-- **T11p** next because it blocks everything else. The blitter we spent this work on
-  fires 445 times in the launcher and intro and **zero times in the viewport**, so the
-  in-game renderer is still unidentified -- and it scales sprites, which is what word 3's
-  `162..165` sequence meant.
-- **T11r** and **T11m2** both need T11p: proving `group * 16 + nibble`, and pairing each
-  sprite with the scene palette it is actually drawn against. T11m's pixel-exact
-  acceptance falls out of the same measurement.
-- **T18** still lands on everything after this; bring it forward the moment a crash costs
-  a second run.
-- **T11m4**, **T11n**, **T11o** and **T09b** need no emulator and can fill any gap.
+What is not solved is **behaviour**, and it is a single blocker rather than many. Only 42% of
+asset bytes are accounted for; the rest is bytecode nobody can disassemble because no entry
+point is known for any asset except `main.io`. That one gap is why `zombi.io` is half
+unknown, why the language files are 88% unknown, why `affobj.io` is entirely unknown, and
+why combat, magic and quests (T21-T24) have never been located.
 
-Then T14 and T17 -- reproducing the language screen and the first in-game screen offline
--- become the honest proof that the formats are understood.
+T37 attacks it directly. T33, T34 and T32 are instances of it and should wait.
 
 The arc: get the binary readable, learn what the game loads and when, then reproduce
 two real screens offline from the game's own files. Reproducing a screen is the first
@@ -98,6 +89,10 @@ Compose rewrite has to do.
       offset, length, destination buffer.
       **Done when:** FINDINGS.md has a table of every file touched before the language
       menu appears, in order, with sizes — and the same run twice gives the same table.
+      *BLOCKER LIKELY STALE (recheck before believing it): it was written before
+      `tools/nudge.py` moved key-sending into a separate process, which is the documented fix
+      for exactly this -- CLAUDE.md, "a blocking tracer and a key-sending timer cannot share
+      one loop". Every probe since has driven the game that way while tracing.*
       *Traced launch → `logo.IO` (18 calls, FINDINGS §3.0), reproducible across runs,
       with every caller located and annotated in `ishar.chani`. Remaining: the menu
       transition, which needs a keypress — nudging over MCP pauses the emulator too
@@ -165,8 +160,7 @@ Compose rewrite has to do.
 
 ## M3 — Draw the language-selection screen ourselves
 
-- [~] **T10 · Find the decompressor**
-      From T07's destination buffer, follow the code that fills it.
+- [x] **T10 · Find the decompressor**      From T07's destination buffer, follow the code that fills it.
       *Done: a byte-oriented RLE decoder and its stream helpers are annotated
       (`rle_decode_loop`, `get_byte`, `read_next_chunk`, `put_byte`, `load_container`,
       FORMATS §3.2), and the 16-byte header turned out to be a directory of counts, not
@@ -180,6 +174,15 @@ Compose rewrite has to do.
       `:2136`; no search needed, and it does not need the menu traced.*
       **Done when:** the routine is annotated in `ishar.chani`, and the input bytes and
       the decoded bytes for one small file are captured side by side.
+      *Met, and the remaining clause was resting on a dead premise. "Prove `main.io` uses this
+      decoder" could never succeed: `main.io` is mode `0xa100`, so it takes the **LZ77** path
+      at `seg_0000:7b85`, not the RLE decoder this task annotated. The breakpoint that "never
+      fired" was a correct negative, and the task text simply was not updated when the mode
+      branch was discovered -- the scar "read the branch before transcribing the routine" is
+      about that exact mistake.
+      The Done-when itself is satisfied by FORMATS 3.2: both decoders are annotated, and the
+      input and decoded bytes are compared side by side for two files -- `main.io`, all 26,384
+      bytes identical to the emulator's own buffer, and `logo.io`, 40,631 of 40,632.*
 
 - [x] **T10b · Name the outer caller of each DOS call**
       The tracer reads the INT frame, so every caller comes back as `dos_read_asset`
@@ -614,6 +617,8 @@ Compose rewrite has to do.
       identical and both correlate at 45, which is what parity-splitting a 90-wide grid does.
       The live half failed on the harness twice -- MCP `read_memory` needs ~45s for 4KB, and
       the GDB path saw no changed words before the emulator stalled at 1% CPU. T11g3b.*
+      *BLOCKER LIKELY STALE: a stalled emulator is not a property of this task. Restart and
+      confirm the party moves before trusting any null result.*
 
 - [x] **T11r2 · Find the code that applies the palette group**
       Word 3 holds the group (FORMATS.md 3.10, T11r) but **no code site is known**: `[si+6]`
@@ -900,6 +905,56 @@ Compose rewrite has to do.
       asset that has sprites, and a reader written from the document alone can extract any
       of them, not just `zombi.io`.
 
+- [ ] **T11e2 · What sets the language entry point**
+      `main.io` selects a language by entering a switch at one of four addresses; the block
+      itself cannot do that, because linear execution always falls through to French
+      (FINDINGS 6.8). Something upstream sets `SI`, or branches on a language variable using
+      the `0x17`/`0x18`/`0x19`/`0x1a` conditional skips, which compare the accumulator `DX`.
+      *Method: `start.stp` has a `cfg_*` block (FORMATS 2) and the menu writes the choice
+      somewhere. Break on the switch's first instruction (`main.io` offset 2870 in its decode
+      buffer) and read `DX` and `CX`; or search the script for a load-from-variable opcode
+      whose result feeds a `0x19` shortly before 2874.*
+      **Done when:** FINDINGS.md names the variable that holds the language and shows English
+      and French runs requesting different asset ids for the same content.
+
+- [ ] **T36 · What the `b9 04` string tag is as an instruction**
+      Strings in the language files are stored as `b9 04 <ASCII> 00` (FORMATS.md 10.3), and
+      scanning for that tag reads them all out. But `0xb9` maps to `seg_0000:2a78`, which sets
+      `ss:[0bac]` to 2 and calls the expression evaluator -- it does not obviously consume an
+      inline string, so the tag is probably an opcode plus a one-byte operand rather than a
+      two-byte marker.
+      *Method: `vm_op_load_asset` (0x45) is the worked example of an opcode with an inline
+      NUL-terminated operand -- its handler ends with `lodsb / cmp / jnz` to skip the string.
+      Look for the same tail in 2a78's callees, or break on it and watch SI cross the text.*
+      **Done when:** FORMATS.md 10.3 says which byte is the opcode and what the other is, and
+      `tools/vmdis.py` prints the strings as operands instead of stopping on them.
+
+- [ ] **T37 · The 58% problem: enter an asset's embedded script**
+      **This is the largest gap in the project and it is one problem, not several.** Across
+      the 98 decodable assets only **42% of bytes are accounted for** (FORMATS.md, "How much
+      of the assets is actually understood"). The unexplained remainder is the same thing
+      everywhere:
+      - `zombi.io` -- 1,934 bytes before the sprite chain and 3,586 after, 49% (9.5)
+      - the language files -- 88% of each, everything that is not a string (10.6)
+      - `affobj.io` -- the entire 1,432-byte payload (8.3)
+      - seven assets identified as nothing at all (3.6, T32)
+      In every case the bytes are consistent with VM bytecode and in no case can they be
+      disassembled, because **`tools/vmdis.py` has no entry point** and 219 of 231 byte values
+      are valid opcodes, so any alignment "works" and none can be checked. Aligning on
+      `messagee.io` reads the ASCII of `"LEVEL     : "` as a load instruction.
+      Solving entry points once solves all of them, which is why T33 (affobj), T34 (zombi's
+      regions) and T32 (the unidentified seven) should not be attacked separately.
+      *Method: the entry point is not in the asset -- `main.io` was proved to be the running
+      script by catching `DS:SI` live (7.1), and the same instrument answers this. Break on
+      `vm_run`/`vm_dispatch` while the game does the thing an asset is for -- open the
+      character sheet for `messagee.io`, draw a zombie for `zombi.io` -- and check whether
+      `DS:SI` enters that asset's decode buffer. The buffer address comes from the loader.
+      If it never does, the asset's bytes are data the engine reads rather than code it runs,
+      and that is equally an answer.*
+      **Done when:** for at least one asset that is not `main.io`, a disassembly start offset
+      is confirmed against live program counters -- the check that validated `main.io` -- or
+      it is established that these regions are not executed at all.
+
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
       routine draws it, and full-screen art probably shares that path.
@@ -950,7 +1005,7 @@ Compose rewrite has to do.
       contrées (3.12, T11g2). `en1.fic` is record-structured rather than a grid -- its
       autocorrelation peaks at lags 2, 4, 8 and 16 instead of 90.*
 
-- [ ] **T11e · Decode main.io's catalogue and answer the language question**
+- [~] **T11e · Decode main.io's catalogue and answer the language question****
       *Reframed by T27: `main.io` is not a catalogue table, it is a script, and the "entries"
       are operands of opcode 0x45. So this is not a record-format task any more -- it is
       answered by reading the listing T30 produces.*
@@ -963,6 +1018,15 @@ Compose rewrite has to do.
       one known file is confirmed against a live load, and FINDINGS.md states how the
       language selection reaches a different file — with the code or the trace that
       shows it, not the filename pattern.
+      *Two of three met. The "catalogue" is a script and its record layout is the
+      `vm_op_load_asset` instruction -- opcode 0x45, word id, inline NUL-terminated name
+      (FORMATS 7). An id is confirmed against the file itself for **85 of 94 assets**: word 0
+      of the decoded payload equals the id operand (FORMATS 3.15), and the nine exceptions are
+      language variants sharing their base file's id, which is itself part of the answer.
+      The third clause is half done: the selection is a **switch** in the script -- each
+      language case loads its file then skips to a common end, and running the block from the
+      top gives French (FINDINGS 6.8). What sets the entry point is not found, so the variable
+      holding the language is still unknown. See T11e2.*
 
 - [x] **T11 · `tools/io.py`**
       Port the decoder offline.

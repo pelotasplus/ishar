@@ -476,6 +476,24 @@ key the game uses to find an already-loaded asset (3.4), not merely a label.
 instruction in `main.io` (section 7), across all 94 assets the script loads.
 
 
+
+#### How much of the assets is actually understood: 42%
+
+Summing everything this document can name -- the 16-byte asset header (3.15), sprite records
+(3.10), palette records (3.9) and strings (10.3) -- across the 98 decodable `.io` files:
+
+**673,966 of 1,583,646 bytes, 42%.**
+
+It is very uneven. `presti.io` is 98% accounted for and `buste.io` 95%, because they are
+almost entirely sprites. At the other end, eight files are at **0% beyond their header** --
+`param.io`, `map.io`, `monstre.io`, `gaz.io`, `encont.io`, `dplt.io`, `blancpc.io`,
+`iboishar.io` -- and the language files sit at 8-12% (10.5).
+
+The remainder is mostly script: `main.io` is bytecode (section 7), `affobj.io` is bytecode
+(section 8), and the unexplained regions inside sprite banks (9.5) and language files are
+the same kind of thing. **Reading the game's art and text is solved; reading its behaviour
+is not.**
+
 ### 3.7 What is inside a decoded asset (T11b)
 
 **Established, byte for byte.** A decoded asset holds **8-bit palette indices, one byte
@@ -1534,3 +1552,173 @@ See T34.
 **Verified by:** header fields against `tools/io.py` (11,272 out, zero residue); the id
 against `main.io`'s load instruction and across 94 assets; the chain walked with zero gaps;
 the symmetry counts above.
+
+## 10. Where the strings are, and their format
+
+### 10.1 Which files
+
+Text is not in one file per language; it is in **two sets of four**, one file per language:
+
+| set | French | English | Deutsch | Italiano | strings | contents |
+|---|---|---|---|---|---|---|
+| messages | `message.io` | `messagee.io` | `messaged.io` | `messagei.io` | **99** | UI labels -- `LEVEL     : `, `EXPERIENCE: `, `AGILITY      : ` |
+| narrative | `textin.io` | `textine.io` | `textind.io` | `textini.io` | **35** | the intro and story text |
+
+The suffix is the language: **no suffix = French**, `e` = English, `d` = Deutsch,
+`i` = Italiano. French carries no letter because it is the studio's own language and the
+script's fall-through case (FINDINGS 6.8).
+
+`sos.io`/`sosd`/`sose`/`sosi` follow the same naming but are **not text** -- they hold
+filenames such as `foret.io`, `foret.co`, `foret.ao`.
+
+### 10.2 All four variants share one asset id
+
+Every `message*.io` decodes with **asset id 14 (`0x0e`)** in word 0 of its payload
+(3.15) -- the English, German and Italian files included, not just the French one. The same
+holds for the other sets: `textin*` all carry `0x2f`, `sos*` all carry `0x56`.
+
+The script asks for a **different** id per language, though. From `main.io`:
+
+| file | id in the load instruction | id in the file's own header |
+|---|---|---|
+| `messagee.io` | `0x63` | `0x0e` |
+| `messaged.io` | `0x64` | `0x0e` |
+| `messagei.io` | `0x65` | `0x0e` |
+| `message.io` | `0x0e` | `0x0e` |
+
+So the header id names **what the content is** -- "the messages" -- while the script's id
+names **which variant to fetch**. These nine language files are exactly the nine assets that
+break the otherwise universal rule that the two ids match (3.15, 85 of 94).
+
+### 10.3 The string encoding
+
+Strings are **inline in the script**, not in a table with offsets. Each one is:
+
+```
+b9 04  <ASCII bytes>  00
+```
+
+a two-byte tag, the text, and a NUL terminator. There is no length prefix and no index
+table anywhere in the file.
+
+```
+862   b9 04 4c 45 56 45 4c 20 20 20 20 20 3a 20 00
+      ^^^^^ tag        L  E  V  E  L  _  _  _  _  _  :  _  ^^ terminator
+```
+
+Line breaks are their own string: `b9 04 0d 0a 00` is a bare CR LF, which is why the
+strings alternate with empty-looking entries.
+
+**Strings are addressed by position.** `b9 04` occurs exactly 99 times in every one of the
+four `message*` files and exactly 35 times in both `textin*` files, and the n-th string
+means the same thing in each:
+
+| n | `message.io` | `messagee.io` | `messaged.io` | `messagei.io` |
+|---|---|---|---|---|
+| 4 | `NIVEAU    : ` | `LEVEL     : ` | `LEVEL     : ` | `LIVELLO    : ` |
+| 6 | `EXPERIENCE: ` | `EXPERIENCE: ` | `ERFAHRUNG : ` | `ESPERIENZA: ` |
+| 20 | `AGILITE      : ` | `AGILITY      : ` | `BEWEGLICHKEIT: ` | `AGILITA'     : ` |
+
+Labels are **padded with spaces to a fixed width** so the colons line up in the character
+sheet -- the padding is part of the stored string, not applied at draw time.
+
+### 10.4 Reading them
+
+```
+1  decode the container as usual (3.0, 3.2)
+2  scan the payload for the two-byte tag b9 04
+3  the string runs from tag+2 to the next 00
+4  keep them in order; the index is the identity, and it is the same in all four
+   language files of a set
+```
+
+**Status:** the encoding and the positional correspondence are established. What `b9 04`
+*is* as an instruction is not: `0xb9` maps to `seg_0000:2a78`, which sets `ss:[0bac]` to 2
+and calls the expression evaluator, so the tag is more likely an opcode plus a one-byte
+operand than a two-byte marker. It does not matter for reading the strings out, but a
+reader that disassembles rather than scans would need it. See T36.
+
+
+### 10.5 How much of these files the strings explain: 8-12%
+
+The strings are a small part of a language file. Everything else is script.
+
+| file | decoded | strings | bytes in strings | accounted |
+|---|---|---|---|---|
+| `message.io` | 8712 | 99 | 1021 | **11%** |
+| `messagee.io` | 8416 | 99 | 986 | **11%** |
+| `messaged.io` | 8600 | 99 | 1006 | **11%** |
+| `messagei.io` | 8600 | 99 | 1027 | **12%** |
+| `textin.io` | 11896 | 35 | 1088 | **9%** |
+| `textine.io` | 11480 | 35 | 945 | **8%** |
+
+The strings also do not run the length of the file: in `messagee.io` they occupy 679..7027
+of 8416 bytes, and in `textine.io` 7649..10375 of 11480 -- the narrative text sits in the
+*last* third of its file. Everything before, between and after is unread.
+
+That is enough to translate the game or to build a string table, and nowhere near enough to
+reimplement what these files do.
+
+### 10.6 The other 88%: what is known and what is not
+
+A language file is a **script with its strings inline**, and the script is the same in every
+language. Splitting `messagee.io` and `message.io` at their string boundaries gives 100
+inter-string gaps each, and **79 of the 100 are byte-identical between English and
+French** -- so the bulk of the file is language-invariant code.
+
+Of the 21 gaps that do differ, **12 differ only in the operand of a leading `0x0a`**, the
+unconditional forward skip (FINDINGS 6.8):
+
+```
+gap 14   en  0a b70c 00 bf 00 07 00 0f 02 be 00 00 11
+         fr  0a 010d 00 bf 00 07 00 0f 02 be 00 00 11
+             ^^ ^^^^ only the skip distance changes
+   string 14:  en 'ATTRIBUTES :'   fr 'CARACTERISTIQUES :'
+
+gap 44   en  0a 840a 00 bf 00 07 00 0b 00 37 00 32
+         fr  0a cc0a 00 bf 00 07 00 0b 00 37 00 32
+   string 44:  en 'GIVE ITEM'      fr 'DONNER OBJET'
+```
+
+The displacements are **recomputed per language** because they jump over text that changes
+length -- which is what you would expect from a build step that assembles the script with
+the translated strings substituted in.
+
+So every byte of a language file falls into one of three buckets:
+
+| bucket | bytes (messagee.io) | share | status |
+|---|---|---|---|
+| asset header (3.15) | 16 | 0.2% | **decoded** |
+| strings, `b9 04 ... 00` (10.3) | 986 | 12% | **decoded** |
+| the rest | 7414 | 88% | **not decoded** -- see below for exactly what is and is not known |
+
+#### What "the rest" actually means
+
+It is **not** a decoded region, and calling it "script" is an inference from two
+measurements rather than a reading:
+
+1. **It is not text and not language data.** 79 of the 100 gaps are byte-identical between
+   English and French.
+2. **At least the gap openings are instructions.** 12 of the 21 differing gaps begin with
+   `0x0a`, an opcode whose handler is read and understood (`lodsw / inc si / add si,ax`,
+   FINDINGS 6.8), and whose operand provably grows with the length of the translated text.
+
+That is the whole basis. **Running `tools/vmdis.py` over this file does not produce a
+correct listing**: with no known entry point it mis-aligns and reads the ASCII of
+`"LEVEL     : "` as a `vm_op_load_asset` instruction. So the bytes are *consistent with*
+bytecode for the VM of section 6, and are not *decoded* bytecode.
+
+Concretely, what a reimplementation gets from this file today: the 99 strings, in order,
+matched across four languages. What it does not get: when each is shown, where on screen,
+or in response to what -- all of which lives in the 88%.
+
+The 9 differing gaps that the skip-operand explanation does not cover are unexplained
+as well.
+
+**Verified by:** the gap-by-gap comparison of `messagee.io` against `message.io` (79 of 100
+identical, 12 of the rest differing only in a skip operand); the byte sequences quoted
+above.
+
+**Verified by:** counts of the tag across all eight files (99, 99, 99, 99 and 35, 35);
+the index-by-index comparison above, which lines up the same label in four languages; and
+the asset ids read from each file's own header against the load instructions in `main.io`.

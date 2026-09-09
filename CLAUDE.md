@@ -483,6 +483,29 @@ applied too widely, one was the contact sheet's scaler, and neither was the pale
 got investigated first. Before re-deriving a format, render one known-good asset through
 the same path -- `logo.io` has a framebuffer-verified reference for exactly this.
 
+### A blocker is a claim with an expiry date
+
+Three tasks sat blocked on conditions that had stopped being true. `T07` on "nudging over
+MCP pauses the emulator", written before `tools/nudge.py` moved key-sending to a separate
+process -- the documented fix for that exact problem, used by every probe since. `T10` on a
+breakpoint that "never fired", which is the signature of the IP bug in T27b -- though there
+it turned out to be a *dead premise* instead: `main.io` takes the LZ path, so a breakpoint
+on the RLE decoder could never have fired, and the task was never updated when the mode
+branch was found. `T11g3` on an emulator that had stalled at 1% CPU, which is not a
+property of the task at all.
+
+Two rules:
+
+- **When a tool bug is fixed, sweep the roadmap for tasks whose blocker was that class of
+  failure.** After T27b I rechecked one task -- T29d -- and left the others. A blocker
+  written in the past tense is evidence about a past run, not about the task.
+- **When a finding changes what a task rests on, edit the task in the same step.** T10's
+  remaining clause was impossible from the moment the mode branch was discovered, and it
+  survived because nobody went back.
+
+Grepping `ROADMAP.md` for "never fired", "did not fire", "0 hits", "stalled" and the like
+takes seconds and found all three.
+
 ### Proposing work in the reply is not filing it
 
 The `main.io` disassembler was offered as "the obvious next step" in three separate

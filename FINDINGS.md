@@ -667,3 +667,51 @@ changed words before the emulator stalled at 1% CPU. See T11g3b.
 
 **Evidence:** connected-component counts over `cont1.fic` and `cont2.fic`; the parity-plane
 comparison over three files.
+
+### 6.8 How the language choice reaches a different file (T11e, partial)
+
+The four language variants of a text asset are loaded by a **switch in `main.io`'s script**,
+not by a name or a suffix rule. For the message files it sits at offsets 2874-2949:
+
+```
+2870  19 00 2a      cmp dx,cx; if equal skip to 13625 -- past the whole block
+2874  0a 39 00 00   unconditional skip of 57 -> lands at 2935
+2878  45 63 00 "messagee.IO"      English,  asset id 0x63
+2893  0a 34 00 00   skip 52 -> 2949, the end of the block
+2897  45 64 00 "messaged.IO"      Deutsch,  id 0x64
+2912  0a 21 00 00   skip 33 -> 2949
+2916  45 65 00 "messagei.IO"      Italiano, id 0x65
+2931  0a 0e 00 00   skip 14 -> 2949
+2935  45 0e 00 "message.IO"       French,   id 0x0e
+2949  (continues)
+```
+
+Each case loads its file and then skips to the common end, which is a switch. **Running the
+block from the top gives French** -- the first skip jumps straight to 2935 -- which fits a
+French studio treating its own language as the fall-through. The same shape repeats for
+`sos*` at 2974-3019 and for `textin*` at 11891-11977.
+
+The skip opcodes are a family, all reading their displacement inline:
+
+| opcode | handler | behaviour |
+|---|---|---|
+| `0x0a` | `seg_0000:273f` | `lodsw / inc si / add si,ax` -- unconditional forward skip |
+| `0x17` | `seg_0000:28c0` | skip if `DX != 0` |
+| `0x18` | `seg_0000:28cd` | skip if `DX == CX`, byte displacement |
+| `0x19` | `seg_0000:28d8` | skip if `DX == CX`, word displacement |
+| `0x1a` | `seg_0000:28e4` | as `0x18`, three-byte form |
+
+`DX` is the VM accumulator (FORMATS 6), so these branch on whatever the preceding expression
+evaluated to.
+
+**What is established:** the four ids for each text asset, that the selection is a switch,
+that French is the fall-through, and the opcodes that implement the skips.
+
+**What is not:** what sets the entry point. Reaching the English case at 2878 requires `SI`
+to arrive there, and nothing in the block does that -- linear execution always lands on
+French. The selector is upstream and has not been found, so **which variable holds the
+language, and where the menu writes it, are still open** (T11e2).
+
+**Evidence:** the byte sequences above read from decoded `main.io`; the skip targets
+computed from each operand and confirmed to land exactly on a load instruction or on the
+block's end; the handlers read from `ishar-listing.txt`.
