@@ -104,7 +104,7 @@ Compose rewrite has to do.
       be two-phase: drive to the menu and select the language over MCP with no GDB
       client attached, then attach the tracer for the intro → gameplay stretch.*
 
-- [ ] **T09 · Name the files** — *do after T11; the method has changed*
+- [x] **T09 · Name the files**
       For each file, say what it is: splash image, menu font, text block, sprite set,
       map. Evidence is *when it is loaded and what is drawn next*, or — once T11 lands —
       what the decoded bytes actually are.
@@ -117,6 +117,11 @@ Compose rewrite has to do.
       **Done when:** FORMATS.md §3 carries a catalogue with a confidence marker per
       entry, every guess marked as one, and the three traced files agreeing with what
       the decoder says they are.
+      *Done, and honestly partial: 10 files are text with high confidence (read as real
+      dialogue), 9 do not decode, and **87 are left explicitly unclassified** because
+      nothing in their bytes has been shown to be an image yet — naming them from their
+      filenames is the guess this project has been burned by twice. Two of the three
+      traced files agree; `blancpc.io` is mode 0x00 and does not decode (T11g).*
 
 - [x] **T09b · Read the `START.STP` parser**
       `seg_13d7:0e9f` opens it and `seg_13d7:0eb4` reads 14 bytes to `1554:0386`; the
@@ -180,6 +185,13 @@ Compose rewrite has to do.
       is already transcribed for these but has never been checked against ground truth.
       **Done when:** each of the nine either decodes byte-for-byte against a captured
       buffer, or is documented as a different format with the evidence.
+
+- [ ] **T20b · The manual copy-protection gate**
+      `PROTECTION TEST-MANUAL`, `PLEASE USE YOUR MANUAL AND ENTER`, `WORD LINE`,
+      `PAGE :` are in `messagee.io` (FINDINGS §3b), so the game asks for a word from the
+      printed manual at some point. Automated play will hit it.
+      **Done when:** FINDINGS.md says when it triggers, what it accepts, and where the
+      check lives in the code — and whether a measurement session can get past it.
 
 - [ ] **T11h · What consumes the catalogue's `0a` prefix**
       Each language variant in `main.io` is preceded by `0a <u16> 00 00` and carries its
@@ -327,6 +339,9 @@ Compose rewrite has to do.
 - [ ] **T19 · Character record and levelling**
       **Done when:** every field is named or explicitly marked unknown, the XP curve is
       written as data, and one prediction stated in advance is confirmed in the game.
+      *Cheaper now: T09 read the field names straight out of the game's own UI strings —
+      five headline values, five attributes, eight skills (FINDINGS §1.1b). The search in
+      memory now has a known shape to look for instead of an unknown structure.*
       *Method: locate one member's HP by taking damage and intersecting `search_memory`
       results across two or three observations; find a second member the same way, and
       the base and stride of the array fall out. Then `MEMORY_WRITE` breakpoints on the

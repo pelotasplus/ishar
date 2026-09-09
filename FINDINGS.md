@@ -34,6 +34,38 @@ buttons and a LIFE bar. Starting character in a fresh game is `ARAMIR`.
 
 **Open:** character record layout, stat list, XP curve, level-up rules, class system.
 
+### 1.1b The character sheet, read from the game's own labels
+
+`messagee.io` decodes to the English UI strings, which name every field the game shows
+for a character:
+
+```
+LEVEL        EXPERIENCE     VITALITY      PHYSICAL      MENTAL
+ATTRIBUTES:  STRENGTH  CONSTITUTION  AGILITY  INTELLIGENCE  WISDOM
+SKILLS:      LOCKPICKING  ORIENTATION  FIRST AID  1 HAND WEAPONS
+             2 HANDS WEAPONS  THROWING  SHOOTING  LANGUAGES
+```
+
+So a character carries five headline values, five attributes and eight skills. That is
+the shape T19 has to find in memory — and it is a much better anchor than hunting for
+an unknown structure, since each of these is displayed and therefore stored.
+
+Party actions, from the same file: `GIVE ITEM`, `GIVE MONEY`, `KILL`, `DISMISS`,
+`RECRUIT`, `PICK LOCK`, `ORIENTATION`, `FIRST AID`, `MAP`, `CAST SPELL`.
+
+**Evidence:** `tools/io.py` decode of `messagee.io`, whose decoder is verified
+byte-for-byte against the emulator on two other files.
+
+### 1.1c Recruitment is a party vote
+
+`TEAM VOTE :` followed by `: OK`, `: NEUTRAL`, `: AGAINST`, and the outcomes
+`MEMBER RECRUITED`, `CHARACTER REJECTED`, `COMPLETE PARTY`, `EXPULSION APPROVED`,
+`EXPULSION REJECTED`. So existing members vote on whether a candidate joins or is
+expelled, and the vote can fail. A rewrite that models recruitment as a simple "add to
+party" would miss a real mechanic.
+
+**Evidence:** decoded `messagee.io`.
+
 ### 1.2 Combat
 
 Not yet investigated.
@@ -166,6 +198,31 @@ the default instruction time scale.
 **Evidence:** driven over MCP, screenshot at each step.
 
 ---
+
+## 3b. Quests and lore
+
+From the decoded text files. These are the game's own words, quoted only as far as
+needed to establish the facts.
+
+**The premise.** Krogh murdered Prince Jarel and took his throne in Ishar, "an evil
+temple unleashing hordes of monsters". The speaker of the intro is Akeer, one of Jarel's
+companions, who fought the earlier Dark Lord Morgoth. Destroying Krogh grants Ishar's
+powers and the kingdom.
+
+**Three quests**, given by Azalghorm, "the Spirit, Silmarilian Gods messenger": the
+magician's talisman, the exhausted witch, and gaining possession of all of the rune
+tablets.
+
+**Named characters and places** appearing in the strings: Akeer, Zach (another of
+Jarel's companions, who gives a flask), Deloria, Azalghorm; the country of Angarahn with
+a village and the tavern "The Thirsty Barbarian"; a lacustrine city to the north-east
+with the taverns "Frogonir's Inn" and one other.
+
+**Copy protection.** `PROTECTION TEST-MANUAL`, `PLEASE USE YOUR MANUAL AND ENTER`,
+`WORD  LINE`, `PAGE :` — the game asks for a word from the printed manual. This is a
+gate any automated play will hit, and it is not in the roadmap's boot path yet.
+
+**Evidence:** decoded `textine.io` and `messagee.io`.
 
 ## 4. Runtime layout
 
