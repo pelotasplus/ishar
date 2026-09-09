@@ -442,6 +442,22 @@ Anything configured once at startup -- interrupt handlers, palettes, modes, devi
 -- is invisible to a trace that begins later, and the absence looks exactly like a
 feature that was never there.
 
+### A regex that edits the database can eat the database
+
+Replacing one annotation with
+`re.sub(r'^attr\[seg_0000:3a84\]:.*?\n\]\]\]\n', new, text, flags=re.S|re.M)`
+looks surgical and is not: with `re.DOTALL`, `.*?` runs from that annotation to the
+**next** `]]]` anywhere in the file. The entry being replaced was a one-liner, so the
+match swallowed 149 following annotations and they were committed as deleted.
+
+Nothing complained. `disasm.sh` still ran, the listing still looked right, and the loss
+showed up only as coverage sliding 49.6% -> 47.9% two tasks later -- and was nearly
+misread as a legitimate correction.
+
+Edit the database **line by line**, never with a multi-line regex, and after any edit
+check `grep -c '^attr\[' ishar.chani` against what it was. A count that falls when you
+meant to add is the whole check.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

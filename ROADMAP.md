@@ -730,13 +730,20 @@ Compose rewrite has to do.
       **Done when:** FINDINGS.md §5.0 says whether it is the same root cause as §5.1
       or a second one, with the faulting address and how execution got there.
 
-- [ ] **T19c · Re-seed the four routines chani cannot lay out**
+- [x] **T19c · Re-seed the four routines chani cannot lay out**
       `seg_0000:072d`, `seg_0000:0d98`, `seg_0941:1299`, `seg_0941:1c31` are real
       routines dropped from the listing because chani panics on them — and `0d98` is
       the launcher's timer ISR, wanted by T18.
       **Done when:** each is readable somewhere — a chani workaround, a patched
       chani-rs, or a `read_disassembly` transcript pasted into `ishar.chani` as a
       comment — and none is silently missing.
+      *Met, and it simply works now. All four seed without a panic against the current
+      database and decode as real routines -- the layout conflict that caused
+      `layout.rs:361` was resolved by the surrounding coverage that T26/T28/T29 added.
+      Coverage 49.6% -> 49.7%, `seg_0941` 1,349 -> 1,395 instructions.
+      Two of them are **sound code**: `seg_0941:1299` opens `push cx / push ax / mov dx,388h`
+      and `seg_0941:1c31` writes `389h` -- both OPL2 ports, which is a direct lead for T25.
+      `seg_0000:0d98` is the launcher timer ISR that T18 wants.*
 
 - [ ] **T21 · Combat: to-hit and damage**
       The UI names four combat skills — `1 HAND WEAPONS`, `2 HANDS WEAPONS`, `THROWING`,
@@ -782,6 +789,10 @@ Compose rewrite has to do.
       shows writes to port `0x388`. But no sound *asset* has been identified: nothing in
       the 106 files has been shown to be music or samples, and the catalogue's filenames
       do not obviously include any.
+      *Lead from T19c: the OPL driver is in `seg_0941`, not `seg_0000`. `seg_0941:1299`
+      and `seg_0941:1c31` both program ports 0x388/0x389, and `seg_0000:9375`/`9386`/`9396`
+      are the register-write and delay helpers (the delay loops are why `seg_0000:93a6` is
+      hot in every call-count diff -- it is the FM chip, not the mouse).*
       *Method: break on OPL writes (`0x388`/`0x389`) or on the SoundBlaster ports and
       read where the data being written comes from — that pointer leads to the music
       format, whether it lives in an .io file or inside the executable.*
