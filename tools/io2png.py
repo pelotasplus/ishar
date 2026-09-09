@@ -62,8 +62,17 @@ def main():
         width = int(sys.argv[sys.argv.index("--width") + 1]) if "--width" in sys.argv else 144
         skip = int(sys.argv[sys.argv.index("--skip") + 1]) if "--skip" in sys.argv else 0
         height = None
-    pal = (load_palette(sys.argv[sys.argv.index("--palette") + 1])
-           if "--palette" in sys.argv else [(i, i, i) for i in range(256)])
+    if "--palette-at" in sys.argv:
+        # The asset carries its own palette: 256 RGB triplets, 8 bits per channel.
+        # The game shifts each right by 2 to make the VGA DAC's 6-bit values, so
+        # the file's bytes are already what a PNG wants.
+        at = int(sys.argv[sys.argv.index("--palette-at") + 1], 0)
+        raw = decode(open(src, "rb").read())[0]
+        pal = [tuple(raw[at + i * 3: at + i * 3 + 3]) for i in range(256)]
+    elif "--palette" in sys.argv:
+        pal = load_palette(sys.argv[sys.argv.index("--palette") + 1])
+    else:
+        pal = [(i, i, i) for i in range(256)]
 
     data = data_all[skip:]
     if height is None:

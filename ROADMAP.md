@@ -223,7 +223,9 @@ Compose rewrite has to do.
       is a directory. The file's first word is its own asset id from the catalogue,
       which suggests the head of the file is a keyed table.
       **Done when:** `tools/io2png.py` can enumerate every sprite in a file without being
-      given an offset, and FORMATS.md describes the directory.
+      given an offset, and FORMATS.md describes the directory. **T11j found the same
+      unknown from the other side** — the palette's offset is per-file too (992 in
+      logo.io, nowhere near that in the others), so one directory answers both.
       *Also tried and failed: no decode start between `seg_0e97:04c0` and the call at
       `0531` lands on it, so the caller's entry is further back or the region interleaves
       data. Next: get the entry from the emulator by breaking at the call and reading the
@@ -240,15 +242,21 @@ Compose rewrite has to do.
       decode buffer base — that gives the offset directly, and the logo appears about 13s
       into a boot, well inside the crash budget.*
 
-- [~] **T11j · Where the palette comes from**
+- [x] **T11j · Where the palette comes from**
       `captures/asset-logo-verified.png` used the DAC as the emulator had it, which
       proves nothing about whether the file carries a palette. Ishar-era assets often
       ship indices only, with the palette loaded separately — the gunboat work was
       caught out by exactly this.
       **Done when:** FORMATS.md says whether a palette travels with an asset, and if not,
       which file or code supplies it, with the DAC writes traced to their source.
-      *Half answered while doing T11k (FORMATS §3.9): `logo.io` carries no palette — the
-      captured DAC's entries appear nowhere in it. Still to find: what does supply it.*
+      *Done (FORMATS §3.9): the palette **is** in the asset — 256 RGB triplets, 8 bits
+      per channel, and the game shifts each right by two for the 6-bit DAC. Verified
+      768/768 against a captured palette. `seg_0000:74b5` copies it from the decoded
+      asset into a staging buffer at `ss:0e46`; `seg_0e97:0d5f` writes that to port
+      0x3c9. `tools/io2png.py --palette-at` uses it, so an asset now renders correctly
+      with no emulator at all. The earlier "carries no palette" entry was wrong — that
+      search looked for the 6-bit DAC values, not the 8-bit stored form. Where the
+      palette sits varies per file, which is the same unknown as T11k.*
 
 - [ ] **T11h · What consumes the catalogue's `0a` prefix**
       Each language variant in `main.io` is preceded by `0a <u16> 00 00` and carries its

@@ -214,6 +214,18 @@ rest. Before transcribing a routine, walk backwards to whatever chose it and che
 inputs actually arrive there — and prefer ground truth captured from the machine, which
 is what showed the output could not possibly have come from the code being read.
 
+### Search for the value as stored, not as captured
+
+`logo.io` was recorded as carrying no palette because a search for the captured DAC
+bytes found nothing in the file. The DAC holds 6-bit values; the file stores 8-bit ones
+and the game shifts them right by two on the way out. The bytes were there the whole
+time, in the obvious place, in the obvious format.
+
+Before concluding something is absent, ask what transformation sits between the copy you
+have and the copy you are looking for -- scaling, packing, endianness, a shift -- and
+search for the pre-image too. A negative result from one encoding is not a negative
+result.
+
 ### A routine you found by reading is not the routine in use
 
 T10 located an RLE decoder with a refill helper by reading the listing, annotated it,

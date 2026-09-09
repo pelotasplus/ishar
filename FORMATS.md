@@ -508,19 +508,36 @@ first rows include bytes that are not part of that image.
 **Verified by:** the annotated disassembly of both blitters and the mode switch; the
 byte-level search that ruled out a width field near the pixels.
 
-### 3.9 The palette does not travel with the asset (T11j, partial)
+### 3.9 The palette travels with the asset (T11j)
 
-`logo.io` carries no palette. The DAC captured while its sprite was on screen has entries
-like `(54,63,63)`, `(0,45,0)`, `(63,0,0)`; nothing resembling that table appears anywhere
-in the decoded file, and the only 768-byte run whose bytes are all ≤ 63 — the shape a
-6-bit VGA palette would have — sits inside the sprite's own pixel data.
+**Corrects an earlier entry in this file**, which said `logo.io` carried no palette. It
+does. The first search looked for the DAC's **6-bit** values as captured; the file stores
+**8-bit** RGB, so nothing matched and the wrong conclusion was recorded.
 
-So an asset is indices only, and the palette is loaded from somewhere else. Which is the
-trap gunboat hit: a correct image against the wrong palette looks broken, and once came
-out entirely black.
+How it reaches the screen:
 
-**Verified by:** byte search of the decoded `logo.io` against `.ish/logo-palette.json`.
-**Open:** which file or code supplies it — T11j.
+1. `seg_0000:74b5` copies from the decoded asset — `DS:SI` was `2365:0031`, and `2365`
+   is `logo.io`'s own decode buffer — into a DGROUP staging buffer at `ss:0e46`.
+2. `seg_0e97:0d5f` writes that buffer out to the VGA DAC data port `0x3c9`.
+
+The stored form is **256 entries of 3 bytes, 8 bits per channel**. The DAC gets each byte
+shifted right by two: `dac = byte >> 2`. Verified for **768 of 768** bytes against the
+palette captured while the logo was on screen — `0xda -> 0x36`, `0xff -> 0x3f`,
+`0xb5 -> 0x2d`, with no exceptions.
+
+That also means an asset's palette is *already* in the form a PNG wants, and
+`tools/io2png.py --palette-at OFFSET` now uses it directly.
+
+**Where it sits is per-file.** In `logo.io` the palette is at offset 992, but only 2 of
+93 decodable files have anything palette-shaped there — so the offset is carried
+somewhere, exactly like the sprite offsets of §3.8. The two questions have one answer,
+and finding it closes both.
+
+So, unlike Eye of the Beholder's separate `.PAL` files, Ishar ships each asset with its
+own palette inside the same compressed file.
+
+**Verified by:** an IO breakpoint on port `0x3c9` and a memory-write breakpoint on the
+staging buffer, both naming their writers; then the byte-for-byte shift check.
 
 ## 4. Video
 
