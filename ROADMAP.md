@@ -282,15 +282,25 @@ Compose rewrite has to do.
       It cost a wrong turn during T11k.
       **Done when:** `ish dis 0e97:038b` prints the same instructions as the listing does.
 
-- [ ] **T11m · Which 16 palette entries a 4bpp sprite uses**
-      Sprites carry indices 0..15; the file carries a 256-entry palette (FORMATS.md 3.9).
-      Shapes extract correctly now but colours are wrong, so there is a base or sub-palette
-      chosen per sprite or per file.
-      *Method: break on the blitter, read the DAC and the sprite's indices, and see which
-      16 DAC entries the drawn pixels actually land on. Header word 0 varies per sprite
-      (272, 784, 1040, 1296, 2816, 3600...) and is the only unexplained field left.*
-      **Done when:** `tools/ioscan.py` reproduces the emulator's framebuffer colours for a
-      sprite it did not get the palette from, checked pixel by pixel.
+- [ ] **T11m · Why the colours are wrong on extracted sprites**
+      Shapes extract correctly (T11k); colours do not. Two candidate causes, and they are
+      not the same task:
+      (a) sprite indices 0..15 are offset or run through a 16-entry LUT into the 256-colour
+      DAC, or (b) `tools/ioscan.py` is simply picking the wrong 768-byte block as the file's
+      palette — its detector is a heuristic and would produce exactly this symptom.
+      *Tried and failed twice: `tools/t11m-palette.py` watches the blitter, then reads the
+      framebuffer at the next stop to pair each nibble with the byte that reached the screen.
+      Run 1 assumed a pitch of 320 and returned the background distribution for every nibble
+      -- the signature of sampling the wrong pixels. Run 2 read the pitch from `ss:[1dd5]`
+      and the clip rect from `ss:[0c2c..0c32]`; the sanity guard then rejected every frame,
+      so at least one of those offsets is not what it was read as. The destination is also
+      an offscreen buffer (`les di, ss:[1dbf]`), not necessarily 320x200.*
+      *Cheaper next: settle (b) first, statically. Capture the DAC while a known asset is on
+      screen and search that file for the same values shifted left by two -- exactly how
+      `logo.io`'s palette was found at 992 (3.9). If the block ioscan picked is not the block
+      that search finds, the bug is the detector and there is no LUT to look for.*
+      **Done when:** `tools/ioscan.py` reproduces the emulator's framebuffer colours for one
+      sprite it did not take the palette from, checked pixel by pixel.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
