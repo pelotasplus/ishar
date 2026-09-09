@@ -13,15 +13,28 @@ address annotated in `ishar.chani`, not only written up in `FINDINGS.md`.
 
 Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
-**Next up: T10 → T11 → T18, then T09.** T10 is the cheapest thing on the board and unblocks the
-most: T07 located the one path every asset takes, so the decoder is a read of known
-code rather than a search, and each measurement is a ~10s run from a paused start —
-short enough that the crashes barely bite. T11 turns that into a decoder with test
-vectors, which is what text, sprites and maps all wait on. T18 comes straight after,
-because two distinct garbage-execution faults cost runs in a single session and that
-tax lands on every task after this one. Bring T18 forward immediately if a crash costs
-a second run before then. T09 follows T11 because the decoder changes how it is done
-(below). T09b needs no emulator at all and can fill any gap.
+**Next up: T11q → T11p → T11r → T11m2 → T11m, then T14/T17.**
+
+T10 and T11 are done: the container decodes, sprites are 4bpp and chain end to end, and
+the palette format is confirmed against the running game's framebuffer. What remains on
+graphics is a single missing association -- **which palette is live when a sprite is
+drawn** -- and one unproven claim underneath it.
+
+- **T11q** first because it costs nothing and needs no emulator: drop the ~50 chain
+  records that report impossible palette groups.
+- **T11p** next because it blocks everything else. The blitter we spent this work on
+  fires 445 times in the launcher and intro and **zero times in the viewport**, so the
+  in-game renderer is still unidentified -- and it scales sprites, which is what word 3's
+  `162..165` sequence meant.
+- **T11r** and **T11m2** both need T11p: proving `group * 16 + nibble`, and pairing each
+  sprite with the scene palette it is actually drawn against. T11m's pixel-exact
+  acceptance falls out of the same measurement.
+- **T18** still lands on everything after this; bring it forward the moment a crash costs
+  a second run.
+- **T11m4**, **T11n**, **T11o** and **T09b** need no emulator and can fill any gap.
+
+Then T14 and T17 -- reproducing the language screen and the first in-game screen offline
+-- become the honest proof that the formats are understood.
 
 The arc: get the binary readable, learn what the game loads and when, then reproduce
 two real screens offline from the game's own files. Reproducing a screen is the first
@@ -329,6 +342,34 @@ Compose rewrite has to do.
       rather than distinct palettes.
       **Done when:** the bank's entries can be enumerated from its structure instead of by
       scanning for the white/black signature, and the count is confirmed.
+
+- [ ] **T11q · Reject chain records that cannot be sprites**
+      Word 0 is `(group << 8) | 16` for 742 of ~800 extracted sprites, and the group is a
+      value 0..15 because the DAC has 16 sub-palettes (FORMATS.md 3.9). Yet the chain walk
+      emits records reporting groups of 32, 44, 68, 99 and 255, and low bytes other than 16 --
+      roughly 50 of the 811 PNGs are junk the walk picked up after losing sync. Filtering on
+      `low byte == 16 and group <= 15` costs nothing and needs no emulator; the risk to check
+      is that a legitimate sprite is dropped, so count before and after and eyeball the
+      difference rather than trusting the drop.
+      **Done when:** `tools/ioscan.py` emits no record with group > 15, the sprite count is
+      reported before and after, and a sample of the dropped records is confirmed to be noise.
+
+- [ ] **T11r · Prove word 0's high byte is the palette group**
+      The claim behind every colour in the extraction, and it is inferred, not measured:
+      the low byte is constant at 16 (a colour count) and the high byte spans exactly 0..15
+      (the DAC's group range), which is suggestive rather than conclusive. Rendering with
+      and without the `group * 16` base differs visibly -- `dragon.io`'s body goes from
+      rainbow to tan scales with it applied (`captures/group-base-test.png`) -- but that is
+      an aesthetic judgement, not a check.
+      **The model also has a fact it does not explain:** `knight.io` carries sprites in eight
+      different groups (0, 2, 3, 4, 6, 9, 10, 13), and `zombi.io` in twelve. If a group were
+      simply "this monster's 16 colours", one file would use one group. So either a group is
+      finer-grained than per-monster (per body part, per damage state, per frame), or the
+      high byte is something else that merely happens to fall in 0..15.
+      *Blocked on T11p: proving it needs a sprite caught being drawn, and the blitter we know
+      does not run in the viewport. A UI sprite avoids the scaling problem.*
+      **Done when:** one sprite's pixels are matched to the framebuffer with `group * 16 +
+      nibble` at over 95%, and the eight-groups-in-one-file observation is explained.
 
 - [ ] **T11p · The viewport renderer is not the blitter we know**
       `seg_0e97:038b` fires 445 times during the launcher/title/intro and **zero times in
