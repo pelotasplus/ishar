@@ -568,6 +568,29 @@ monsters, objects, characters -- carries none and is drawn against whatever pale
 current scene loaded. Extracting one of those in isolation therefore cannot get its
 colours right without knowing the scene (T11m2).
 
+#### `geren.io` is the palette bank
+
+`geren.io` holds **12 unique 768-byte palettes** and `gerdep.io` another 5, and four of
+the seven palettes found inside scene files are byte-identical entries in them:
+
+| scene file | its palette | is |
+|---|---|---|
+| `fond.io` | 12108 | `geren#0` |
+| `fcave.io` | 1310 | `geren#2` |
+| `fcave2.io` | 5712 | `geren#2` |
+| `ftemple.io` | 16244 | `geren#11` |
+| `frise.io` | 34700 | `gerdep#0` |
+| `fville.io` | 1304, 1352 | not in the bank |
+| `itaverne.io` | 5946 | not in the bank |
+
+So scene files embed a copy of the bank entry they use, and the ~100 assets that carry
+no palette borrow one at runtime. `tools/ioscan.py` defaults those to `bank#0` -- a
+placeholder, not the answer: which entry a given sprite is drawn against is T11m2.
+
+`geren.io`'s offsets are `6684, 7408, 7456, 9180, 9904, 9952, 10724, 11448, 11496,
+12172, 12220, 12268` -- note the recurring `+724` and `+48` steps, which suggests the
+bank has a record structure of its own that has not been read yet.
+
 **A scene file can carry more than one palette.** `fond.io` has valid blocks at 556 and 12108,
 `geren.io` at 6540-ish, 6684 and 12268, `logo.io` at 992 and an identical copy at
 20172. The one in use for a given scene is *not* determined yet -- for `fond.io` the

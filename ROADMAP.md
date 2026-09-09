@@ -305,6 +305,10 @@ Compose rewrite has to do.
       monster, object and character sprite is drawn against whatever the current scene loaded.
       That, not a bad detector, is why most extractions have right shapes and wrong colours:
       `tools/ioscan.py` falls back to the best-scoring block in a file that has none.
+      `geren.io` turns out to be the palette **bank** -- 12 unique blocks, and four scene
+      files embed byte-identical copies of entries in it (FORMATS.md 3.9). `tools/ioscan.py`
+      now defaults palette-less assets to `bank#0`, which is a visible improvement and still
+      a placeholder.
       *Method: T10b already recorded which files the game reads and when. Pair each sprite
       asset with the scene palette that is live when it is drawn -- or just break on the
       blitter and record the DAC alongside each sprite, which gives the pairing directly.*
@@ -317,6 +321,14 @@ Compose rewrite has to do.
       exits as soon as it cannot still reach the bar. A full `--all` run went from over ten
       minutes (killed) to **2.7s**, picking the same offsets for the three validated files.
       **Done when:** `tools/ioscan.py --all` completes in under 60s. *Met.*
+
+- [ ] **T11m4 · The palette bank's own record structure**
+      `geren.io`'s 12 palettes sit at 6684, 7408, 7456, 9180, 9904, 9952, 10724, 11448,
+      11496, 12172, 12220, 12268 -- recurring `+724` and `+48` steps, so the bank has a
+      layout rather than being a loose pile, and `+48` pairs may be detector artefacts
+      rather than distinct palettes.
+      **Done when:** the bank's entries can be enumerated from its structure instead of by
+      scanning for the white/black signature, and the count is confirmed.
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other

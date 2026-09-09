@@ -111,17 +111,12 @@ def find_palette(data, chain_end=0):
         if s >= 24:
             cands.append((pos, s))
         pos = data.find(b"\x00\x00\x00", pos + 1)
+    # No weak fallback: a file with no palette of its own borrows one from the
+    # bank, which is what the game does. Guessing at the best-scoring block in
+    # such a file is what produced the arbitrary colours.
     if not cands:
-        best, bs = None, 0
-        pos = data.find(b"\x00\x00\x00")
-        while 0 <= pos <= limit:
-            s = palette_score(data, pos, bs)
-            if s > bs:
-                best, bs = pos, s
-            pos = data.find(b"\x00\x00\x00", pos + 1)
-        if best is None or bs < 8:
-            return None
-        cands = [(best, palette_score(data, best))]
+        return None
+
     # Overlapping candidates 48 or 144 bytes early still satisfy the black-start
     # rule (geren.io scored one at 6540 as well as the true 6684), and a shifted
     # candidate is always the earlier one, so take the last.
@@ -153,7 +148,43 @@ def render(data, off, w, h, pal):
     return rows
 
 
-def do_file(path, outdir):
+_BANK = []
+
+
+def bank():
+    """geren.io is the game's palette bank: 12 unique 768-byte blocks, four of
+    which are byte-identical to the palettes found inside scene files
+    (fond -> geren#0, fcave/fcave2 -> geren#2, ftemple -> geren#11, frise ->
+    gerdep#0). Assets that carry no palette of their own -- about 100 of 110 --
+    borrow one, so the bank is a far better default than the best-scoring block
+    in a file that has none. Which entry belongs to which sprite is T11m2; until
+    that lands, entry 0 (the outdoor scene) is the placeholder."""
+    if _BANK:
+        return _BANK
+    for name in ("geren.io", "gerdep.io"):
+        try:
+            d = decode(open(os.path.join(GAME, name), "rb").read())[0]
+        except Exception:
+            continue
+        limit, pos = len(d) - 768, d.find(b"\x00\x00\x00")
+        while 0 <= pos <= limit:
+            if palette_score(d, pos, 24) >= 24:
+                b = bytes(d[pos:pos + 768])
+                if b not in _BANK:
+                    _BANK.append(b)
+            pos = d.find(b"\x00\x00\x00", pos + 1)
+    return _BANK
+
+
+def bank_palette(n=0):
+    b = bank()
+    if not b:
+        return None
+    c = b[min(n, len(b) - 1)]
+    return [tuple(c[i:i + 3]) for i in range(0, 768, 3)]
+
+
+def do_file(path, outdir, bank_index=0):
     name = os.path.splitext(os.path.basename(path))[0].lower()
     try:
         data = decode(open(path, "rb").read())[0]
@@ -163,7 +194,12 @@ def do_file(path, outdir):
     taken = [(o, o + 8 + ((w + 1) // 2) * h) for o, w, h in sprites]
     chain_end = taken[-1][1] if taken else 0
     found = find_palette(data, chain_end)
-    pal = found[1] if found else [(i * 16 % 256,) * 3 for i in range(256)]
+    if found:
+        pal, where = found[1], str(found[0])
+    else:
+        pal, where = bank_palette(bank_index), f"bank#{bank_index}"
+        if pal is None:
+            pal, where = [(i * 16 % 256,) * 3 for i in range(256)], "grey"
     os.makedirs(outdir, exist_ok=True)
     for off, w, h in sprites:
         png.write(os.path.join(outdir, f"{name}-{off:06d}-{w}x{h}.png"),
@@ -171,19 +207,22 @@ def do_file(path, outdir):
     covered = sum(e - s for s, e in taken)
     return (f"{name}: {len(sprites):3d} sprites, "
             f"{100 * covered // max(1, len(data)):3d}% of {len(data)} bytes, "
-            f"palette {found[0] if found else '-'}")
+            f"palette {where}")
 
 
 def main():
     argv = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not argv:
         sys.exit(__doc__)
+    n = 0
+    if "--bank" in sys.argv:
+        n = int(sys.argv[sys.argv.index("--bank") + 1])
     if "--all" in sys.argv:
         for f in sorted(x for x in os.listdir(GAME) if x.lower().endswith(".io")):
-            print(do_file(os.path.join(GAME, f), argv[0]), flush=True)
+            print(do_file(os.path.join(GAME, f), argv[0], n), flush=True)
     else:
         src = argv[0] if os.path.exists(argv[0]) else os.path.join(GAME, argv[0])
-        print(do_file(src, argv[1] if len(argv) > 1 else "."))
+        print(do_file(src, argv[1] if len(argv) > 1 else ".", n))
 
 
 if __name__ == "__main__":
