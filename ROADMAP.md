@@ -1554,7 +1554,16 @@ Compose rewrite has to do.
       named in chani.
       Remaining for 90%: paths reached only by indirect jumps, and branch targets that land
       in data (the 56). Other assets stay near 0% from offset 24, which is evidence that 24
-      is **not** their entry — see T37e.*
+      is **not** their entry — see T37e.
+      Second round: found the two statements that end `vm_run` — `0x42` (`add sp,2 / ret`,
+      and the second most common opcode in main.io) and `0x43` — since a handler can only
+      leave that loop by discarding its return address (FORMATS 7.2c).
+      Treating them as terminal in traversal is **wrong**: coverage falls 42.8% -> 8.7%, so
+      control really does continue past them, which fits them being yields that resume.
+      But the confirming test fails: if a yield saved SI just past the opcode, every
+      observed first-yield offset would sit one byte after a `0x42`/`0x43`, and none of the
+      four does. Either those offsets are not yields, or the live-`DS:SI`-to-offset base is
+      wrong. Unresolved and written down rather than guessed at. Model left at 42.8%.*
 
 - [x] **T39c · Find `main.io`'s real entry point**
       Stepping from offset 0 dies after 23 statements at offset 40, so the file does not

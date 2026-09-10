@@ -207,11 +207,32 @@ def i8(d, o):
     return d[o] - 256 if d[o] & 0x80 else d[o]
 
 
+# Statements that END the script rather than continuing. vm_run is a loop -- fetch,
+# call the handler, jump back -- so a handler exits it only by discarding vm_run's own
+# return address. Exactly two do:
+#   0x42  seg_0000:2d94   add sp,2 / ret
+#   0x43  seg_0000:2d98   cmp ss:[0c19],0 / jz 2d94 / call 2808 / add sp,2
+# They are YIELDS, not stops: the caller saves SI (`mov es:[bp-8],si`) and resumes the
+# script there next time, so control does fall through to the following statement and
+# traversal must not treat them as terminal.
+#
+# Treating them as terminal was tried and is wrong: coverage fell 42.8% -> 8.7%. And the
+# check that would have supported it fails -- if a yield saved SI just past the opcode,
+# every observed first-yield offset would sit one byte after a 0x42/0x43, and none of
+# the four does (main.io 256 follows 0x29, logo.io 256 follows 0x14, blancpc.io 801
+# follows 0x12, fbuis.io 3960 follows 0x00). So either those offsets are not yields of
+# this kind, or the asset/offset attribution behind them is wrong. Unresolved; recorded
+# so the idea is not retried blind.
+TERMINATORS = set()
+
+
 def successors(d, pc):
     """Where control can go from the statement at pc, or None if unknown."""
     if pc + 1 >= len(d):
         return None
     opc = d[pc]
+    if opc in TERMINATORS:
+        return []
     info = INFO.get(opc)
     if info and info[2] and step_var(d, pc) is None:
         base, width, cond, call = info[2]

@@ -1352,6 +1352,39 @@ and stopping at its `ret` or the next handler start; the five hand-checked shape
 and recursive traversal from `main.io`'s entry reaching 4,811 statements with **no stall
 on any in-range opcode**.
 
+### 7.2c Two statements end `vm_run`, and an unresolved puzzle about yields (T39b)
+
+`vm_run` is a loop -- fetch, `call cs:[bx+24h]`, jump back -- so a handler can only leave
+it by discarding `vm_run`'s own return address. Exactly two do:
+
+| opcode | handler | code |
+|---|---|---|
+| `0x42` | `seg_0000:2d94` | `add sp,2 / ret` |
+| `0x43` | `seg_0000:2d98` | `cmp ss:[0c19],0 / jz 2d94 / call 2808 / add sp,2` |
+
+`0x42` is the **second most common opcode in `main.io`** (930 uses), so this is the normal
+way a script gives control back. It is a *yield*, not a stop: the caller immediately does
+`mov es:[bp-8], si` (7.5), so the script resumes at the following statement.
+
+**A test that should have confirmed that, and does not.** If a yield saves SI just past
+the opcode, then every offset caught by a `MEMORY_WRITE` on the PC slot should sit exactly
+one byte after a `0x42` or `0x43`. None of the four observed does:
+
+| asset | first yield | preceding byte |
+|---|---|---|
+| `main.io` | 256 | `0x29` |
+| `logo.io` | 256 | `0x14` |
+| `blancpc.io` | 801 | `0x12` |
+| `fbuis.io` | 3960 | `0x00` |
+
+So either those offsets are not yields of this kind, or the base used to turn a live
+`DS:SI` into an asset offset is wrong. Unresolved, and recorded here so the idea is not
+retried blind.
+
+Treating the two as terminal in traversal was also tried and is wrong: coverage falls
+**42.8% -> 8.7%**, which is the strongest evidence that control really does continue past
+them.
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image
