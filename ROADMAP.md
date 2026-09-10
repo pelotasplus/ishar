@@ -1873,7 +1873,7 @@ Compose rewrite has to do.
       **Done when:** ten opcodes are attributed to named actions with counts, and each is
       annotated in `ishar.chani`.
 
-- [ ] **T29f · Get into a fight**
+- [~] **T29f · Get into a fight**
       Combat cannot be attributed without combat. Clicking ATTACK with nothing adjacent
       changes almost nothing on screen and moves no interesting counts (FINDINGS 4.16).
       There is a figure visible in the Dragonia starting scene that may be an NPC or a
@@ -1883,6 +1883,19 @@ Compose rewrite has to do.
       bars for the confirmation that damage is being taken.*
       **Done when:** a screenshot shows combat under way (a monster in the viewport and a
       LIFE bar changing), and one call-count diff is taken across an attack.
+      *Not met — no monster, no LIFE bar moved — but the attempt produced three findings and
+      two opcode attributions (FINDINGS 4.17).
+      The figure in the Dragonia scene is an **NPC**: walking into it brings up dialogue
+      naming Angarahn and a tavern. **ATTACK is two-step** — the button alone only dismisses
+      a panel; ATTACK then a click on the target is what acts. And attacking a friendly NPC
+      triggers a **full-screen demon frame and resets the party to its start position**,
+      which is Ishar's murder-consequence system, observed.
+      Attributed: `vm_op_attack_swing` (0x15, 7,805 calls on an attack against 0 idle) and
+      `vm_op_consequence_event` (0x57, 96 calls at the demon frame, absent from every other
+      action measured). Both named in `ishar.chani`.
+      Blind exploration is **not** a method: twelve rounds of six forward steps ended against
+      a hedge with the frame changing 0.0–0.3%. Finding a monster needs data, not walking —
+      see T29h.*
 
 - [ ] **T37f · The entry points of every script-carrying asset**
       *Replaces T37b, T37c and T37e, which were three descriptions of one question and each
@@ -1941,3 +1954,17 @@ Compose rewrite has to do.
       (5.3) aborts a trace in ~2s rather than wasting a budget.*
       **Done when:** FINDINGS lists the intro's assets in load order with the screen each
       one produces, as 4.9 does for the splash.
+
+- [ ] **T29h · Find where the monsters are, from the data**
+      T29f established that wandering does not work — terrain blocks movement and twelve
+      rounds of walking ended against a hedge. Finding a fight should come from the files.
+      Three untried leads, all cheap and offline:
+      `encont.io` is loaded during engine setup and its name reads as *encontre* (encounter);
+      `monstre.io` is literally "monster" and sits at 0% accounted for; and the world maps
+      `cont*.fic` are 90x54 grids whose cell values are half-decoded (T11g3).
+      *Method: decode `encont.io` and `monstre.io` and look for structure that pairs a map
+      cell or region with a creature id — a table of small records, or ids matching the
+      monster sprite assets (`zombi.io`, `azal.io`, `dealer.io`). Cross-check any candidate
+      against the map grid the party actually stands on (T11g3b).*
+      **Done when:** a location is named where a monster should appear, the party is driven
+      there, and a screenshot shows the creature — closing T29f.

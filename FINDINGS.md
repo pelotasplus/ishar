@@ -634,6 +634,45 @@ almost nothing, which is a fair result rather than a failed measurement.
 **Evidence:** `tools/t29c-action.py`, idle-vs-action windows of equal length; the
 validation against the independently-known `0x4b`; `.ish/t29c-*.json`.
 
+### 4.17 First contact with the game's own rules (T29f)
+
+With the mouse working, the party can be driven into the world. Three things came out of
+one attempt to start a fight, none of them previously recorded.
+
+**NPCs talk when you walk into them.** The figure standing in the Dragonia starting scene
+is not a monster. Walking four steps forward brings up a text panel over the bottom third
+of the screen (`captures/t29f-npc-dialogue.png`):
+
+> WARM TEAR! TO THE SOUTH, IN ANGARAHN COUNTRY, THERE IS A NICE LITTLE VILLAGE, ITS
+> TAVERN, 'THE THIRSTY BARBARIAN', IS KNOW MILES AROUND.
+
+So world text is delivered by proximity, not by a menu verb, and it names two places --
+**Angarahn** and the tavern -- that are leads for the map work.
+
+**ATTACK is two-step.** Clicking a character's ATTACK button alone only dismisses whatever
+panel is open. Clicking ATTACK and *then* clicking a target in the viewport is what acts.
+
+**Attacking a friendly NPC resets the party.** The second click produced a full-screen
+demon frame -- a horned face over a glowing orb full of tiny falling figures
+(`captures/t29f-consequence-demon.png`) -- which waits for a mouse click, not a key, and
+then returns the party to its **starting position**. Ishar is known for punishing murder;
+this is that system, observed.
+
+**Two opcodes attributed** by call-count diff against an idle window of equal length:
+
+| opcode | handler | evidence |
+|---|---|---|
+| `0x15` `vm_op_attack_swing` | `seg_0000:28a9` | **7,805 calls** when ATTACK is clicked with a target ahead, 0 idle -- the largest mover of any action measured. Not combat-exclusive (903 in another baseline), but driven ~9x harder |
+| `0x57` `vm_op_consequence_event` | `seg_0000:4b8f` | 96 calls at the moment of the demon frame, 0 idle, and absent from every other action measured -- menu draw, MAP, portrait select, click on empty ground |
+
+**What is still not done:** T29f asked for a monster in the viewport and a LIFE bar
+changing. Neither happened -- no LIFE bar moved, and the only creature encountered was
+friendly. Wandering to find a monster failed too: six forward steps per turn for twelve
+turns ended against a hedge with the frame changing 0.0-0.3%, so terrain blocks movement
+and blind exploration is not a method.
+
+**Evidence:** `tools/t29c-action.py` idle-vs-action windows; the three captures above.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
