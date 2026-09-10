@@ -1589,7 +1589,7 @@ Compose rewrite has to do.
       Remaining: run the cold-start scan far enough to catch `frise.io` and `dplt.io`'s
       first entries — see T37c.*
 
-- [ ] **T37c · Catch the first `vm_run` entry for assets loaded after the menu**
+- [~] **T37c · Catch the first `vm_run` entry for assets loaded after the menu**
       T37b established the method — from a paused cold start the first `vm_run` entry for an
       asset is its entry point — and got `main.io` and `logo.io`, both 24. `frise.io` and
       `dplt.io` demonstrably run script but were only caught mid-execution, so their entries
@@ -1602,3 +1602,30 @@ Compose rewrite has to do.
       **Done when:** entry offsets are recorded for `frise.io` and `dplt.io`, and it is
       stated whether they are 24 — which would make the entry a constant and close T37's
       entry-point question for the whole corpus.
+      *Not met, but the instrument problem behind it is solved and the evidence for T37 grew
+      a lot (FORMATS 7.6).
+      The blocker was measured rather than guessed: a breakpoint on `vm_run` stops once per
+      **statement** — its loop jumps back to its own entry — and that stalls the game
+      completely. 270s of wall clock with **0.0% of the screen changed**; the game cannot
+      reach the state being looked for while the probe is attached.
+      Fix: `mov es:[bp-8],si` (`seg_0000:26b2`) runs only when `vm_run` *returns*, so a
+      MEMORY_WRITE on the script-PC slot fires once per **yield**: `tools/t37d-switch.py`
+      gets **164 stops/s against 2.6**, and the game runs normally. The slot sits at a fixed
+      linear address (`0x12948`) that is stable across runs.
+      With it, **ten** assets were caught running script rather than three — including
+      `blancpc.io`, `fond.io` and `presti.io`, all filed as pure graphics.
+      Still open: those offsets are **yields, not entries** (`main.io` reads 256 there and 24
+      from a cold start), and neither `frise.io` nor `dplt.io` appeared in the window. See
+      T37e.*
+
+- [ ] **T37e · Entry points, now that a cheap probe exists**
+      T37c built `tools/t37d-switch.py` (164 stops/s, game runs normally) and used it to
+      find ten assets running script, but its offsets are yield points. An entry point needs
+      the *first* write of a script's PC, not any write.
+      *Method: at each stop the slot's previous value is known — keep it. A write whose new
+      pointer lands in an asset that has not been seen before, or whose segment:offset is
+      discontinuous with the previous PC, marks a script starting rather than resuming.
+      Record that. Run it from a cold start through to the first gameplay frame, which is
+      now affordable.*
+      **Done when:** entry offsets are recorded for at least three assets besides `main.io`
+      and `logo.io`, and it is stated whether 24 is the constant entry for all of them.

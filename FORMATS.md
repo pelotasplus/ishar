@@ -1277,10 +1277,31 @@ statement opcodes, any start decodes plausibly for a while, so this test cannot 
 entry point -- the same trap as "97% decoded" (7.3). The only real evidence is the two
 assets watched live.
 
-**Status:** partial. The method for finding an entry point is settled and cheap (cold
-start, first `vm_run` entry, strict matching). It has been run long enough to reach
-`main.io` and `logo.io` only; `frise.io` and `dplt.io` were caught mid-execution, so their
-lowest sampled offsets (478, 198) are **not** entry points.
+**Ten assets, not three (T37c).** A cheaper instrument widened this considerably. Breaking
+on `vm_run` stops once per *statement* -- its loop jumps back to its own entry -- which
+costs so much that the game stops advancing at all: 270s of wall clock with the screen
+frozen and 0.0% of pixels changed. But `mov es:[bp-8], si` at `seg_0000:26b2` runs only
+when `vm_run` **returns**, so a `MEMORY_WRITE` on the script-PC slot fires once per script
+*yield* instead: **164 stops/s against 2.6**, and the game runs.
+
+Driven from boot to the intro, ten assets were seen running script:
+
+`main.io`, `logo.io`, `blancpc.io`, `itaverne.io`, `preson.io`, `presen.io`,
+`presti.io`, `param.io`, `fond.io`, `gerdep.io`
+
+`blancpc.io` is the blank frame, `fond.io` a backdrop, `presti.io` the title lettering --
+all previously filed as pure graphics. Whatever the other 58% of asset bytes are, script
+is a large part of it.
+
+**Status:** partial, and the entry-point question is still open. The offsets that scan
+reports are **yield points, not entries**: `main.io` shows 256 there and 24 from a paused
+cold start, so the first yield caught depends on when the probe attached. `frise.io` and
+`dplt.io` did not appear at all in that window. Only `main.io` (24) and `logo.io` (24)
+have entry points, both from a paused cold start where the first `vm_run` entry is the
+entry by construction.
+
+The slot is at a fixed linear address (`ES:BP = 126b:02a0`, so `0x12948`) and is stable
+across runs, which is what makes the cheap probe possible.
 
 **Verified by:** `.ish/t37b.json`; `tools/t37b-scan.py`; the rival-offset table above.
 
