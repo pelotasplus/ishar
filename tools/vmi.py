@@ -248,9 +248,22 @@ def successors(d, pc):
     return None if nxt is None else [nxt]
 
 
+def plausible(d, pc):
+    """Could a statement start here? There are exactly 231 opcodes."""
+    return 0 <= pc < len(d) and d[pc] in STMT
+
+
 def traverse(d, entry):
-    """Recursive-descent: every statement reachable from entry, and bytes covered."""
-    seen, todo, unknown = set(), [entry], set()
+    """Recursive-descent: every statement reachable from entry, and bytes covered.
+
+    Targets are checked before they are followed. A computed target landing on a byte
+    with no entry in the 231-opcode table cannot be code, and following one puts the
+    walk inside a data block where every later step is garbage -- which is where all 56
+    of the earlier stalls came from, each traced back to a different branch rather than
+    to one wrong shape. Rejected targets are counted, not silently dropped: they are the
+    branches worth looking at.
+    """
+    seen, todo, unknown, rejected = set(), [entry], set(), []
     while todo:
         pc = todo.pop()
         if pc in seen or pc < 0 or pc >= len(d):
@@ -260,7 +273,12 @@ def traverse(d, entry):
         if succ is None:
             unknown.add(pc)
             continue
-        todo.extend(succ)
+        for t in succ:
+            if plausible(d, t):
+                todo.append(t)
+            else:
+                rejected.append((pc, t))
+    traverse.rejected = rejected
     covered = 0
     for pc in seen:
         n = step(d, pc)

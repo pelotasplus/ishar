@@ -1385,6 +1385,48 @@ Treating the two as terminal in traversal was also tried and is wrong: coverage 
 **42.8% -> 8.7%**, which is the strongest evidence that control really does continue past
 them.
 
+### 7.2d Traversal: validate a target before following it (T39b)
+
+Recursive traversal of `main.io` stalled 56 times on bytes with no opcode entry. Tracing
+each stall back to the branch that first entered the data showed **56 different branches**,
+across opcodes including four checked by hand -- so it was not one wrong shape. Following a
+single bad target puts the walk inside a data block where every later step is garbage, and
+each stall was just where that particular wander stopped.
+
+The fix is to check a target before taking it: there are exactly **231** statement opcodes,
+so a computed target landing on a byte outside the table cannot be code.
+
+| | before | after |
+|---|---|---|
+| stalls on non-opcodes | 56 | **0** |
+| statements reached | 4,811 | 4,755 |
+| byte coverage | 42.8% | 42.6% |
+| targets rejected | — | 116 |
+
+Coverage barely moves, which is the point: the extra 56 statements had been fictional.
+
+**The rejections are not a base error.** For the two worst offenders the current shape is
+already the best available -- `0x06` base 3 gives 61/87 plausible targets against 60, 60,
+61, 60 for bases 1-5, and `0x0a` base 4 gives 121/141 against 118-119 either side. Both
+match the shapes verified by hand against live execution.
+
+Note also that "lands on a valid opcode" is a *weak* test here: 231 of 256 byte values are
+valid, so ~90% of random targets pass it. `0x06` managing only 70% says those sites are
+being decoded at PCs that are themselves wrong.
+
+**The acceptance number that matters is live coverage.** Against 34 IP-verified `DS:SI`
+values sampled at `vm_run` during gameplay, traversal from the entry hits **25 of 34 =
+73.5%** of the statements the VM actually executed. That is a far better measure than byte
+coverage, and it is the one to move.
+
+The nine misses cluster at 19919-20130 and are all opcodes `0x1f` and `0x14`. One of them,
+19919, is the fall-through of the unconditional jump at 19915 (`0a de 00`, target 20141) --
+so it is not reached by that path at all and must have an **incoming edge from somewhere
+traversal does not compute**. The remaining gap is missing in-edges, not wrong lengths.
+
+**Verified by:** the before/after table above; the base sweep; and the live comparison
+against `.ish/live-offsets.json`, sampled with `r["ip"] == entry` checked at every stop.
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image
@@ -1583,8 +1625,9 @@ memory breakpoint cannot. The replacement guard is the one above -- **read the w
 location and check it holds what the register says**.
 
 What survives is the IP-verified work: `main.io`, `logo.io` (entry 24 each, first-entry
-from a paused cold start) and `frise.io`, `dplt.io` from the T37b gameplay scan, all taken
-at a `vm_run` breakpoint where `r["ip"] == entry` was checked. Four assets, not eleven.
+from a paused cold start) and `frise.io`, `dplt.io`, and `samb.io` from gameplay scans, all
+taken at a `vm_run` breakpoint where `r["ip"] == entry` was checked. **Five** assets, not
+eleven.
 
 It also resolves 7.2c's puzzle: the "first yield" offsets were never yields, so there was
 never a reason for them to follow a `0x42`. And separately confirmed while chasing it, the

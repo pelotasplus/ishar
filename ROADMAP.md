@@ -1681,3 +1681,26 @@ Compose rewrite has to do.
       at 256**, and `logo.io`, `blancpc.io` and `fbuis.io` traverse to 0.1-1.4% from 24 —
       which is itself evidence that **24 is not their entry**. Whatever sets a script's
       initial PC is still the missing piece.*
+
+- [ ] **T39d · The in-edges traversal cannot compute**
+      Traversal from `main.io`'s entry reaches 73.5% of the statements the VM actually
+      executes (FORMATS 7.2d). All nine misses are places reached by an **incoming edge**
+      that is not a static displacement — 19919 is the fall-through of an unconditional
+      jump at 19915, so nothing on that path reaches it.
+      Two candidates, and they are distinguishable: scripts have **more than one entry**
+      (an event handler resumed by the engine, which 7.5's `es:[bp-8]` model allows), or
+      some branch target is **computed** rather than an immediate.
+      *Method: for each missed offset, look for a static displacement anywhere in the file
+      that would land on it — if one exists, the branch opcode carrying it is unmodelled;
+      if none does, the offset is an engine entry point and belongs with T37e.*
+      **Done when:** live coverage of `main.io` is over 90%, or each remaining miss is
+      classified as computed-branch or engine-entry with the evidence.
+
+- [ ] **T39e · Why do only 70% of `0x06` targets land on an opcode?**
+      231 of 256 byte values are valid statement opcodes, so ~90% of *random* targets pass
+      the "is it an opcode" test. `0x06` (script call, d16 base +3) manages 61/87 = 70%,
+      which is worse than chance and says those sites are being decoded at PCs that are
+      themselves wrong (FORMATS 7.2d).
+      **Done when:** it is established whether the sub-chance rate comes from bogus `0x06`
+      sites reached down a wrong path, or from `0x06` targets being computed rather than
+      immediate — with a count either way.
