@@ -1538,7 +1538,7 @@ Compose rewrite has to do.
       **Done when:** stepping from a live-verified anchor covers over 90% of `main.io`
       without meeting an unsized opcode, and each modelled handler cites its code.
 
-- [ ] **T39c · Find `main.io`'s real entry point**
+- [x] **T39c · Find `main.io`'s real entry point**
       Stepping from offset 0 dies after 23 statements at offset 40, so the file does not
       begin with executable script. The live anchors that do work were found by matching
       bytes against a running `DS:SI`, which needs the emulator.
@@ -1548,3 +1548,27 @@ Compose rewrite has to do.
       answer T37 needs for every other asset.*
       **Done when:** the entry offset is recorded in FORMATS section 7 and stepping from it
       reaches at least as far as stepping from offset 96 does.
+      *Met. The entry is **offset 24** (FORMATS 7.5). The first six live entries to `vm_run`
+      are 24, 60, 96, 103, 108, 113 and `tools/vmi.py` reproduces all six offline; stepping
+      from 24 covers 140 statements against 138 from 96, reaching the same offset 758.
+      Two things fell out. The statements at 24 and 60 are opcode `0x46`, 36 bytes each —
+      `rep movsb` copying a 32-byte record inline — now modelled in the stepper.
+      And **scripts are resumable coroutines**: the caller does `lds si,es:[bp-8]` / `call
+      vm_run` / `mov es:[bp-8],si`, so a script's PC is a far pointer in the frame. The entry
+      point is whatever is stored in that slot, not a constant — so *finding who first writes
+      `es:[bp-8]` is the general form of T37's question*, and it is the same one breakpoint
+      for every asset.*
+
+- [ ] **T37b · Who writes `es:[bp-8]`? The general entry-point question**
+      T39c found that a script's program counter is a far pointer in the frame at
+      `es:[bp-8]`, restored by `lds si,es:[bp-8]` before each `vm_run` and written back
+      after (FORMATS 7.5). So an asset's script entry point is whatever put a pointer in
+      that slot — not a constant, and not necessarily in the asset header.
+      This is T37's blocker ("vmdis has no entry point") asked in a form that a single
+      breakpoint answers, for every asset at once rather than one at a time.
+      *Method: MEMORY_WRITE on the frame slot, or break on the routine that sets it, and
+      record the far pointer written together with which asset was most recently loaded.
+      Match each pointer against the decoded assets the way `tools/t39c-entry.py` does.*
+      **Done when:** for at least three assets other than `main.io`, an entry offset is
+      recorded in FORMATS and stepping from it with `tools/vmi.py` runs without meeting an
+      unsized opcode sooner than `main.io` does.

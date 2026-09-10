@@ -123,6 +123,13 @@ def step_expr(d, pc, depth=0):
 # instruction boundaries and vmdis did not (T38/T38b).
 def step_var(d, pc):
     opc = d[pc]
+    # 0x46, handler seg_0000:2ded -- declares an entity and copies its record inline:
+    #     lodsw / lodsb / mov cx,20h / mov di,bx / add di,6 / rep movsb
+    # `rep movsb` takes its source from SI, so 32 bytes of the script stream are the
+    # operand. 1 + 2 + 1 + 32 = 36. main.io's first two statements are both this, at
+    # offsets 24 and 60, which is exactly the 24 -> 60 -> 96 the live VM steps through.
+    if opc == 0x46:
+        return pc + 36
     if opc == 0x29:
         if pc + 4 >= len(d):
             return None

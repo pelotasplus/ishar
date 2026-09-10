@@ -1202,6 +1202,42 @@ header instead.
 is a stronger statement than a pixel comparison, and it independently confirms T11r, which
 was established by rendering alone.
 
+### 7.5 `main.io`'s entry point is offset 24, and scripts are resumable (T39c)
+
+The first entry to `vm_run` in an entire run has `DS:SI = 1cf3:0018`, which is
+**`main.io` offset 24**. The first six entries are
+
+```
+24, 60, 96, 103, 108, 113
+```
+
+and `tools/vmi.py` stepping from 24 reproduces that sequence exactly. The first 24 bytes
+are therefore **not script** -- which is why stepping from 0 dies after 23 statements at
+offset 40.
+
+**Scripts are resumable, not called.** The caller is `seg_0000:26af`, and the two
+instructions around the call are the whole story:
+
+```
+lds  si, es:[bp-8]      ; restore the script's far program counter from the frame
+call vm_run
+mov  es:[bp-8], si      ; save it back
+```
+
+So a script's PC is a far pointer living in the frame at `es:[bp-8]`; `vm_run` runs until
+a statement returns control and the updated `SI` is written back. That makes every script
+a coroutine the engine resumes, and it means **the entry point is whatever was stored in
+that slot**, not a constant in the code. Finding who first writes `es:[bp-8]` is the
+general form of T37's question.
+
+**The statements at 24 and 60 are both opcode `0x46`**, 36 bytes each -- `lodsw / lodsb /
+mov cx,20h / rep movsb`, where the `rep movsb` takes 32 bytes of inline record straight
+out of the script stream. Two entity declarations, then the block initialisers at 96.
+
+**Verified by:** a breakpoint on `vm_run` from a paused start, catching the first six
+entries ever; the 64-byte run at each `DS:SI` matched uniquely against `main.io` and
+against no other asset; and the stepper reproducing all six offsets offline.
+
 ### 7.4 Some statements are variable-length, and that is what broke the listing (T39)
 
 Opcode `0x29` (handler `seg_0000:5713`) is a **block initialiser** whose length depends on
