@@ -1570,6 +1570,29 @@ statement opcodes, any start decodes plausibly for a while, so this test cannot 
 entry point -- the same trap as "97% decoded" (7.3). The only real evidence is the two
 assets watched live.
 
+**RETRACTED: the "ten assets" result below is invalid (T39b).** The cheap probe it rests
+on cannot be trusted, and the check that shows it is one line: at a `MEMORY_WRITE` stop on
+the PC slot, does the slot actually contain `SI`? **4 stops agreed and 5,868 did not** --
+the slot sat constant at `0x144d` while `SI` wandered over `0x6f37`, `0x72ed`, `0x715e`.
+So `DS:SI` read at such a stop is not the script PC, and every offset and asset name that
+probe produced is meaningless.
+
+This is the "any pause reaches the GDB client" scar in a form the usual guard misses: an
+execution breakpoint can be validated by comparing `ip` to the armed address, and a
+memory breakpoint cannot. The replacement guard is the one above -- **read the watched
+location and check it holds what the register says**.
+
+What survives is the IP-verified work: `main.io`, `logo.io` (entry 24 each, first-entry
+from a paused cold start) and `frise.io`, `dplt.io` from the T37b gameplay scan, all taken
+at a `vm_run` breakpoint where `r["ip"] == entry` was checked. Four assets, not eleven.
+
+It also resolves 7.2c's puzzle: the "first yield" offsets were never yields, so there was
+never a reason for them to follow a `0x42`. And separately confirmed while chasing it, the
+`DS:SI` -> offset mapping itself is exact -- across 10 IP-verified samples the matched
+index equalled `SI` every time, so `offset = SI` and the base is `DS*16`.
+
+**Superseded text follows.**
+
 **Ten assets, not three (T37c).** A cheaper instrument widened this considerably. Breaking
 on `vm_run` stops once per *statement* -- its loop jumps back to its own entry -- which
 costs so much that the game stops advancing at all: 270s of wall clock with the screen

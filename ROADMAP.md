@@ -1639,8 +1639,15 @@ Compose rewrite has to do.
       MEMORY_WRITE on the script-PC slot fires once per **yield**: `tools/t37d-switch.py`
       gets **164 stops/s against 2.6**, and the game runs normally. The slot sits at a fixed
       linear address (`0x12948`) that is stable across runs.
-      With it, **ten** assets were caught running script rather than three — including
-      `blancpc.io`, `fond.io` and `presti.io`, all filed as pure graphics.
+      With it, **ten** assets appeared to be running script rather than three — including
+      `blancpc.io`, `fond.io` and `presti.io`.
+      **RETRACTED (T39b).** That probe is unsound. At a MEMORY_WRITE stop the slot does not
+      contain `SI`: 4 stops agreed, **5,868 did not**, with the slot constant at `0x144d`
+      while SI wandered. So `DS:SI` read at such a stop is not the script PC and every
+      offset and asset name it produced is meaningless. An execution breakpoint can be
+      validated against `ip`; a memory breakpoint cannot, so the guard has to be "read the
+      watched location and check it matches the register". Only the IP-verified assets
+      stand: `main.io`, `logo.io`, `frise.io`, `dplt.io`.
       Still open: those offsets are **yields, not entries** (`main.io` reads 256 there and 24
       from a cold start), and neither `frise.io` nor `dplt.io` appeared in the window. See
       T37e.*

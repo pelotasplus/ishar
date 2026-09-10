@@ -752,6 +752,24 @@ execution, **check whether the disputed byte is an opcode at all** before theori
 what kind of opcode it is. And when the format has any variable-length instruction, a
 table-driven disassembler is wrong in kind, not in detail -- the fix is a stepper.
 
+### A memory breakpoint cannot be validated the way an execution breakpoint can
+
+The scar above says a stop is not evidence of a breakpoint, and gives the guard: compare
+`ip` to the address you armed. That guard only exists for execution breakpoints. For a
+`MEMORY_WRITE` breakpoint there is no `ip` to compare, and a whole result was built on
+the assumption that the registers at such a stop describe the write.
+
+They do not. Reading the watched location and comparing it to the register supposedly
+just written: **4 stops agreed, 5,868 did not**. The slot sat constant while `SI`
+wandered. Eleven assets "running script", a table of entry offsets, and a puzzle about
+why they did not follow a terminator -- all of it dissolved, and the puzzle was the tell
+that something upstream was wrong.
+
+**The guard for a memory breakpoint is to read the watched bytes and check they hold what
+you think was just written.** One extra read per stop. And when a derived result produces
+a puzzle that will not resolve, suspect the instrument before inventing a mechanism --
+7.2c was two rounds of theorising about yields that were never yields.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their
