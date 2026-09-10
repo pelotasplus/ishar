@@ -472,7 +472,7 @@ Compose rewrite has to do.
       The eight-groups-in-one-file puzzle dissolves too -- that was word 0's flag nibble
       being read as a group. FORMATS.md 3.10.*
 
-- [~] **T11p · The viewport renderer is not the blitter we know**
+- [x] **T11p · The viewport renderer is not the blitter we know**
       `seg_0e97:038b` fires 445 times during the launcher/title/intro and **zero times in
       30s of walking around the game viewport**, so the 3D view is drawn by something else.
       That renderer also **scales** sprites by distance -- which is what header word 3's
@@ -493,6 +493,21 @@ Compose rewrite has to do.
       `seg_0000:5534`, `:817b`, `:82e5`, `:84af`, `:850c`, `:ab76` -- but the listing has lost
       alignment across that whole region, so they cannot be read until it is re-seeded.
       Remaining for this task: name the drawing routine those writes sit in, and the scale.*
+      *Done. The blocker above was stale: T11p2 had already corrected the writer list and
+      named `blit_to_screen`, and the "lost alignment" note pointed at the wrong region --
+      the corrected addresses decode fine. The region that genuinely needed seeding was
+      `seg_0e97:05c0-06d5`, which nothing had reached.
+      Method: MEMORY_WRITE on the **e000 back buffer** (the game renders offscreen
+      and `blit_to_screen` copies e000:X -> a000:X, same offsets, rows 320 apart), turning
+      on the spot, minus a control breakpoint on never-written memory to subtract phantoms.
+      Two sites at 16 hits each against 0 in the control.
+      Named and seeded (`seg_0e97`: 1651 -> 1684 instructions, coverage 49.9%):
+      `viewport_row_loop` 05c0, `viewport_expand_4bpp` 0644 (opaque),
+      `viewport_expand_4bpp_mirrored` 05e5 (masked, right-to-left), `viewport_fill_rect` 06d5.
+      **The scale is a per-row step, not a resample**: `add si,cs:[002c]` / `add di,cs:[002e]`,
+      sampled live at 15 and 321 — 321 on a 320-wide buffer shears each row one pixel.
+      FORMATS 3.13d. That also explains T36's result: viewport pixels can never match an
+      extraction verbatim.*
 
 - [x] **T26 · Decode the VM opcode set**
       `vm_dispatch` (`seg_0000:69a6`) dispatches 120 handlers through `vm_opcode_table` at

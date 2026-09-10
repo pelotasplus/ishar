@@ -1544,4 +1544,31 @@ attr[seg_0e97:0b63]: type = code; name = expand_4bpp_masked; comment = [[[
 attr[seg_0e97:0b40]: type = code; name = sprite_base_zero; comment = [[[
     The mode 0 path: `mov bh, 0`, so the base is zero, and `add si,6` -- a **6-byte** header rather than 8.
 ]]]
+attr[seg_0e97:05c0]: type = code; name = viewport_row_loop; comment = [[[
+    Top of the viewport's per-row loop. `and bh,bh / je` picks the masked or unmasked
+    path, then falls into the 4bpp expanders below. Ends at 05f4 with the row step:
+        add si, cs:[002c]   // source advance per row
+        add di, cs:[002e]   // destination advance per row
+    Those two words are how the viewport "scales": it does not resample, it walks the
+    source and destination with independent per-row deltas. Sampled live while walking
+    in Dragonia: cs:[002c] = 15, cs:[002e] = 321. A destination step of 321 on a
+    320-wide buffer shifts each row one pixel right -- a shear, which is the perspective.
+    Found by breaking on writes to the e000 back buffer while turning (T11p); 16 hits
+    against a control of 0 at the same sites.
+]]]
+attr[seg_0e97:05e5]: type = code; name = viewport_expand_4bpp_mirrored; comment = [[[
+    Right-to-left 4bpp expander: low nibble, `je` to skip zero, `add al,bl`, written to
+    es:[di-1] with `dec di`. Masked AND mirrored -- used for horizontally flipped sprites.
+]]]
+attr[seg_0e97:0644]: type = code; name = viewport_expand_4bpp; comment = [[[
+    The viewport's own 4bpp expander, and unlike the panel's it has NO zero test:
+        lodsb / mov ah,al / shr al,1 x4 / add al,bl / stosb / loop 0657
+        0657: mov al,ah / and al,0fh / add al,bl / stosb / loop 0644
+    High nibble first, base in BL. Opaque, which fits a full-frame background.
+    Distinct from expand_4bpp_masked (0b63, panel) and expand_4bpp_opaque (0ad1).
+]]]
+attr[seg_0e97:06d5]: type = code; name = viewport_fill_rect; comment = [[[
+    `rep stosb / add di,bx / mov cx,dx / dec bp / jnz / ret` -- a rectangle fill with a
+    per-row stride in BX. The sky and ground bands.
+]]]
 end

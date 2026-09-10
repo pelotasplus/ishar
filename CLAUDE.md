@@ -668,6 +668,21 @@ extractor saying "transparent here".
 `tools/png.py` now writes RGBA when handed 4-tuples. When a value means "absent",
 give it a channel of its own -- never a magic value inside the data.
 
+### Subtract the phantoms with a control breakpoint
+
+Every attempt to find who writes the framebuffer drowned in stops at `seg_0000:3d64`
+(`wait_loop`) and a scatter of singletons, because the keypresses needed to make the
+game redraw each pause the machine, and every pause reaches the GDB client.
+
+The fix is a control: arm the same probe, send the same keys, but break on an address
+the program never writes -- `0xB8000` is ideal in mode 13h. Whatever shows up there is
+the phantom set. Subtract it. In T11p that turned "12 sites, unusable" into two sites
+at 16 hits each with zero in the control.
+
+Generally: when an instrument has a known noise source you cannot remove, **measure the
+noise under the same conditions and subtract it**, rather than trying to reason about
+which hits look plausible.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

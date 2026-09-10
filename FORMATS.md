@@ -1366,6 +1366,43 @@ payload from a decoder written only from this file; the sprite's `word3 = 0x00d0
 group 13 / base 208, which is also the base an independent reverse search recovered from
 the screen bytes without being told it.
 
+### 3.13d The viewport has its own expanders, and "scaling" is a per-row step (T11p)
+
+The 3D view is not drawn by the sprite path in 3.13c. It has its own family in
+`seg_0e97`, found by breaking on writes to the **e000 back buffer** while turning on the
+spot -- 16 hits at each of two sites, against a control that produced 0 there:
+
+| | |
+|---|---|
+| `viewport_row_loop` `seg_0e97:05c0` | per-row loop; `and bh,bh / je` picks masked or not |
+| `viewport_expand_4bpp` `seg_0e97:0644` | high nibble, `add al,bl`, `stosb`, then low nibble -- **no zero test, opaque** |
+| `viewport_expand_4bpp_mirrored` `seg_0e97:05e5` | right-to-left (`dec di`, `es:[di-1]`) and **does** test zero |
+| `viewport_fill_rect` `seg_0e97:06d5` | `rep stosb / add di,bx / dec bp / jnz` -- sky and ground bands |
+
+So there are now **five** 4bpp expanders in the game, not one: the panel's masked
+(`0b63`), the panel's opaque (`0ad1`), and these three. All use the same nibble order and
+`base + nibble`; they differ in direction and in whether zero is skipped.
+
+**The "scale" is not a resample.** `viewport_row_loop` ends with
+
+```
+add si, cs:[002c]        ; source advance per row
+add di, cs:[002e]        ; destination advance per row
+```
+
+Two independent per-row deltas. Sampled live while walking in Dragonia: `cs:[002c] = 15`,
+`cs:[002e] = 321`. A destination step of **321 on a 320-wide buffer shifts every row one
+pixel sideways** -- a shear, which is where the perspective comes from; the source step
+chooses how fast the sprite is consumed, which is where the size change comes from.
+
+This is why T36's framebuffer search found **no** asset matching the viewport at either
+depth over 1,517 probe runs while the UI panel matched immediately: viewport pixels are
+sheared and row-skipped, so they cannot appear verbatim anywhere.
+
+**Verified by:** MEMORY_WRITE breakpoints on `0xE0000 + y*320 + x` with a control
+breakpoint on never-written memory to subtract the phantom stops; instruction text read
+from the emulator, which had executed the region the listing still had as `db`.
+
 ### 3.14 `presti.io` -- unresolved
 
 The title lettering. Nine sprites, all **mode `0x00`** (6-byte header, and the code at
