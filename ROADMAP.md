@@ -1559,7 +1559,7 @@ Compose rewrite has to do.
       `es:[bp-8]` is the general form of T37's question*, and it is the same one breakpoint
       for every asset.*
 
-- [ ] **T37b · Who writes `es:[bp-8]`? The general entry-point question**
+- [~] **T37b · Who writes `es:[bp-8]`? The general entry-point question**
       T39c found that a script's program counter is a far pointer in the frame at
       `es:[bp-8]`, restored by `lds si,es:[bp-8]` before each `vm_run` and written back
       after (FORMATS 7.5). So an asset's script entry point is whatever put a pointer in
@@ -1572,3 +1572,33 @@ Compose rewrite has to do.
       **Done when:** for at least three assets other than `main.io`, an entry offset is
       recorded in FORMATS and stepping from it with `tools/vmi.py` runs without meeting an
       unsized opcode sooner than `main.io` does.
+      *Partial, and it moved T37 a long way (FORMATS 7.6). Three assets are now **observed
+      executing bytecode**: `frise.io` (60 distinct PCs), `dplt.io` (39) and `main.io` (34),
+      with every sample attributed and none ambiguous under the strict match (64-byte run,
+      unique in its asset, absent from all 97 others). `frise.io` is the UI frieze and
+      `dplt.io` was unclassified — so T37's "the unexplained bytes are consistent with
+      bytecode" becomes "these assets are running bytecode".
+      Entry points: `main.io` **24**, `logo.io` **24**, both from a paused cold start where
+      the first `vm_run` entry is by construction the entry.
+      **Not** established: that 24 is universal. Stepping all 98 assets from a given offset
+      gives median 17 statements from 24 but 25 from 16 and 23 from 18 — offset 24 scores
+      *worse* than its neighbours, because with 219 of 231 valid opcodes any start decodes
+      for a while. The test cannot pick an entry point; only the live observation can.
+      Static `es:[bp-8]` analysis was a dead end: six sites, three writes, all script-level
+      call/return (`add ax,si`), and nothing writes the segment half at `bp-6` at all.
+      Remaining: run the cold-start scan far enough to catch `frise.io` and `dplt.io`'s
+      first entries — see T37c.*
+
+- [ ] **T37c · Catch the first `vm_run` entry for assets loaded after the menu**
+      T37b established the method — from a paused cold start the first `vm_run` entry for an
+      asset is its entry point — and got `main.io` and `logo.io`, both 24. `frise.io` and
+      `dplt.io` demonstrably run script but were only caught mid-execution, so their entries
+      are unknown. The scan reached only ~78s of emulated boot in 270s of wall clock because
+      every `vm_run` entry is a breakpoint stop.
+      *Method: arm the breakpoint late rather than from the start — run unattended to the
+      first gameplay frame, then attach and clear, so the first entry seen per newly-loaded
+      asset is still its entry. Or condition the breakpoint on DS so only unseen script
+      segments stop.*
+      **Done when:** entry offsets are recorded for `frise.io` and `dplt.io`, and it is
+      stated whether they are 24 — which would make the entry a constant and close T37's
+      entry-point question for the whole corpus.

@@ -1238,6 +1238,52 @@ out of the script stream. Two entity declarations, then the block initialisers a
 entries ever; the 64-byte run at each `DS:SI` matched uniquely against `main.io` and
 against no other asset; and the stepper reproducing all six offsets offline.
 
+### 7.6 Assets other than `main.io` do run script (T37b)
+
+T37's premise is that embedded scripts have no known entry point. Both halves of that can
+now be improved on: three assets are **observed executing bytecode**, and two entry points
+are known.
+
+Method: break on `vm_run`, and match each `DS:SI` against the decoded assets requiring the
+64-byte run to be unique **within** its asset and absent from **all 97 others**. In a
+130s gameplay scan every sample was attributed, none ambiguous:
+
+| asset | distinct PCs seen | range | size |
+|---|---|---|---|
+| `frise.io` | 60 | 478..32831 | 53,808 |
+| `dplt.io` | 39 | 198..3285 | 3,376 |
+| `main.io` | 34 | 3269..20140 | 26,384 |
+
+`frise.io` is the UI frieze and `dplt.io` was unclassified; both run VM code. That turns
+"the unexplained bytes are consistent with bytecode" (T37) into "these assets are running
+bytecode", observed.
+
+**Two entry points.** From a *paused cold start* the breakpoint catches every `vm_run`
+entry in order, so the first offset seen for an asset is its entry. `main.io` enters at
+**24** (7.5) and `logo.io` also enters at **24**.
+
+**But 24 is not established as a universal entry**, and the obvious test says so. Stepping
+`tools/vmi.py` from a given offset across all 98 assets gives:
+
+| start | median statements | assets reaching 10 |
+|---|---|---|
+| 16 | 25.0 | 88 |
+| 18 | 23.0 | 88 |
+| **24** | **17.0** | **68** |
+| 26 | 21.0 | 79 |
+
+Offset 24 scores *worse* than its neighbours. With 219 of 231 byte values valid as
+statement opcodes, any start decodes plausibly for a while, so this test cannot pick an
+entry point -- the same trap as "97% decoded" (7.3). The only real evidence is the two
+assets watched live.
+
+**Status:** partial. The method for finding an entry point is settled and cheap (cold
+start, first `vm_run` entry, strict matching). It has been run long enough to reach
+`main.io` and `logo.io` only; `frise.io` and `dplt.io` were caught mid-execution, so their
+lowest sampled offsets (478, 198) are **not** entry points.
+
+**Verified by:** `.ish/t37b.json`; `tools/t37b-scan.py`; the rival-offset table above.
+
 ### 7.4 Some statements are variable-length, and that is what broke the listing (T39)
 
 Opcode `0x29` (handler `seg_0000:5713`) is a **block initialiser** whose length depends on
