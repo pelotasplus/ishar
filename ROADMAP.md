@@ -1343,7 +1343,7 @@ Compose rewrite has to do.
       **Done when:** FORMATS 2 says what `C` is, from the code that reads
       `seg_13d7:0b8e` — or records that nothing reads it.
 
-- [ ] **T36b · Machine-verify the 4bpp sprite path**
+- [x] **T36b · Machine-verify the 4bpp sprite path**
       T36 proved the container (98/98, two implementations) and the 8bpp path against the
       live framebuffer, but 4bpp is only cross-validated between two of our own readers —
       level 2, not level 3 (FINDINGS 4.12). 4bpp is most of the game's art and is where
@@ -1356,3 +1356,31 @@ Compose rewrite has to do.
       `cont()` after each dump or the game never advances past the logo.*
       **Done when:** one 4bpp asset is compared pixel-by-pixel against VRAM with every
       differing pixel accounted for, as `logo.io` now is.
+      *Done, and it overturned FORMATS 3.13. `buste.io`'s portrait (mode 0x10, 64x36 at
+      6986) matches VRAM on **1233/1233 non-zero pixels = 100.0000%**, and on **0 of 1071**
+      nibble-zero pixels — those show the frieze behind, so nibble 0 is transparent. The
+      key is on the **nibble**, before the base is added, which is why the old test on the
+      final index could never fire. `word3 = 0x00d0` predicts base 208 and an independent
+      reverse search recovered base 208 from the screen bytes, so the `word3 >> 4` group
+      rule is confirmed from two directions too.
+      Also learned: the outdoor viewport matches **no** asset at either depth, confirming
+      T11p — it is composed with perspective scaling, not blitted. Verify against the UI
+      panel, not the 3D view.*
+
+- [ ] **T36c · Find the masked 4bpp expander**
+      FORMATS 3.13 documents `expand_4bpp` (`seg_0e97:0ad1`), which writes both nibbles
+      with `stosw` and tests nothing. It cannot have drawn `buste.io`'s portrait, which
+      the framebuffer shows skipping every nibble-zero pixel (3.13b). So a second, masked
+      4bpp expander exists and is the one actually used for panel sprites.
+      *Method: break on `seg_0e97:0ad1` with the party panel being drawn and see whether it
+      fires at all — if it does not, that is the finding. Then find the routine that does,
+      via the caller of the portrait blit, and read its inner loop for the `jz`.*
+      **Done when:** the masked expander is named and annotated in `ishar.chani`, and 3.13
+      says which of the two is used for which sprites.
+
+- [ ] **T36d · Re-extract the 4bpp assets with correct transparency**
+      Everything in `captures/assets/` rendered from a 4bpp sprite has a solid rectangle of
+      `base + 0` where transparency belongs (3.13b). `tools/ioscan.py` and
+      `tools/io2png.py` both need the nibble-0 key, and the PNGs need regenerating.
+      **Done when:** a re-extracted portrait from `buste.io` has an alpha-zero background
+      and its opaque pixels still match VRAM 1:1.

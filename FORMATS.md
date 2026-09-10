@@ -1285,8 +1285,46 @@ the rule was generalised to the whole format. Every 4bpp sprite was rendered wit
 punched through it wherever a pixel used colour 0 -- which reads as green speckle scattered
 through otherwise correct art, and is easy to mistake for a palette fault.
 
-**Status:** established from the drawing code. Not yet checked against a framebuffer
-capture of a 4bpp sprite.
+**Status:** the framebuffer check has now been done, and it contradicts the code above
+for mode `0x10`. See 3.13b.
+
+### 3.13b The framebuffer says mode `0x10` keys nibble 0 (T36b)
+
+`buste.io`'s portrait -- the sprite at 6986, mode `0x10`, 64x36, `word3 = 0x00d0` -- was
+compared pixel by pixel against live VRAM with the party panel on screen, at its measured
+origin (screen 0,147):
+
+| | |
+|---|---|
+| nibble != 0 | **1233 / 1233 identical = 100.0000%** |
+| nibble == 0 | 1071 pixels, **0 identical** |
+
+Every drawn pixel is exactly right, and every nibble-0 pixel shows something else: values
+177-181, which is `frise.io`'s base 176 -- the frieze *behind* the portrait. So nibble 0
+was not written. `frise.io`'s own sprite at 42656 behaves the same way (172 nibble-0
+pixels, none matching).
+
+Two things follow.
+
+**The rule is on the nibble, not the palette index.** Key when the **nibble** is 0, before
+the group base is added -- not when the final index is 0. Those are different tests: with
+base 208 the final index is 208, never 0, so a test on the index can never fire. That
+distinction is what makes this compatible with 3.13's history: keying on the *index* was
+indeed wrong and produced the speckle, and keying on the *nibble* is what the machine does.
+
+**`expand_4bpp` at `seg_0e97:0ad1` is not the routine that drew this.** It writes both
+nibbles with `stosw` and tests nothing, so it cannot produce the result above. There is
+another 4bpp expander -- a masked one -- and 3.13 describes a real routine that is not the
+one in use here. That is the scar in `CLAUDE.md` ("a routine you found by reading is not
+the routine in use") landing on this file. Finding it is T36c.
+
+**Consequence for the extracted art:** anything rendered with 4bpp treated as opaque has a
+solid rectangle of `base + 0` where transparency belongs. That is most of `captures/assets/`.
+
+**Verified by:** live VRAM at `0xA0000` with the game in Dragonia, compared against the
+payload from a decoder written only from this file; the sprite's `word3 = 0x00d0` predicts
+group 13 / base 208, which is also the base an independent reverse search recovered from
+the screen bytes without being told it.
 
 ### 3.14 `presti.io` -- unresolved
 

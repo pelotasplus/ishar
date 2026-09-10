@@ -443,13 +443,45 @@ moved between two captures taken 15 seconds apart, which is the confirmation.
 - container + LZ: **proven** on 100% of the corpus, two ways.
 - 8bpp sprite records, geometry, and index-0 keying: **proven against the machine**, with
   every differing pixel accounted for.
-- 4bpp: **cross-validated, not machine-verified.** The Java reader and `tools/ioscan.py`
+- 4bpp: **now machine-verified too, and it corrected the spec** -- see T36b below and
+  FORMATS 3.13b. Superseded text follows for the record:
+- ~~4bpp: cross-validated, not machine-verified.~~ The Java reader and `tools/ioscan.py`
   agree on the 4bpp assets, but agreement between two readers is level 2, not level 3,
   and 4bpp is where every historical bug in this project lived (the palette group, the
   transparency over-generalisation, the nibble order). It is the majority of the art.
 
 **Evidence:** `java/out/corpus.csv`; the Python/Java comparison; `tools/t36-fbmatch.py`
 and the numbers above, from `.ish/fb.bin` captured live while `captures/t36-logo-verified.png` was on screen.
+
+### 4.13 The 4bpp check, and the rule it overturned (T36b)
+
+`buste.io`'s portrait -- mode `0x10`, 64x36, at payload offset 6986 -- compared against
+live VRAM with the party panel on screen:
+
+| | |
+|---|---|
+| nibble != 0 | **1233 / 1233 = 100.0000%** identical |
+| nibble == 0 | 1071 pixels, **0** identical |
+
+So the decoder written only from FORMATS.md is exactly right on every pixel the game
+drew, and every nibble-zero pixel shows the frieze behind it (values 177-181 =
+`frise.io`'s base 176). **Mode `0x10` keys nibble 0**, which FORMATS 3.13 explicitly
+denied. Details and the consequences are in FORMATS 3.13b; the short version is that the
+test is on the *nibble*, before the group base is added, and that `expand_4bpp` at
+`seg_0e97:0ad1` cannot be the routine that drew it (T36c).
+
+Two things confirmed on the way, both from directions that did not know the answer:
+
+- **`word3 >> 4` is the palette group.** The sprite's `word3 = 0x00d0` predicts group 13,
+  base 208. A reverse search -- take the screen bytes, subtract a candidate base, check
+  every result is 0..15, repack two per byte high-nibble-first, and look for that in the
+  decoded payloads -- recovered base 208 for `buste.io` and 192 for `frise.io` without
+  being told either.
+- **The outdoor viewport is not a blit.** No asset matches the 3D view at either depth,
+  over 1,517 probe runs. The UI panel matches immediately. That is T11p's finding arriving
+  from a different direction: verify against the panel, never the viewport.
+
+**Evidence:** `.ish/fb3.bin` captured live in Dragonia (`captures/t36b-panel-verified.png`); the per-nibble split above.
 
 ## 5. Known defects (ours and the game's)
 
