@@ -1449,7 +1449,7 @@ Compose rewrite has to do.
       re-extracted. The acceptance case passes exactly: 1071 alpha-zero pixels, the same
       count the VRAM split predicted, and 1233/1233 = 100.0000% on the opaque ones.*
 
-- [~] **T38 · Prove the `main.io` disassembly against execution**
+- [x] **T38 · Prove the `main.io` disassembly against execution**
       `tools/vmdis.py main.io --stats` reports 97% "decoded as instructions", and that number
       is worthless on its own: T37 records that 219 of 231 byte values are valid opcodes, so
       a linear walk from any offset decodes to ~100% whether or not it is aligned. T30's
@@ -1476,6 +1476,16 @@ Compose rewrite has to do.
       anchoring since replaced, so it is not trustworthy alone — but vmdis emits `db` at 88,
       95 and 151 independently, and offsets under ~160 are where main.io's catalogue lives
       (T11e). Decoding a catalogue as instructions would look exactly like this. See T38b.*
+      *Superseded by T39d, and closed on a stronger result than it asked for. It wanted
+      ">99% of sampled `DS:SI` on instruction boundaries across three phases" from
+      `tools/vmcheck.py`. Traversal now reaches **100% of the statements the VM actually
+      executes** (34/34 IP-verified samples) from `main.io`'s two entry points, which
+      subsumes the sampling check — a boundary set that contains every executed statement
+      cannot be misaligned where execution goes.
+      What T38 contributed stands and is why it was worth doing: it found that `vmdis` read
+      **label lines as mnemonics**, so every handler named in `ishar.chani` lost its operand
+      width — our own annotations degrading the disassembler, invisible in the headline
+      (97% before and after).*
 
 - [~] **T39 · Implement the VM and run `main.io` against the emulator**
       The asset half was only ever settled by building a decoder from FORMATS.md alone and
@@ -1644,7 +1654,7 @@ Compose rewrite has to do.
       `es:[bp-8]` is the general form of T37's question*, and it is the same one breakpoint
       for every asset.*
 
-- [~] **T37b · Who writes `es:[bp-8]`? The general entry-point question**
+- [x] **T37b · Who writes `es:[bp-8]`? The general entry-point question**
       T39c found that a script's program counter is a far pointer in the frame at
       `es:[bp-8]`, restored by `lds si,es:[bp-8]` before each `vm_run` and written back
       after (FORMATS 7.5). So an asset's script entry point is whatever put a pointer in
@@ -1673,8 +1683,12 @@ Compose rewrite has to do.
       call/return (`add ax,si`), and nothing writes the segment half at `bp-6` at all.
       Remaining: run the cold-start scan far enough to catch `frise.io` and `dplt.io`'s
       first entries — see T37c.*
+      *Closed into T37f. The static route is a dead end and is recorded as such: `es:[bp-8]`
+      has six sites, the three writes are all script-level call/return, and nothing writes
+      the segment half at `bp-6`. What replaced it — first `vm_run` entry from a paused cold
+      start — is now T37f's method.*
 
-- [~] **T37c · Catch the first `vm_run` entry for assets loaded after the menu**
+- [x] **T37c · Catch the first `vm_run` entry for assets loaded after the menu**
       T37b established the method — from a paused cold start the first `vm_run` entry for an
       asset is its entry point — and got `main.io` and `logo.io`, both 24. `frise.io` and
       `dplt.io` demonstrably run script but were only caught mid-execution, so their entries
@@ -1709,8 +1723,13 @@ Compose rewrite has to do.
       Still open: those offsets are **yields, not entries** (`main.io` reads 256 there and 24
       from a cold start), and neither `frise.io` nor `dplt.io` appeared in the window. See
       T37e.*
+      *Closed into T37f. Its instrument, `tools/t37d-switch.py`, was retracted: at a
+      MEMORY_WRITE stop the slot does not contain `SI` (4 stops agreed, 5,868 did not), so
+      the ten assets and the yield offsets it produced are meaningless. The IP-verified
+      result stands — five assets run script: `main.io`, `logo.io`, `frise.io`, `dplt.io`,
+      `samb.io`.*
 
-- [!] **T37e · Entry points, now that a cheap probe exists**
+- [x] **T37e · Entry points, now that a cheap probe exists**
       T37c built `tools/t37d-switch.py` (164 stops/s, game runs normally) and used it to
       find ten assets running script, but its offsets are yield points. An entry point needs
       the *first* write of a script's PC, not any write.
@@ -1739,6 +1758,10 @@ Compose rewrite has to do.
       at 256**, and `logo.io`, `blancpc.io` and `fbuis.io` traverse to 0.1-1.4% from 24 —
       which is itself evidence that **24 is not their entry**. Whatever sets a script's
       initial PC is still the missing piece.*
+      *Closed into T37f. Its blocker is gone: T39d supplied control-flow traversal, and the
+      answer it produced changes the question — `main.io` has **two** entry points (24 and
+      19919), the second a region with no static in-edge from anywhere in the file. So an
+      asset has a *set* of entry points, not one, and that is what T37f asks for.*
 
 - [x] **T39d · The in-edges traversal cannot compute**
       Traversal from `main.io`'s entry reaches 73.5% of the statements the VM actually
@@ -1841,3 +1864,38 @@ Compose rewrite has to do.
       bars for the confirmation that damage is being taken.*
       **Done when:** a screenshot shows combat under way (a monster in the viewport and a
       LIFE bar changing), and one call-count diff is taken across an attack.
+
+- [ ] **T37f · The entry points of every script-carrying asset**
+      *Replaces T37b, T37c and T37e, which were three descriptions of one question and each
+      carried a stale premise. Consolidated so the next reader inherits one account.*
+
+      **What is known.** Five assets are confirmed running VM script, all from `vm_run`
+      breakpoints where `ip == entry` was checked: `main.io`, `logo.io`, `frise.io`,
+      `dplt.io`, `samb.io`. Entry points are known for two — `main.io` at **24 and 19919**,
+      `logo.io` at **24**.
+
+      **What changed the question.** An asset has a *set* of entry points, not one. `main.io`'s
+      second region has no static in-edge from anywhere in the file: five of its statements
+      have zero candidate in-edges and the rest are reachable only from those, so the engine
+      enters it directly (FORMATS 7.2e). Traversing from 24 alone reaches 73.5% of executed
+      statements; adding 19919 reaches 100%.
+
+      **What is ruled out**, so it is not retried:
+      - *static analysis of `es:[bp-8]`* — six sites, three writes, all script-level
+        call/return, and nothing writes the segment half at `bp-6`;
+      - *filtering by segment* — assets share the script buffer (`DS = 1cf3`), so excluding
+        `main.io`'s segment excludes every script (verified against a control that fires);
+      - *a `MEMORY_WRITE` probe on the PC slot* — at such a stop the slot does not contain
+        `SI` (4 agreed, 5,868 did not), so anything read there is meaningless;
+      - *offset 24 as a universal entry* — stepping all 98 assets from a fixed offset gives
+        median 17 statements from 24 against 25 from 16, i.e. worse than its neighbours.
+
+      *Method: the only instrument that works is the expensive one — a `vm_run` execution
+      breakpoint from a paused cold start, where the first entry seen for an asset is its
+      entry by construction, with `ip` checked at every stop. It costs ~2.6 stops/s and
+      stalls the game, so reach each asset's load moment first and arm it there. For second
+      and later entries, use the in-edge test instead: a reached region with no static
+      displacement landing on it from anywhere in the file is engine-entered.*
+      **Done when:** entry-point sets are recorded in FORMATS for `frise.io`, `dplt.io` and
+      `samb.io`, and `tools/vmi.py` traversing from each set reaches over 90% of that asset's
+      IP-verified live `DS:SI` samples — the measure that worked for `main.io`.
