@@ -113,11 +113,15 @@ The shipped file is `RBVVSAP1J0M1KQ`.
 |---|---|---|---|
 | `R` | *(never read)* | key checked, value ignored by this parser | — |
 | `V` | `C`=0 `E`=1 `V`=2 `H`=3, else 3 | video: CGA, EGA, VGA, Hercules | `cfg_video` `seg_13d7:03a6` |
-| `S` | `I`=0 `A`=1 `B`=2 `N`=3 `G`=4 `C`=4 | sound device; `A` is AdLib. `C` also sets `seg_13d7:0b8e` to 8, so `C` and `G` share a value and are told apart by that byte | `cfg_sound` `seg_13d7:05fc` |
+| `S` | `I`=0 `A`=1 `B`=2 `N`=3 `G`=4 `C`=4 | sound device. The setup screen names them in this order: **PC Speaker, Ad Lib, Sound Blaster, Sound OFF, Sound Galaxy** (FINDINGS 4.11), so `I` is the PC speaker and `N` is off. `C` also sets `seg_13d7:0b8e` to 8, so `C` and `G` share a value and are told apart by that byte; the UI offers only one Sound Galaxy entry, so what `C` selects is still open | `cfg_sound` `seg_13d7:05fc` |
 | `P` | digit − `'1'` | port | `cfg_port` `seg_13d7:066a` |
 | `J` | digit − `'0'` | joystick | `cfg_joystick` `seg_13d7:0402` |
 | `M` | digit − `'0'` | mouse | `cfg_mouse` `seg_13d7:048a` |
-| `K` | `A`=0 `Q`=1 `Z`=2, else 0 | keyboard layout: AZERTY, QWERTY, QWERTZ | `cfg_keyboard` `seg_13d7:0574` |
+| `K` | `A`=0 `Q`=1 `Z`=2, else 0 | keyboard layout: AZERTY, QWERTY, **QWERTZU** -- the setup screen's own spelling, and it suggests AZERTY | `cfg_keyboard` `seg_13d7:0574` |
+
+The setup screen displays five of the seven: VIDEO, JOYSTICK, MOUSE, KEYBOARD, SOUND.
+`R` and the port never appear, and VIDEO is shown but not selectable. Its enumerations
+match this table exactly, checked independently of the parser (FINDINGS 4.11).
 
 After parsing, each value is range-checked and replaced from a default if out of range:
 video against 4, sound against 5, port against 4, mouse against 2, joystick against 3.

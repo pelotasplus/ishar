@@ -344,6 +344,59 @@ driven by `tools/gdbtrace.py --drive {english,french}` from a cold boot and both
 ending in gameplay, verified by the panel match in `tools/ish boot`'s `in_game()`
 and by screenshot.
 
+### 4.11 The launcher's setup screen, and how to reach it (T09c)
+
+It exists, it is reachable, and it is titled **"SILMARILS SETUP — by Julien Pierre"**
+(`captures/t09c-setup-screen.png`). Three actions -- `PLAY`, `SAVE SETUP`, `QUIT` --
+over five fields, with `Use ^ v <- -> to select options, ENTER to validate.`
+
+**How it is reached.** `load_settings` (`seg_13d7:0e96`) opens `START.STP`; at
+`seg_13d7:0e9f` a `jnb` skips past `jmp 0fde`, and `0fde` is the failure path that
+sets `settings_invalid`. So the screen appears whenever the file is missing,
+unreadable, or fails the key-letter check (FORMATS 2).
+
+It was reached **without touching the game's file**, by patching the two branch
+bytes at runtime:
+
+    tools/ish start --gdb --pause
+    tools/ish poke 1554:0e9f 9090      # `jnb +3` -> two NOPs, so the jmp always runs
+    tools/ish go
+
+`1554` is `seg_13d7` at runtime (load `017d`). The patch lives in memory only; the
+shipped `START.STP` is byte-identical afterwards. Note `poke` takes the **runtime**
+segment while `dis` takes the listing one.
+
+**The defaults**, which is what the screen shows once `settings_invalid` is set:
+VGA, joystick 0, mouse Yes, QWERTY, PC Speaker.
+
+**What the UI confirms about FORMATS 2.** The enumerations are listed on screen, in
+order, which names the letters the parser matches:
+
+| field | choices, in order | letters from the parser |
+|---|---|---|
+| SOUND | PC Speaker, Ad Lib, Sound Blaster, Sound OFF, Sound Galaxy | `I`=0 `A`=1 `B`=2 `N`=3 `G`=4 |
+| KEYBOARD | AZERTY, QWERTY, QWERTZU | `A`=0 `Q`=1 `Z`=2 |
+| JOYSTICK | 0, 1, 2 | digit, range-checked against 3 |
+
+All five sound values and all three keyboard values match the parser exactly, from
+a completely independent direction. Two small corrections: the third layout is
+**QWERTZU**, not QWERTZ, and `I` is the **PC speaker**, which the format table left
+unnamed.
+
+Three more things the screen says:
+
+- **VIDEO is displayed but not selectable.** Up and Down step PLAY / SAVE SETUP /
+  QUIT / JOYSTICK / MOUSE / KEYBOARD / SOUND and skip over VIDEO entirely. It is
+  shown as VGA and cannot be changed -- consistent with a VGA-only release, though
+  the parser still decodes CGA/EGA/Hercules.
+- **`R` and `P` never appear.** Consistent with FORMATS 2: `R`'s value is never read
+  and the port is not surfaced to the user.
+- **The suggested keyboard is AZERTY**, the studio's own layout, while the shipped
+  `START.STP` says `KQ` = QWERTY.
+
+**Evidence:** the three captures above, taken from a live run patched as shown;
+`START.STP` verified unchanged (`RBVVSAP1J0M1KQ`) after the session.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault

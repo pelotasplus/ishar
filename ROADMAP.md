@@ -184,7 +184,7 @@ Compose rewrite has to do.
       digits minus '0'. `R`'s value is never read — recorded as such. The old guess-table
       had two of seven right and invented a field.*
 
-- [ ] **T09c · The launcher's setup screen**
+- [x] **T09c · The launcher's setup screen**
       The `START.STP` buffer is followed by `VIDEO`, `CGA`, `EGA` and "to select
       options, ENTER to validate", so the launcher has a setup UI nobody has seen.
       **Done when:** FINDINGS.md says how it is reached (a key, a switch, a missing
@@ -193,6 +193,14 @@ Compose rewrite has to do.
       (`seg_13d7:0b90`) whenever START.STP is missing, unreadable, or fails the key-letter
       check. The setup UI's text sits in the same segment. Try it with the file renamed
       or a byte corrupted — copy it aside first, it is the game's own file.*
+      *Done. It is "SILMARILS SETUP — by Julien Pierre" (FINDINGS 4.11,
+      `captures/t09c-setup-screen.png`). Reached without touching the game's file at all:
+      `tools/ish poke 1554:0e9f 9090` turns the `jnb` at `seg_13d7:0e9f` into two NOPs so
+      the failure jump always runs. START.STP verified byte-identical afterwards.
+      It paid for itself twice over — the on-screen choice lists confirm FORMATS 2's sound
+      and keyboard enums from a direction independent of the parser, and corrected two
+      details (QWERTZ**U**, and `I` = PC Speaker). VIDEO turns out to be displayed but not
+      selectable.*
 
 - [x] **T09d · ~~Why the scancode table differs on disk and in memory~~** — *withdrawn:
       there was no difference.* The listing was reading 0x250 bytes off, because
@@ -1326,3 +1334,11 @@ Compose rewrite has to do.
       **Done when:** the two call sites are distinguished and it is said what each read is
       for — a size probe, a re-read after `param.IO` changes something, or a genuine
       second load.
+
+- [ ] **T09f · What does `S` = `C` select?**
+      `cfg_sound` maps both `G` and `C` to 4, telling them apart by setting
+      `seg_13d7:0b8e` to 8 for `C` (FORMATS 2). The setup screen offers only one
+      Sound Galaxy entry, so `C` is a device the UI cannot choose — likely a variant
+      board selected only by hand-editing `START.STP`.
+      **Done when:** FORMATS 2 says what `C` is, from the code that reads
+      `seg_13d7:0b8e` — or records that nothing reads it.
