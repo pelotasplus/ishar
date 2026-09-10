@@ -770,6 +770,28 @@ you think was just written.** One extra read per stop. And when a derived result
 a puzzle that will not resolve, suspect the instrument before inventing a mechanism --
 7.2c was two rounds of theorising about yields that were never yields.
 
+### When one input device works and another does not, compare their wiring
+
+Mouse input was written off for months as "the game does not use the mouse", then as "the
+harness cannot reach a pointer". Neither was true. Keyboard events and mouse events both
+go through Spice86's `InputEventHub`, but the keyboard device subscribed to the hub and
+the mouse device subscribed to the GUI -- and in headless mode the GUI never raises mouse
+events at all. Two lines in `Spice86DependencyInjection.cs`.
+
+The diagnosis took one question: *the keyboard works, so what is different about the
+mouse?* Following both paths from the same MCP entry point to the same device layer found
+it in minutes, after two earlier sessions had concluded the game or the emulator was at
+fault.
+
+So when a facility half-works, **diff it against the half that works** before theorising
+about the guest. And two related traps caught here:
+
+- `send_mouse_move` takes **normalised 0.0-1.0** coordinates. Passing pixels answers
+  `Mouse moved to (1.000, 1.000)` -- clamped to the corner, so the pointer never moves and
+  nothing fires. It reports success either way.
+- The emulator is a checkout we own. "The emulator cannot do it" is a claim to check
+  against its source, not a stopping point.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

@@ -898,7 +898,22 @@ eight INT 33h calls during boot -- `AX=0x00` reset (x2), `0x0f` mickey/pixel rat
 handler, with the callback at `ES:DX = 017d:1249`** (`mouse_event_handler` in
 `ishar.chani`). After that it never calls INT 33h again, so a mid-game window sees nothing.
 
-**The blocker is real but it is Spice86's, not the game's.** With the callback address
+**FIXED (T29c3).** One line each for `Mouse` and `MouseDriver` in Spice86's
+`Spice86DependencyInjection.cs`: they subscribed to `_gui as IGuiMouseEvents` while the
+keyboard subscribes to the `InputEventHub`. Injected mouse events go into the hub, nothing
+was listening to the hub's mouse events, and in headless mode `_gui` is the `HeadlessGui`,
+which by its own comment "never raises these events". Passing `inputEventHub` instead --
+it wraps the GUI, so real pointer input is unaffected -- makes the whole chain work.
+
+After the fix: the callback at `017d:1249` fires with `AX=1` on movement (0 hits before,
+against a live control of 507), **the game's own cursor appears and tracks the pointer**,
+and clicking `MAP` in the ACTION menu opened the world map of KENDORIA -- 65.4% of the
+screen changed. `captures/t29c3-action-menu.png`, `captures/t29c3-map-clicked.png`.
+
+So the mouse is now drivable from the harness, and T29c's whole premise -- that combat and
+magic cannot be reached -- is dead.
+
+**The blocker as it was (superseded):** With the callback address
 known, driving the harness's mouse -- moves and clicks, and with the *correct* units, see
 below -- produces **0 hits on the callback** and **0 hits on the BIOS INT 74h handler**,
 against **507** for a control breakpoint at `vm_run` in the same session. So injected

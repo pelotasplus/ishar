@@ -591,7 +591,7 @@ Compose rewrite has to do.
       per second, so the game loop is script-driven. Domain verbs fire once per event and a
       walk diff cannot see them. See T29c.*
 
-- [!] **T29c · Attribute primitives to combat, magic and the party**
+- [ ] **T29c · Attribute primitives to combat, magic and the party**
       T29 named every statement handler's signature but not its meaning. Domain verbs fire
       once per event, so the walk diff that worked for the language core cannot see them.
       *Method: `tools/t11p-diff.py` takes a call-count snapshot, runs an action, and diffs --
@@ -610,7 +610,11 @@ Compose rewrite has to do.
       magic and inventory stay unreachable. `tools/t29c-action.py` and its idle baseline
       work correctly -- see T29d.*
 
-- [!] **T29d · Find how Ishar reads the mouse**
+- [x] **T29d · Find how Ishar reads the mouse**
+      *Answered by T29c2/T29c3: the game calls INT 33h eight times during boot and installs
+      an event handler with `AX=0x0c`, callback `017d:1249` (`mouse_event_handler`). It never
+      calls INT 33h again, which is why mid-game traces saw nothing. The harness now
+      delivers mouse input to it.*
       T29c is blocked because the game hooks no mouse interrupt: INT 33h is never called and
       INT 0Bh/0Ch/74h are untouched BIOS stubs (FINDINGS.md 6.4). Yet `souris.io` -- French
       for mouse -- is one of the assets, and the ACTION menu cannot be worked from the
@@ -1475,7 +1479,7 @@ Compose rewrite has to do.
       statements at offset 40). The 10,000-sample live gate needs most of ~110 handlers
       modelled by hand; see T39b.*
 
-- [!] **T29c2 · Recheck T29c's "no mouse the harness can reach" blocker**
+- [x] **T29c2 · Recheck T29c's "no mouse the harness can reach" blocker**
       T29c is `[!]` because combat and magic are mouse-driven and INT 33h showed 0 calls.
       Blockers here have a poor record: T07, T10, T11g3 and T08 were all blocked on
       conditions that had stopped being true, and T11p's blocker named the wrong region
@@ -1748,7 +1752,7 @@ Compose rewrite has to do.
       For contrast `0x14` is 178/178 = 100% against a 90.2% chance baseline, so its shape is
       certainly right. The 7.2d target check already stops these propagating.*
 
-- [ ] **T29c3 · Make Spice86 deliver injected mouse input to the game**
+- [x] **T29c3 · Make Spice86 deliver injected mouse input to the game**
       T29c2 root-caused the mouse blocker: the game registers an INT 33h event handler at
       `017d:1249`, Spice86 registers it correctly and has the code to call it
       (`MouseDriver.cs:129-157`), but injected moves and clicks never raise IRQ12, so
@@ -1763,6 +1767,17 @@ Compose rewrite has to do.
       over faking INT 33h returns, so the game's own code path runs.*
       **Done when:** a breakpoint on `seg_0000:1249` fires while the harness injects mouse
       movement, and clicking a visible ACTION-menu entry changes the screen.
+      *Met, both halves. The fix is one line each for `Mouse` and `MouseDriver` in Spice86's
+      `Spice86DependencyInjection.cs`: they subscribed to `_gui as IGuiMouseEvents` while the
+      keyboard subscribes to `inputEventHub`. Injected events went into the hub with nothing
+      listening, and in headless mode `_gui` is `HeadlessGui`, which "never raises these
+      events". Passing `inputEventHub` (which wraps the GUI, so real input is unaffected)
+      makes the chain work. Committed in the Spice86 checkout as `d3b54587`.
+      Result: the callback fires with `AX=1` on movement (0 before), the game's cursor
+      appears and tracks the pointer, and clicking MAP opened the world map of KENDORIA —
+      65.4% of the screen (`captures/t29c3-map-clicked.png`).
+      **This unblocks T29c, T29d, T29c2 and with them T21 (combat), T22 (magic) and T23
+      (quests)** — the entire game-logic half of the project.*
 
 - [ ] **T40 · Where do on-screen positions come from?**
       FINDINGS 4.15 maps every UI region to its asset — `frise.io` for the chrome at three
