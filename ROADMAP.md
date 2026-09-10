@@ -1564,6 +1564,20 @@ Compose rewrite has to do.
       observed first-yield offset would sit one byte after a `0x42`/`0x43`, and none of the
       four does. Either those offsets are not yields, or the live-`DS:SI`-to-offset base is
       wrong. Unresolved and written down rather than guessed at. Model left at 42.8%.*
+      *Third round — the 56 stalls are **fixed** (FORMATS 7.2d). Each traced back to a
+      *different* branch, so it was never one wrong shape; following one bad target puts the
+      walk inside data where everything after is garbage. Targets are now checked before
+      being taken (231 opcodes exist, so a target outside the table cannot be code):
+      **stalls 56 -> 0**, coverage 42.8% -> 42.6%, 116 targets rejected. Coverage barely
+      moves because the extra 56 statements were fictional.
+      Not a base error: for `0x06` base 3 gives 61/87 plausible targets against 60/60/61/60
+      for bases 1-5, and `0x0a` base 4 gives 121/141 against 118-119 either side — both the
+      hand-verified values.
+      **New acceptance number: live coverage.** Against 34 IP-verified `DS:SI` values sampled
+      at `vm_run` during gameplay, traversal hits **25/34 = 73.5%** of the statements actually
+      executed. Byte coverage is the weaker measure; this is the one to move.
+      The nine misses are all in-edges traversal cannot compute — 19919 is the fall-through of
+      an unconditional jump, so it is reached from somewhere else entirely. See T39d.*
 
 - [x] **T39c · Find `main.io`'s real entry point**
       Stepping from offset 0 dies after 23 statements at offset 40, so the file does not
