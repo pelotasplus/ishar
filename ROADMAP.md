@@ -1618,7 +1618,7 @@ Compose rewrite has to do.
       from a cold start), and neither `frise.io` nor `dplt.io` appeared in the window. See
       T37e.*
 
-- [ ] **T37e · Entry points, now that a cheap probe exists**
+- [!] **T37e · Entry points, now that a cheap probe exists**
       T37c built `tools/t37d-switch.py` (164 stops/s, game runs normally) and used it to
       find ten assets running script, but its offsets are yield points. An entry point needs
       the *first* write of a script's PC, not any write.
@@ -1629,3 +1629,16 @@ Compose rewrite has to do.
       now affordable.*
       **Done when:** entry offsets are recorded for at least three assets besides `main.io`
       and `logo.io`, and it is stated whether 24 is the constant entry for all of them.
+      *Blocked on **T39b**, and the dependency is the finding (FORMATS 7.6). A cold-start run
+      gives each asset's first *yield* — `main.io` 256, `logo.io` 256, `blancpc.io` 801,
+      `fbuis.io` 3960 (an eleventh asset running script). Tying a yield back to an entry
+      means stepping from the candidate entry and checking the walk reaches it; that fails
+      for all four because `tools/vmi.py` walks **linearly** and scripts reach their yields
+      through jumps — `main.io`'s walk covers offset 758 without ever touching 256.
+      So entry points are not a tracing problem any more. They need a stepper that follows
+      control flow, which needs the handlers modelled (T39b). Three approaches have now
+      failed for three different reasons — static `es:[bp-8]` analysis, filtering by segment
+      (assets share `DS=1cf3`), and yield corroboration — and only the expensive
+      statement-level breakpoint from a cold start works, which stalls the game before the
+      later assets load.
+      **Do T39b first.** This entry is not ready.*

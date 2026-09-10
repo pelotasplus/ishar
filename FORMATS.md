@@ -1303,6 +1303,32 @@ entry by construction.
 The slot is at a fixed linear address (`ES:BP = 126b:02a0`, so `0x12948`) and is stable
 across runs, which is what makes the cheap probe possible.
 
+**Why entry points need the interpreter, not more tracing (T37e).** A genuine cold-start
+run of the cheap probe gives each asset's *first yield*: `main.io` 256, `logo.io` 256,
+`blancpc.io` 801, `fbuis.io` 3960 (an eleventh asset running script). For `main.io` the
+entry is independently known to be 24, so the obvious corroboration is to step from 24 and
+see whether the walk passes through 256. It does not -- and neither do the others.
+
+That is not a tuning problem. `tools/vmi.py` walks **linearly**, and a script reaches its
+first yield through jumps; `main.io`'s walk covers offset 758 without ever touching 256.
+So a first yield cannot be tied back to an entry until the stepper follows control flow,
+which needs the branch conditions evaluated, which is T39b.
+
+Three approaches to entry points have now failed, and they fail for different reasons
+worth keeping:
+
+- **Static.** `es:[bp-8]` has six sites; the three writes are all script-level call/return
+  (`add ax,si`), and nothing writes the segment half at `bp-6`.
+- **Filter by segment.** Assets share the script buffer (`DS = 1cf3`), so excluding
+  `main.io`'s segment excluded every script. Verified against a control condition that
+  does fire.
+- **Corroborate a yield by stepping.** Blocked on linear walking, above.
+
+The one method that works is the expensive one: from a paused cold start, a `vm_run`
+breakpoint catches every statement in order, so the first is the entry by construction --
+which is how `main.io` and `logo.io` were both established as 24. It costs 2.6 stops/s and
+stalls the game before the later assets load.
+
 **Verified by:** `.ish/t37b.json`; `tools/t37b-scan.py`; the rival-offset table above.
 
 ### 7.4 Some statements are variable-length, and that is what broke the listing (T39)
