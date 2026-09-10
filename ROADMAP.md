@@ -1955,7 +1955,7 @@ Compose rewrite has to do.
       **Done when:** FINDINGS lists the intro's assets in load order with the screen each
       one produces, as 4.9 does for the splash.
 
-- [ ] **T29h · Find where the monsters are, from the data**
+- [~] **T29h · Find where the monsters are, from the data**
       T29f established that wandering does not work — terrain blocks movement and twelve
       rounds of walking ended against a hedge. Finding a fight should come from the files.
       Three untried leads, all cheap and offline:
@@ -1968,3 +1968,18 @@ Compose rewrite has to do.
       against the map grid the party actually stands on (T11g3b).*
       **Done when:** a location is named where a monster should appear, the party is driven
       there, and a screenshot shows the creature — closing T29f.
+      *Not met, and the premise was half wrong (FORMATS 3.16). `encont.io`, `monstre.io`,
+      `telep.io` and `dead.io` are **scripts, not tables** — each begins with the 16-byte
+      header then `vm_op_block_init`, exactly like `main.io` — so there is no record layout
+      to read and monster placement is code. A scan for `vm_op_load_asset` finds **zero**
+      inline filenames in any of them, so they refer to things by id.
+      Sizes cluster like fixed script slots: `monstre.io` and `telep.io` both 2,016 bytes,
+      `dead.io` and `auteur.io` both 448. And `dead.io` is the death *script* — too small at
+      448 bytes to be the demon frame it shows (FINDINGS 4.17).
+      The fixed data is in the `.fic` files: `cont1..6.fic` are **exactly 90x54** (4,860
+      bytes each, confirming T11g), and `en1.fic` — loaded twice at setup, `EN` reading as
+      *ennemis* in a French codebase — holds ~30 small big-endian words in the 6..50 range
+      after a 56-byte zero run. That is stat-block or per-entity-count shaped, not
+      coordinate shaped.
+      Two leads left, both offline: `en1.fic`'s word array, and the `cont*.fic` cell values
+      (T11g3, still half-decoded).*

@@ -1506,6 +1506,45 @@ wrong offset, and the target check added in 7.2d already stops them propagating.
 against `.ish/live-offsets.json` (IP-verified samples); the signed/unsigned sweep; and the
 operand-byte histogram.
 
+### 3.16 The small assets are scripts, and the `.fic` files are the data (T29h)
+
+Looking for where monsters live turned up the shape of the data rather than the answer.
+
+**The small `.io` files are script, not tables.** `encont.io` (2,008 bytes), `monstre.io`
+(2,016), `telep.io` (2,016) and `dead.io` (448) all begin with the 16-byte asset header and
+then **`29 …` — `vm_op_block_init`** — the same opening as `main.io`'s script. So monster
+placement, encounters and teleports are *code*, not a lookup table, which is why searching
+them for records found nothing.
+
+Sizes cluster suspiciously: `monstre.io` and `telep.io` are byte-identical in length at
+2,016, and `dead.io` and `auteur.io` both at 448. That reads like fixed script slots.
+
+**None of them names an asset inline.** A scan for opcode `0x45` (`vm_op_load_asset`, a word
+id then a NUL-terminated filename -- section 7) finds **zero** instances in `encont.io`,
+`monstre.io`, `dplt.io` or `samb.io`, though `main.io` is full of them. Whatever these
+scripts refer to, they refer to it by id.
+
+**`dead.io` is the death script.** 448 bytes is far too small for the full-screen demon
+frame seen when the party is wiped (FINDINGS 4.17), so this is the sequence that shows it,
+not the picture.
+
+**The `.fic` files are where the fixed data is.**
+
+| file | size | content |
+|---|---|---|
+| `cont1.fic` .. `cont6.fic` | 4,860 each | **exactly 90 x 54** -- six world grids, confirming T11g's dimensions |
+| `en1.fic` | 3,640 | loaded **twice** during setup (4.10); `EN` in a French codebase reads as *ennemis* |
+| `tab1.fic` | 361 | only four distinct byte values, 1-4 |
+
+`en1.fic` is zeros for its first 56 bytes and then a run of big-endian words with a zero
+high byte -- 15, 32, 28, 7, 11, 50, 20, 20, 20, 20, 20, 20, 20, 39, 31, 12, 7, 10, 9, 9,
+40, 31, 46, 26, 33, 37, 38, 20, 29, 22, 6, 27 -- then zeros again. Roughly thirty small
+numbers in the 6..50 range, which is the shape of a stat block or a per-entity count, not
+of coordinates.
+
+**Status:** structural only. Nothing here yet says *where* a monster stands. The two leads
+that remain are `en1.fic`'s word array and the `cont*.fic` grids' cell values (T11g3).
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image
