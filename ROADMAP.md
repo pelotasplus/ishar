@@ -811,7 +811,7 @@ Compose rewrite has to do.
       `rampart.io` keeps 24, `buste.io` 33, `dragon.io` 13 and `logo.io` 4. `gerdep.io` drops
       to 0, correctly -- it is the palette bank's companion. Total 920 -> 803 sprites.*
 
-- [~] **T30 · Disassemble `main.io`**
+- [x] **T30 · Disassemble `main.io`**
       Everything needed is in place and none of it needs the emulator: `main.io` is the
       script the game runs (T27), the four dispatch tables are read out of the image
       (FORMATS.md 6), `vm_run`'s encoding is known -- opcode byte, word-scaled table at
@@ -833,9 +833,22 @@ Compose rewrite has to do.
       it is correctly aligned; the number cannot distinguish a right answer from a wrong one.
       T38 supplies a falsifiable check (every sampled `DS:SI` must be an instruction
       boundary). Do not tick T30 on the percentage alone.
-      **Done when:** `tools/vmdis.py` prints a listing of `main.io` in which over 80% of the
-      bytes are decoded as instructions rather than skipped, and FORMATS.md documents at
-      least ten opcodes' operand layouts.
+      **Done when:** ~~`tools/vmdis.py` prints a listing of `main.io` in which over 80% of the
+      bytes are decoded as instructions rather than skipped~~ — *criterion withdrawn as
+      unsound (219 of 231 byte values are opcodes, so a linear walk scores that either way)*
+      — **replaced by:** a listing is produced by a tool whose statement boundaries are
+      confirmed against live execution, and FORMATS.md documents at least ten opcodes'
+      operand layouts.
+      *Met. `tools/vmi.py --listing` writes `main-io-listing.txt` (6,009 lines, gitignored as
+      derived output) by traversing from both entry points and printing only statements it
+      actually reaches, marking everything else as not-reached rather than decoding it. Its
+      boundaries are the ones verified against the running VM: **34/34 = 100%** of
+      IP-verified live `DS:SI` samples land on them (FORMATS 7.2e).
+      The documentation half is over-met — FORMATS 7.2b tabulates **all 231** opcodes, not
+      ten, with operands, expression nesting and branch shape, generated from the handlers.
+      Two more named in `ishar.chani` while producing the listing: `vm_op_declare_entity`
+      (0x46, fixed 36 bytes with a 32-byte inline record) and `vm_op_block_init` (0x29,
+      variable `5 + 2*count`) — the instruction that no table can size.*
       *Working, and the acceptance criterion I wrote was a bad one: 219 of 231 byte values
       are valid opcodes, so a linear walk reports 98% decoded whether it is right or not.
       The check that does discriminate: the interpreter was caught live at SI = 3270, 3271,

@@ -1606,4 +1606,20 @@ attr[seg_0000:9386]: type = code; name = party_member_select; comment = [[[
     selection highlight, not a new screen. Attributed by call-count diff, portrait click vs
     idle (T29c).
 ]]]
+attr[seg_0000:2ded]: type = code; name = vm_op_declare_entity; comment = [[[
+    Opcode 0x46, and a **fixed 36-byte** statement: lodsw / lodsb / mov cx,20h / rep movsb.
+    The `rep movsb` takes its source from SI, so 32 bytes of the script stream are an inline
+    record copied into a structure at es:[bx+6], with `or es:[bx],40h` setting a flag and a
+    pointer written at es:[bx+2]. main.io's first two statements are both this, at offsets
+    24 and 60 -- the entry point and the one after it (FORMATS 7.5).
+]]]
+attr[seg_0000:5713]: type = code; name = vm_op_block_init; comment = [[[
+    Opcode 0x29, and **variable length: 5 + 2*count**, where count is its own third operand
+    byte. lodsw gives a destination offset, lodsb the count, lodsb one byte, then `inc cx`
+    and a loop reading one WORD per further iteration. This is the instruction no
+    table-driven disassembler can size, and getting it wrong is what put `vmdis` out of
+    alignment: at offset 96 its loop swallows `5a 00` and at 143 it swallows `1a 00`, so
+    those bytes are operand data rather than the statements they were being read as
+    (FORMATS 7.4).
+]]]
 end

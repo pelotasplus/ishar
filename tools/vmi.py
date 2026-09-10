@@ -311,7 +311,42 @@ def traverse(d, entry):
     return seen, covered, unknown
 
 
+def listing(d, entries):
+    """A disassembly of the reachable script, in offset order.
+
+    Only statements the traversal actually reaches are printed; everything else is
+    marked as data rather than decoded, because a linear walk decodes data just as
+    happily as code (FORMATS 7.3).
+    """
+    seen, _, _ = traverse_all(d, entries)
+    out, prev = [], 0
+    for pc in sorted(seen):
+        if pc > prev:
+            out.append(f"{prev:6d}  ---- {pc - prev} bytes not reached ----")
+        opc = d[pc]
+        nxt = step(d, pc)
+        nm = NAME.get(STMT.get(opc, -1), f"op_{opc:02x}")
+        raw = " ".join(f"{b:02x}" for b in d[pc:nxt if nxt else pc + 1][:8])
+        succ = successors(d, pc)
+        flow = ""
+        if succ and INFO.get(opc) and INFO[opc][2]:
+            flow = "  -> " + ", ".join(str(t) for t in succ)
+        out.append(f"{pc:6d}  {raw:24s} {nm:30s}{flow}")
+        prev = nxt if nxt else pc + 1
+    if prev < len(d):
+        out.append(f"{prev:6d}  ---- {len(d) - prev} bytes not reached ----")
+    return out
+
+
 def main():
+    if "--listing" in sys.argv:
+        args = [a for a in sys.argv[1:] if not a.startswith("--")]
+        src = args[0] if args else "main.io"
+        d = decode(open(os.path.join(GAME, src), "rb").read())[0]
+        ent = MAIN_ENTRIES if src == "main.io" else (24,)
+        for ln in listing(d, ent):
+            print(ln)
+        return
     if "--selftest" in sys.argv:
         print(f"statement {len(STMT)}  expr {len(EXPR)}  store {len(STORE)}  addassign {len(ADDA)}")
         print(f"statements embedding an expression: {sum(1 for v in INFO.values() if v[1])}")
