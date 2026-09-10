@@ -808,7 +808,10 @@ Compose rewrite has to do.
       `lodsb`/`lodsw` it executes before returning, which `tools/vmops.py` already reports as
       `imm`. Start with the opcodes that actually appear in `main.io`, not all 231; unknown
       opcodes stop the listing, and where it stops tells you which handler to read next.*
-      **NOTE: this acceptance criterion is unsound and is superseded by T38.** 219 of 231
+      **NOTE: T39 is a prerequisite.** FORMATS 7.3: 79 of 230 statement opcodes embed an
+      expression from a *different*, byte-scaled table, so their length is variable and no
+      table-driven disassembler can get it right. A correct listing needs the interpreter.
+      **This acceptance criterion is also unsound and is superseded by T38.** 219 of 231
       byte values are valid opcodes, so a linear walk decodes to ~97% regardless of whether
       it is correctly aligned; the number cannot distinguish a right answer from a wrong one.
       T38 supplies a falsifiable check (every sampled `DS:SI` must be an instruction
@@ -1469,7 +1472,7 @@ Compose rewrite has to do.
       **Done when:** either ten primitives are attributed as T29c asks, or it is shown with a
       keyboard trace that combat genuinely cannot be entered without a pointer.
 
-- [ ] **T38b · Is the start of `main.io` a catalogue rather than script?**
+- [x] **T38b · ~~Is the start of `main.io` a catalogue rather than script?~~** — *premise dead; the real cause found instead*
       `vmdis` decodes from offset 0 and emits `db` at 88, 95 and 151; a live sample put
       instruction boundaries at 103 and 150 where vmdis has neither (FINDINGS 4.14). But
       T11e says `main.io` carries a catalogue, and offsets under ~160 are where it sits — a
@@ -1481,6 +1484,22 @@ Compose rewrite has to do.
       real and the region needs its own entry point.*
       **Done when:** vmdis skips the catalogue, and either the two offsets are inside it —
       recorded as such — or they remain and are named in FORMATS.md as a misaligned region.
+      *The premise was false and this entry was written from my own misreading. FORMATS 7
+      already establishes — with live evidence — that `main.io` is **bytecode throughout**,
+      not a table: opcode 0x45 carries an asset id and an inline filename as *operands*.
+      The `hdr_is_catalogue` flag names a 16-byte directory in the **container header**,
+      which `decode()` strips before the payload begins. There is no catalogue in the
+      payload to skip, so the method here cannot be carried out.
+      What the investigation did establish (FORMATS 7.3): the two offsets are **real**, and
+      my earlier "untrustworthy anchoring" caveat was over-cautious — a run of nine 5-byte
+      `0x29` records resumes on exactly 103 and 150, corroborating the live samples with no
+      emulator involved.
+      The cause is structural: **79 of 230 statement opcodes call the expression evaluator**,
+      so the bytes after them are expression bytecode from the byte-scaled table at 0x01f2 —
+      a different instruction set — and the statement's length is variable. A single-table
+      linear disassembler cannot be right for those, which is also why "97% decoded" is
+      meaningless. Getting lengths right needs an interpreter, so **T39 is now a
+      prerequisite for T30**, not an extra.*
 
 - [ ] **T38c · Get vmcheck out of its saturation trap**
       The check saturates at ~34 distinct offsets because the idle game re-runs the same

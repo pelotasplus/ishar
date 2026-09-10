@@ -1092,6 +1092,48 @@ container path (section 3), and executed in place.
 decoded `main.io`, with the asset id matching the catalogue id independently established
 in 3.5.
 
+### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
+
+`tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image
+`0x24`. That is wrong for a large minority of instructions, and it is why the listing
+drifts out of alignment in places.
+
+**79 of the 230 statement opcodes call the expression evaluator** (`seg_0000:69a6`) inside
+their handler. The bytes that follow such a statement are not statement opcodes: they are
+**expression** bytecode, dispatched through the *byte-scaled* table at `0x01f2` (section
+6), which is a different instruction set with different operand widths. A statement's
+length is therefore **variable** -- it depends on how the nested expression parses -- and
+no fixed per-opcode width can express it.
+
+That is the real content of the "97% decoded as instructions" figure: with 219 of 231 byte
+values valid as statement opcodes, a single-table linear walk always resyncs and always
+scores ~97%, whether or not it is reading the right table.
+
+**Worked example.** The disputed region at payload offsets 96-160 is a run of nine 5-byte
+`0x29` records, and it resumes on exactly the two offsets the running VM reported as
+instruction boundaries:
+
+```
+ 96: 29 80 00 01 01
+101: 5a 00              <- two bytes, not the three vmdis assigns
+103: 29 82 13 00 01
+...
+143: 29 68 15 01 02
+148: 1a 00              <- two bytes
+150: 29 ec 15 00 02
+```
+
+`0x5a`'s handler is `mov ss:[0c76],0 / call 69a6 / ... / lodsw`, so it consumes a nested
+expression *before* its own word. The drumbeat of `0x29` records is independent
+corroboration that 103 and 150 are right and the listing is wrong there.
+
+**Consequence:** a correct `main.io` listing needs an interpreter, not a table -- the
+lengths only fall out of actually evaluating the nesting. That is T39, and it is now the
+prerequisite for T30 rather than a nice-to-have.
+
+**Verified by:** handler scan bounded at each `ret` and at the next handler start (79 of
+230); the byte dump above; live `DS:SI` samples at `vm_run` (FINDINGS 4.14).
+
 #### Five sprite formats, selected by word 0's low byte
 
 | mode | header | pixels | palette base | routine |

@@ -718,6 +718,23 @@ Two habits from it:
   spot check: two `vm_op_jump_word` one byte apart, when the handler plainly reads three.
   **Read a few lines of the output, not only the summary.**
 
+### Check the premise in the file, not in your memory of the file
+
+T38b was filed by me, in this repo's own format, on the theory that the start of
+`main.io` is a catalogue that vmdis was wrongly decoding as instructions. FORMATS
+section 7 already said the opposite, with live evidence: `main.io` is bytecode
+throughout, and the "catalogue" flag names a 16-byte directory in the *container
+header* that `decode()` strips before the payload starts.
+
+The word "catalogue" appears 20-odd times in FORMATS meaning two different things, and
+I filed a task off the wrong one without re-reading the section that settles it. Ten
+seconds of grep would have prevented it -- and this is the pre-flight the `goal` skill
+already mandates, skipped because the task was one I had written myself and therefore
+felt already checked.
+
+**A task you wrote is not a premise you verified.** Re-read the finding it rests on
+before acting on it, especially when it is your own.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their
