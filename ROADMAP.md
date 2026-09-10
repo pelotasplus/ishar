@@ -808,6 +808,11 @@ Compose rewrite has to do.
       `lodsb`/`lodsw` it executes before returning, which `tools/vmops.py` already reports as
       `imm`. Start with the opcodes that actually appear in `main.io`, not all 231; unknown
       opcodes stop the listing, and where it stops tells you which handler to read next.*
+      **NOTE: this acceptance criterion is unsound and is superseded by T38.** 219 of 231
+      byte values are valid opcodes, so a linear walk decodes to ~97% regardless of whether
+      it is correctly aligned; the number cannot distinguish a right answer from a wrong one.
+      T38 supplies a falsifiable check (every sampled `DS:SI` must be an instruction
+      boundary). Do not tick T30 on the percentage alone.
       **Done when:** `tools/vmdis.py` prints a listing of `main.io` in which over 80% of the
       bytes are decoded as instructions rather than skipped, and FORMATS.md documents at
       least ten opcodes' operand layouts.
@@ -1410,3 +1415,43 @@ Compose rewrite has to do.
       indistinguishable from a sprite that legitimately uses green. All 803 PNGs
       re-extracted. The acceptance case passes exactly: 1071 alpha-zero pixels, the same
       count the VRAM split predicted, and 1233/1233 = 100.0000% on the opaque ones.*
+
+- [ ] **T38 · Prove the `main.io` disassembly against execution**
+      `tools/vmdis.py main.io --stats` reports 97% "decoded as instructions", and that number
+      is worthless on its own: T37 records that 219 of 231 byte values are valid opcodes, so
+      a linear walk from any offset decodes to ~100% whether or not it is aligned. T30's
+      "over 80%" acceptance therefore cannot fail. This task supplies one that can.
+      *Method: break on the VM fetch (`vm_dispatch`, `seg_0000:69a6`) and sample `DS:SI` --
+      the script program counter -- a few thousand times across boot, the language menu and
+      a walk. Every sampled SI must land on an instruction boundary in vmdis's listing. One
+      that lands mid-instruction disproves the alignment for that region. FINDINGS 6.9
+      already did this by hand for 10 samples over the menu; this is the same check at
+      scale and automated.*
+      **Done when:** `tools/vmcheck.py` reports the share of sampled `DS:SI` values that are
+      instruction boundaries, it is over 99% across at least three phases, and any region
+      that fails is named in FORMATS.md as not-yet-aligned rather than quietly counted.
+
+- [ ] **T39 · Implement the VM and run `main.io` against the emulator**
+      The asset half was only ever settled by building a decoder from FORMATS.md alone and
+      comparing its output to the machine (T36/T36b). The game-logic half needs the same
+      gate, and nothing weaker will do: a disassembly that looks plausible is not evidence,
+      for the reason T38 exists.
+      *Method: implement `vm_run` and the opcodes in one file, the way `java/IsharSprites.java`
+      was written from the spec alone. Start the interpreter at the same entry the game uses,
+      step it, and compare its `SI` sequence -- and the engine variables it writes -- against
+      a live trace of the real one. Divergence names the first opcode that is wrong, which is
+      exactly the feedback the sprite work got from a framebuffer diff.*
+      **Done when:** the interpreter reproduces at least 10,000 consecutive `DS:SI` values
+      from a live trace with no divergence, and every opcode it had to guess at is listed.
+
+- [ ] **T29c2 · Recheck T29c's "no mouse the harness can reach" blocker**
+      T29c is `[!]` because combat and magic are mouse-driven and INT 33h showed 0 calls.
+      Blockers here have a poor record: T07, T10, T11g3 and T08 were all blocked on
+      conditions that had stopped being true, and T11p's blocker named the wrong region
+      entirely. Since it was written, `tools/ish keys` over MCP has been shown to drive the
+      game reliably (T08, T36b) where `tools/nudge.py` did not.
+      *Method: FINDINGS 6.4 says F1 opens the ACTION menu. Drive it with MCP keys and take
+      the call-count diff `tools/t11p-diff.py` was built for. If the menu is reachable by
+      keyboard, the mouse is not needed and the blocker is dead.*
+      **Done when:** either ten primitives are attributed as T29c asks, or it is shown with a
+      keyboard trace that combat genuinely cannot be entered without a pointer.

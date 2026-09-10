@@ -683,6 +683,20 @@ Generally: when an instrument has a known noise source you cannot remove, **meas
 noise under the same conditions and subtract it**, rather than trying to reason about
 which hits look plausible.
 
+### A percentage that cannot fall is not a measurement
+
+`tools/vmdis.py main.io --stats` says 97% of the file "decoded as instructions", and
+T30's acceptance asked for over 80%. But 219 of the 231 byte values are valid opcodes,
+so a linear walk decodes to roughly that from *any* starting offset, aligned or not.
+The number would have been just as high on a listing that was wrong end to end.
+
+This is the "coverage is not comprehension" trap wearing a different hat, and it is
+worth the same reflex every time a percentage appears: **ask what value it would take
+if the thing being measured were completely wrong.** If the answer is "about the same",
+it is not evidence. Here the falsifiable version is T38 -- sample the script's own
+program counter at the VM fetch and require every sample to land on an instruction
+boundary, which a misaligned listing fails immediately.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their
