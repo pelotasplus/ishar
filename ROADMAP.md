@@ -1342,3 +1342,17 @@ Compose rewrite has to do.
       board selected only by hand-editing `START.STP`.
       **Done when:** FORMATS 2 says what `C` is, from the code that reads
       `seg_13d7:0b8e` — or records that nothing reads it.
+
+- [ ] **T36b · Machine-verify the 4bpp sprite path**
+      T36 proved the container (98/98, two implementations) and the 8bpp path against the
+      live framebuffer, but 4bpp is only cross-validated between two of our own readers —
+      level 2, not level 3 (FINDINGS 4.12). 4bpp is most of the game's art and is where
+      the palette-group, transparency and nibble-order bugs all happened.
+      *Method: as T36 — reach a screen drawn from a 4bpp asset, dump `0xA0000`, and search
+      the decoded payloads for the framebuffer run **expanded the other way**: for each
+      candidate base `g*16`, subtract it from the screen bytes, check every result is
+      0..15, repack two-per-byte high-nibble-first and search for that. A hit names the
+      file, the base and the group at once. Note the GDB reads pause the machine, so
+      `cont()` after each dump or the game never advances past the logo.*
+      **Done when:** one 4bpp asset is compared pixel-by-pixel against VRAM with every
+      differing pixel accounted for, as `logo.io` now is.

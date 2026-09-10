@@ -397,6 +397,60 @@ Three more things the screen says:
 **Evidence:** the three captures above, taken from a live run patched as shown;
 `START.STP` verified unchanged (`RBVVSAP1J0M1KQ`) after the session.
 
+### 4.12 Is FORMATS.md good enough to build from? Mostly, and here is the number (T36)
+
+The question was whether 1,700 lines of format prose actually lead anywhere. The test:
+a decoder written **only from FORMATS.md**, run over the whole corpus, and checked
+against what the emulator puts on screen.
+
+**Level 1 -- the container. 98/98.** `java/IsharCorpus.java` decodes every `.io` file
+in the game: 97 in mode `0xa0` (bit-packed LZ77) and one, `blancpc.io`, stored,
+1,583,646 bytes of payload in total. No failures.
+
+That alone proves little -- an LZ decoder can produce garbage without throwing. So:
+
+**Level 2 -- an independent implementation. 98/98 byte-identical.** Every payload was
+compared against `tools/io.py`, written separately from the disassembly. All 98 agree
+byte for byte, none differ, none error. Two implementations can still share a mistake,
+which is why there is a level 3.
+
+**Level 3 -- the machine.** The live framebuffer at `0xA0000` was dumped while the
+Silmarils logo was on screen and searched across all 98 decoded payloads. **Exactly one
+matched**: `logo.io`, and no other asset contained any of the probe runs.
+
+The layout was then measured rather than assumed, from where the matching runs landed:
+adjacent screen columns are 1 byte apart in the file, adjacent rows 144 -- so 8 bits per
+pixel, 144-byte stride. The header that predicts that geometry is at offset 1856,
+`mode = 0x14`, `144x118`, pixels at 1864, which is exactly what FORMATS 3.10 says a mode
+`0x14` record looks like.
+
+Comparing all of it against VRAM at its measured origin (screen x=84, y=11):
+
+| | |
+|---|---|
+| opaque pixels compared | 12,875 |
+| identical to the framebuffer | **12,850 = 99.81%** |
+| index-0 pixels skipped (3.13 keying) | 4,117 |
+| differing | 25 |
+
+The 25 are not scattered: they fill one **13x13 square** at x 91-103, y 100-112, and
+their screen values (129-141) do not overlap the sprite's own range (21-31) anywhere.
+That is a second sprite composited on top -- the animated sparkle by the blue gem. It
+moved between two captures taken 15 seconds apart, which is the confirmation.
+
+**So the honest scoreboard:**
+
+- container + LZ: **proven** on 100% of the corpus, two ways.
+- 8bpp sprite records, geometry, and index-0 keying: **proven against the machine**, with
+  every differing pixel accounted for.
+- 4bpp: **cross-validated, not machine-verified.** The Java reader and `tools/ioscan.py`
+  agree on the 4bpp assets, but agreement between two readers is level 2, not level 3,
+  and 4bpp is where every historical bug in this project lived (the palette group, the
+  transparency over-generalisation, the nibble order). It is the majority of the art.
+
+**Evidence:** `java/out/corpus.csv`; the Python/Java comparison; `tools/t36-fbmatch.py`
+and the numbers above, from `.ish/fb.bin` captured live while `captures/t36-logo-verified.png` was on screen.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
