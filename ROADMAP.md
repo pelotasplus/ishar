@@ -1526,7 +1526,7 @@ Compose rewrite has to do.
       **Done when:** the cumulative distinct-offset count is over 500 and the boundary rate
       across all of them is reported as one number.
 
-- [ ] **T39b · Model the statement handlers one at a time**
+- [~] **T39b · Model the statement handlers one at a time**
       `tools/vmi.py` steps correctly where it has been taught and stops at the first opcode
       it cannot size (offset 758 walking from 96). FORMATS 7.4 shows why a scan of each
       handler's `lodsb`/`lodsw` is not enough: `0x29`'s loop body reads a word per
@@ -1537,6 +1537,24 @@ Compose rewrite has to do.
       first unknown opcode is the progress measure, and it must only ever grow.*
       **Done when:** stepping from a live-verified anchor covers over 90% of `main.io`
       without meeting an unsized opcode, and each modelled handler cites its code.
+      *Substantial progress, not met (FORMATS 7.2b). Coverage from the real entry (24):
+      linear 173 statements -> **recursive traversal 4,811 statements, 42.8% of bytes**.
+      **No stall on any in-range opcode**: all 56 remaining stalls are on bytes >230, i.e.
+      data reached by a wrong branch target, not statements the stepper cannot size.
+      Two fixes got it there. The dispatch-table floor was `0x100`, which threw away the
+      no-op opcodes whose handler is a bare `ret` in the spare bytes at image 0x20..0x23 —
+      opcode `0x04`'s entry is literally `0x0022`, and dropping it is what stalled the walk
+      at offset 758. `tools/vmdis.py` has the same floor and the same hole.
+      Then control flow: every branch handler is built from the same four parts (`lodsb`/
+      `lodsw` width, an `inc si` skip, a `jz`/`jnz` test, a push into `es:[bp-0ah]`), so the
+      shape is *derived* rather than hand-coded. It reproduces all five shapes that had been
+      checked by hand against live execution.
+      Also produced: the full 231-opcode table in FORMATS 7.2b, generated from the handlers
+      — 85 no-ops, 105 embedding an expression, 22 branch-shaped, 2 variable-length, 165
+      named in chani.
+      Remaining for 90%: paths reached only by indirect jumps, and branch targets that land
+      in data (the 56). Other assets stay near 0% from offset 24, which is evidence that 24
+      is **not** their entry — see T37e.*
 
 - [x] **T39c · Find `main.io`'s real entry point**
       Stepping from offset 0 dies after 23 statements at offset 40, so the file does not
@@ -1642,3 +1660,8 @@ Compose rewrite has to do.
       statement-level breakpoint from a cold start works, which stalls the game before the
       later assets load.
       **Do T39b first.** This entry is not ready.*
+      *Update after T39b's traversal landed: still not reached. Traversing `main.io` from 24
+      covers 4,811 statements and 42.8% of bytes but **does not pass through its first yield
+      at 256**, and `logo.io`, `blancpc.io` and `fbuis.io` traverse to 0.1-1.4% from 24 —
+      which is itself evidence that **24 is not their entry**. Whatever sets a script's
+      initial PC is still the missing piece.*

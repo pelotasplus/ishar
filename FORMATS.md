@@ -1092,6 +1092,266 @@ container path (section 3), and executed in place.
 decoded `main.io`, with the asset id matching the catalogue id independently established
 in 3.5.
 
+### 7.2b The statement opcode table, all 231 (T39b)
+
+Opcode facts had been spread across `ishar.chani` (named handlers), section 6 (the four
+tables), FINDINGS 6.3 (signatures) and `tools/vmi.py` (sizing), with no one place to look
+one up. This is that place. Every row is **derived from the handler's own instructions**
+by `tools/vmi.py`, not hand-entered; regenerate it rather than editing it.
+
+Columns: **operands** are the fixed `lodsb`/`lodsw` reads (`b` = byte, `w` = word);
+**embeds expr** means the handler calls the expression evaluator, so a nested expression
+from the byte-scaled table at `0x01f2` sits between the opcode and its own operands and
+the statement's length is not fixed (7.3); **control flow** gives the branch shape, where
+`base` is the offset from the opcode at which the displacement is applied.
+
+Totals: **85** opcodes take nothing and do nothing to the stream (many are bare `ret`
+no-ops), **105** embed an expression, **22** are branch-shaped, **2** are variable-length
+(`0x29`, `0x46` — see 7.4), and **165** are named in `ishar.chani`.
+
+The five shapes checked by hand against live execution all match what the derivation
+produces: `0x0a` jump d16 base +4, `0x08` jump d8 base +2, `0x14` and `0x1a` conditional
+d16 base +4, `0x06` call d16 base +3.
+
+| opcode | handler | name | operands | embeds expr | control flow |
+|---|---|---|---|---|---|
+| `0x00` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0x01` | `seg_0000:26fa` | vm_stmt_01 | — | — | — |
+| `0x02` | `seg_0000:26fb` | vm_stmt_02 | — | — | — |
+| `0x03` | `seg_0000:26fc` | vm_stmt_03 | — | — | — |
+| `0x04` | `seg_0000:0022` | — | — | — | — |
+| `0x05` | `seg_0000:26fe` | — | b | — | call d8, base +2 |
+| `0x06` | `seg_0000:2711` | vm_op_call_word | w | — | call d16, base +3 |
+| `0x07` | `seg_0000:2723` | — | w | — | call d16, base +4 |
+| `0x08` | `seg_0000:2736` | vm_op_jump_byte | b | — | jump d8, base +2 |
+| `0x09` | `seg_0000:273b` | vm_stmt_09 | w | — | jump d16, base +3 |
+| `0x0a` | `seg_0000:273f` | vm_op_jump_word | w | — | jump d16, base +4 |
+| `0x0b` | `seg_0000:2802` | vm_stmt_0b | — | — | — |
+| `0x0c` | `seg_0000:2803` | vm_stmt_0c | — | — | — |
+| `0x0d` | `seg_0000:2804` | vm_stmt_0d | — | — | — |
+| `0x0e` | `seg_0000:2805` | vm_stmt_0e | — | — | — |
+| `0x0f` | `seg_0000:2806` | vm_stmt_0f | — | — | — |
+| `0x10` | `seg_0000:2807` | vm_stmt_10 | — | — | — |
+| `0x11` | `seg_0000:2808` | — | — | — | — |
+| `0x12` | `seg_0000:2885` | — | b | — | cond d8, base +2 |
+| `0x13` | `seg_0000:2890` | — | w | — | cond d16, base +3 |
+| `0x14` | `seg_0000:289c` | vm_op_jump_if_zero | w | — | cond d16, base +4 |
+| `0x15` | `seg_0000:28a9` | — | b | — | cond d8, base +2 |
+| `0x16` | `seg_0000:28b4` | — | w | — | cond d16, base +3 |
+| `0x17` | `seg_0000:28c0` | vm_stmt_17 | w | — | cond d16, base +4 |
+| `0x18` | `seg_0000:28cd` | vm_stmt_18 | b | — | cond d8, base +2 |
+| `0x19` | `seg_0000:28d8` | vm_stmt_19 | w | — | cond d16, base +3 |
+| `0x1a` | `seg_0000:28e4` | vm_stmt_1a | w | — | cond d16, base +4 |
+| `0x1b` | `seg_0000:28f1` | vm_stmt_1b | b | — | cond d8, base +2 |
+| `0x1c` | `seg_0000:28fc` | vm_stmt_1c | w | — | cond d16, base +3 |
+| `0x1d` | `seg_0000:2908` | vm_stmt_1d | w | — | cond d16, base +4 |
+| `0x1e` | `seg_0000:2915` | vm_op_eval_reset | b | yes | — |
+| `0x1f` | `seg_0000:2937` | vm_stmt_eval | — | yes | — |
+| `0x20` | `seg_0000:293d` | vm_stmt_assign | b | yes | — |
+| `0x21` | `seg_0000:295f` | vm_stmt_assign_neg | — | yes | — |
+| `0x22` | `seg_0000:2969` | vm_stmt_22 | — | — | — |
+| `0x23` | `seg_0000:296a` | vm_stmt_23 | — | — | — |
+| `0x24` | `seg_0000:2a92` | — | — | yes | — |
+| `0x25` | `seg_0000:2a9f` | vm_stmt_25 | b | — | — |
+| `0x26` | `seg_0000:2ab1` | vm_stmt_26 | — | yes | — |
+| `0x27` | `seg_0000:2ace` | vm_stmt_27 | — | yes | — |
+| `0x28` | `seg_0000:2ae2` | vm_stmt_28 | — | yes | — |
+| `0x29` | `seg_0000:5713` | — | wbbw | — | **variable length** |
+| `0x2a` | `seg_0000:2afc` | vm_op_wait_tick | — | yes | — |
+| `0x2b` | `seg_0000:2837` | vm_op_loop | — | — | — |
+| `0x2c` | `seg_0000:2850` | vm_stmt_2c | — | — | — |
+| `0x2d` | `seg_0000:286a` | vm_stmt_2d | — | — | — |
+| `0x2e` | `seg_0000:5738` | — | b | yes | cond d8, base +3 |
+| `0x2f` | `seg_0000:5768` | — | b | yes | cond d8, base +3 |
+| `0x30` | `seg_0000:2744` | vm_op_jump_rel8 | b | — | — |
+| `0x31` | `seg_0000:2749` | vm_stmt_31 | w | — | — |
+| `0x32` | `seg_0000:27b9` | vm_op_jump_rel16 | w | — | — |
+| `0x33` | `seg_0000:27bd` | vm_stmt_33 | — | — | — |
+| `0x34` | `seg_0000:67b5` | vm_prim_1arg | — | yes | — |
+| `0x35` | `seg_0000:5798` | vm_stmt_35 | — | yes | — |
+| `0x36` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0x37` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0x38` | `seg_0000:2e9b` | vm_stmt_38 | — | yes | — |
+| `0x39` | `seg_0000:2ec0` | vm_stmt_39 | — | yes | — |
+| `0x3a` | `seg_0000:2e94` | vm_stmt_3a | — | — | — |
+| `0x3b` | `seg_0000:2e93` | — | — | — | — |
+| `0x3c` | `seg_0000:2cce` | vm_stmt_3c | — | — | — |
+| `0x3d` | `seg_0000:2de5` | — | w | — | — |
+| `0x3e` | `seg_0000:57c1` | — | — | yes | — |
+| `0x3f` | `seg_0000:57b0` | — | — | — | — |
+| `0x40` | `seg_0000:2ce2` | — | w | — | — |
+| `0x41` | `seg_0000:2d80` | — | — | yes | — |
+| `0x42` | `seg_0000:2d94` | — | — | — | — |
+| `0x43` | `seg_0000:2d98` | vm_stmt_43 | — | — | — |
+| `0x44` | `seg_0000:2da7` | — | — | — | — |
+| `0x45` | `seg_0000:2dbd` | vm_op_load_asset | wb | — | — |
+| `0x46` | `seg_0000:2ded` | — | wb | — | **variable length** |
+| `0x47` | `seg_0000:2ef3` | — | w | — | — |
+| `0x48` | `seg_0000:333f` | — | — | yes | — |
+| `0x49` | `seg_0000:336f` | — | — | yes | — |
+| `0x4a` | `seg_0000:3aae` | vm_stmt_4a | — | — | — |
+| `0x4b` | `seg_0000:3a84` | vm_op_draw_menu | — | yes | — |
+| `0x4c` | `seg_0000:3b86` | — | — | yes | — |
+| `0x4d` | `seg_0000:3b9c` | vm_stmt_4d | — | yes | — |
+| `0x4e` | `seg_0000:325f` | — | w | — | — |
+| `0x4f` | `seg_0000:3279` | — | w | — | — |
+| `0x50` | `seg_0000:3adb` | — | — | — | — |
+| `0x51` | `seg_0000:48b5` | — | — | yes | — |
+| `0x52` | `seg_0000:48bd` | vm_stmt_52 | — | — | — |
+| `0x53` | `seg_0000:4a15` | vm_stmt_53 | — | yes | — |
+| `0x54` | `seg_0000:4ae1` | vm_stmt_54 | — | yes | — |
+| `0x55` | `seg_0000:4b17` | vm_stmt_55 | — | yes | — |
+| `0x56` | `seg_0000:4b59` | vm_stmt_56 | — | yes | — |
+| `0x57` | `seg_0000:4b8f` | — | — | — | — |
+| `0x58` | `seg_0000:4ba4` | vm_stmt_58 | — | — | — |
+| `0x59` | `seg_0000:551a` | — | — | — | — |
+| `0x5a` | `seg_0000:5353` | vm_stmt_5a | w | yes | — |
+| `0x5b` | `seg_0000:5274` | vm_stmt_5b | — | yes | — |
+| `0x5c` | `seg_0000:55dc` | vm_stmt_5c | — | yes | — |
+| `0x5d` | `seg_0000:5594` | vm_stmt_5d | w | yes | — |
+| `0x5e` | `seg_0000:556b` | vm_stmt_5e | — | yes | — |
+| `0x5f` | `seg_0000:3c3b` | vm_stmt_5f | — | yes | — |
+| `0x60` | `seg_0000:4bc4` | vm_stmt_60 | — | — | — |
+| `0x61` | `seg_0000:57d9` | — | b | yes | — |
+| `0x62` | `seg_0000:58a1` | — | — | — | — |
+| `0x63` | `seg_0000:5898` | vm_stmt_63 | — | — | — |
+| `0x64` | `seg_0000:58ad` | — | — | — | — |
+| `0x65` | `seg_0000:58a7` | vm_stmt_65 | — | — | — |
+| `0x66` | `seg_0000:588a` | — | — | — | — |
+| `0x67` | `seg_0000:570b` | — | — | — | — |
+| `0x68` | `seg_0000:591e` | — | — | yes | — |
+| `0x69` | `seg_0000:5b6c` | vm_stmt_69 | — | yes | — |
+| `0x6a` | `seg_0000:58b3` | — | — | yes | — |
+| `0x6b` | `seg_0000:5db8` | vm_stmt_6b | — | yes | — |
+| `0x6c` | `seg_0000:5dff` | vm_stmt_6c | — | yes | — |
+| `0x6d` | `seg_0000:5ea7` | — | — | yes | — |
+| `0x6e` | `seg_0000:60d0` | vm_stmt_6e | — | yes | — |
+| `0x6f` | `seg_0000:58bc` | vm_stmt_6f | ww | — | — |
+| `0x70` | `seg_0000:637f` | — | bw | yes | cond d8, base +2 |
+| `0x71` | `seg_0000:63a8` | — | — | — | — |
+| `0x72` | `seg_0000:63ab` | vm_stmt_72 | bw | — | — |
+| `0x73` | `seg_0000:63ba` | vm_stmt_73 | b | — | — |
+| `0x74` | `seg_0000:63c5` | vm_stmt_74 | — | — | — |
+| `0x75` | `seg_0000:63de` | vm_stmt_75 | — | yes | — |
+| `0x76` | `seg_0000:63f8` | vm_stmt_76 | b | — | — |
+| `0x77` | `seg_0000:6408` | — | wwww | — | — |
+| `0x78` | `seg_0000:643c` | vm_stmt_78 | wwwww | — | — |
+| `0x79` | `seg_0000:649a` | vm_stmt_79 | — | yes | — |
+| `0x7a` | `seg_0000:64c2` | vm_stmt_7a | — | yes | — |
+| `0x7b` | `seg_0000:64c9` | vm_stmt_7b | — | yes | — |
+| `0x7c` | `seg_0000:64d0` | vm_stmt_7c | — | yes | — |
+| `0x7d` | `seg_0000:65c6` | vm_stmt_7d | — | yes | — |
+| `0x7e` | `seg_0000:65d8` | vm_stmt_7e | — | yes | — |
+| `0x7f` | `seg_0000:65e9` | vm_stmt_7f | — | yes | — |
+| `0x80` | `seg_0000:65fa` | vm_stmt_80 | — | yes | — |
+| `0x81` | `seg_0000:6603` | vm_stmt_81 | — | yes | — |
+| `0x82` | `seg_0000:67ae` | vm_stmt_82 | — | yes | — |
+| `0x83` | `seg_0000:3678` | — | — | yes | — |
+| `0x84` | `seg_0000:660d` | — | — | — | — |
+| `0x85` | `seg_0000:662e` | vm_stmt_85 | — | — | — |
+| `0x86` | `seg_0000:6649` | vm_stmt_86 | — | — | — |
+| `0x87` | `seg_0000:665c` | — | — | yes | — |
+| `0x88` | `seg_0000:675d` | vm_stmt_88 | — | yes | — |
+| `0x89` | `seg_0000:6789` | vm_stmt_89 | b | — | jump d8, base +2 |
+| `0x8a` | `seg_0000:6797` | vm_stmt_8a | w | — | — |
+| `0x8b` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0x8c` | `seg_0000:68b6` | — | — | — | — |
+| `0x8d` | `seg_0000:692a` | vm_stmt_8d | — | yes | — |
+| `0x8e` | `seg_0000:4a57` | vm_stmt_8e | — | yes | — |
+| `0x8f` | `seg_0000:4a9c` | vm_stmt_8f | — | yes | — |
+| `0x90` | `seg_0000:3bb2` | vm_stmt_90 | — | — | — |
+| `0x91` | `seg_0000:679d` | vm_stmt_91 | w | — | — |
+| `0x92` | `seg_0000:67a8` | vm_stmt_92 | w | — | — |
+| `0x93` | `seg_0000:50bd` | vm_stmt_93 | — | yes | — |
+| `0x94` | `seg_0000:510f` | — | w | — | — |
+| `0x95` | `seg_0000:6219` | — | — | yes | — |
+| `0x96` | `seg_0000:629b` | — | — | yes | — |
+| `0x97` | `seg_0000:60eb` | vm_stmt_97 | — | yes | — |
+| `0x98` | `seg_0000:60dd` | vm_stmt_98 | — | yes | — |
+| `0x99` | `seg_0000:3339` | vm_stmt_99 | — | — | — |
+| `0x9a` | `seg_0000:332d` | vm_stmt_9a | — | — | — |
+| `0x9b` | `seg_0000:3333` | vm_stmt_9b | — | — | — |
+| `0x9c` | `seg_0000:51af` | — | — | — | — |
+| `0x9d` | `seg_0000:62bb` | — | — | yes | — |
+| `0x9e` | `seg_0000:6370` | vm_stmt_9e | — | — | — |
+| `0x9f` | `seg_0000:368f` | vm_stmt_9f | — | — | — |
+| `0xa0` | `seg_0000:3695` | — | — | — | — |
+| `0xa1` | `seg_0000:6379` | — | — | — | — |
+| `0xa2` | `seg_0000:3bce` | vm_stmt_a2 | — | — | — |
+| `0xa3` | `seg_0000:4967` | vm_stmt_a3 | — | yes | — |
+| `0xa4` | `seg_0000:49a2` | vm_stmt_a4 | — | yes | — |
+| `0xa5` | `seg_0000:49dd` | vm_stmt_a5 | — | yes | — |
+| `0xa6` | `seg_0000:33a3` | vm_stmt_a6 | — | — | — |
+| `0xa7` | `seg_0000:33b7` | — | — | — | — |
+| `0xa8` | `seg_0000:33cb` | vm_stmt_a8 | — | — | — |
+| `0xa9` | `seg_0000:33dc` | vm_stmt_a9 | — | — | — |
+| `0xaa` | `seg_0000:3401` | vm_stmt_aa | — | — | — |
+| `0xab` | `seg_0000:33ec` | vm_stmt_ab | — | — | — |
+| `0xac` | `seg_0000:6210` | vm_stmt_ac | — | — | — |
+| `0xad` | `seg_0000:48c4` | vm_stmt_ad | — | yes | — |
+| `0xae` | `seg_0000:2ca5` | vm_stmt_ae | — | yes | — |
+| `0xaf` | `seg_0000:2cbc` | vm_stmt_af | — | — | — |
+| `0xb0` | `seg_0000:29c4` | vm_stmt_b0 | — | — | — |
+| `0xb1` | `seg_0000:29b5` | vm_stmt_b1 | — | — | — |
+| `0xb2` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0xb3` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0xb4` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0xb5` | `seg_0000:26f9` | vm_stmt_00 | — | — | — |
+| `0xb6` | `seg_0000:2a6b` | vm_stmt_b6 | — | yes | — |
+| `0xb7` | `seg_0000:2a5e` | vm_stmt_b7 | — | — | — |
+| `0xb8` | `seg_0000:2a85` | vm_stmt_b8 | — | yes | — |
+| `0xb9` | `seg_0000:2a78` | — | — | — | — |
+| `0xba` | `seg_0000:296b` | vm_prim_5args | — | yes | — |
+| `0xbb` | `seg_0000:65cf` | vm_stmt_bb | — | yes | — |
+| `0xbc` | `seg_0000:5c08` | — | — | — | — |
+| `0xbd` | `seg_0000:5b8b` | vm_stmt_bd | — | yes | — |
+| `0xbe` | `seg_0000:5b92` | — | — | yes | — |
+| `0xbf` | `seg_0000:2994` | vm_prim_4args | — | yes | — |
+| `0xc0` | `seg_0000:2eff` | vm_stmt_c0 | — | yes | — |
+| `0xc1` | `seg_0000:2f41` | vm_stmt_c1 | — | yes | — |
+| `0xc2` | `seg_0000:2f21` | vm_stmt_c2 | — | yes | — |
+| `0xc3` | `seg_0000:2f61` | vm_stmt_c3 | — | yes | — |
+| `0xc4` | `seg_0000:2f8f` | vm_stmt_c4 | — | yes | — |
+| `0xc5` | `seg_0000:3025` | vm_stmt_c5 | — | yes | — |
+| `0xc6` | `seg_0000:3052` | vm_stmt_c6 | — | yes | — |
+| `0xc7` | `seg_0000:3680` | vm_stmt_c7 | — | yes | — |
+| `0xc8` | `seg_0000:31eb` | vm_stmt_c8 | — | — | — |
+| `0xc9` | `seg_0000:31ec` | vm_stmt_c9 | — | — | — |
+| `0xca` | `seg_0000:515f` | vm_stmt_ca | — | yes | — |
+| `0xcb` | `seg_0000:543b` | vm_stmt_cb | w | yes | — |
+| `0xcc` | `seg_0000:55b8` | vm_stmt_cc | w | yes | — |
+| `0xcd` | `seg_0000:61a1` | — | — | yes | — |
+| `0xce` | `seg_0000:6198` | vm_stmt_ce | — | — | — |
+| `0xcf` | `seg_0000:36c8` | — | — | yes | — |
+| `0xd0` | `seg_0000:369b` | vm_stmt_d0 | — | yes | — |
+| `0xd1` | `seg_0000:5d1c` | vm_stmt_d1 | — | yes | — |
+| `0xd2` | `seg_0000:5d75` | vm_stmt_d2 | — | yes | — |
+| `0xd3` | `seg_0000:5f00` | vm_stmt_d3 | — | — | — |
+| `0xd4` | `seg_0000:6da5` | vm_stmt_d4 | — | — | — |
+| `0xd5` | `seg_0000:62b7` | — | — | yes | — |
+| `0xd6` | `seg_0000:36d0` | vm_stmt_d6 | — | yes | — |
+| `0xd7` | `seg_0000:58d5` | — | — | yes | — |
+| `0xd8` | `seg_0000:58ce` | — | — | yes | — |
+| `0xd9` | `seg_0000:6da6` | vm_stmt_d9 | — | yes | — |
+| `0xda` | `seg_0000:6daa` | vm_stmt_da | — | — | — |
+| `0xdb` | `seg_0000:3aa4` | vm_stmt_db | — | — | — |
+| `0xdc` | `seg_0000:3ad1` | — | — | — | — |
+| `0xdd` | `seg_0000:3a7a` | — | — | — | — |
+| `0xde` | `seg_0000:2d76` | — | — | — | — |
+| `0xdf` | `seg_0000:3225` | vm_stmt_df | — | yes | — |
+| `0xe0` | `seg_0000:31ed` | vm_stmt_e0 | — | yes | — |
+| `0xe1` | `seg_0000:4bcd` | vm_stmt_e1 | — | — | — |
+| `0xe2` | `seg_0000:7d4e` | — | — | yes | — |
+| `0xe3` | `seg_0000:306e` | vm_stmt_e3 | ww | yes | — |
+| `0xe4` | `seg_0000:30e5` | vm_stmt_e4 | ww | yes | — |
+| `0xe5` | `seg_0000:3142` | vm_stmt_e5 | ww | yes | — |
+| `0xe6` | `seg_0000:58e5` | vm_stmt_e6 | — | yes | — |
+
+**Verified by:** `tools/vmi.py`'s `walk()`, reading each handler from `ishar-listing.txt`
+and stopping at its `ret` or the next handler start; the five hand-checked shapes above;
+and recursive traversal from `main.io`'s entry reaching 4,811 statements with **no stall
+on any in-range opcode**.
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image

@@ -43,10 +43,19 @@ for ln in open(os.path.join(HERE, "ishar-listing.txt")):
 
 
 def table(base, scale, n):
+    """Read a dispatch table.
+
+    The lower bound is 0x20, not 0x100. Several opcodes are no-ops whose handler is a
+    bare `ret` in the four spare bytes just below the tables: image 0x20..0x23 holds
+    `05 c3 c3 c3`, and opcode 0x04's entry is literally 0x0022. A 0x100 floor throws
+    those away and the walk then stalls on a perfectly valid no-op -- which is what
+    stopped stepping main.io at offset 758 (T39b). tools/vmdis.py has the same floor
+    and the same hole.
+    """
     t = {}
     for opc in range(n):
         w = struct.unpack_from("<H", IMG, HDR + base + opc * scale)[0]
-        if 0x100 <= w <= 0x9410:
+        if 0x20 <= w <= 0x9410:
             t[opc] = w
     return t
 
@@ -60,8 +69,18 @@ EXPR_ENTRY = {0x69a6, 0x69a9, 0x69ab, 0x69b5, 0x69b8}
 
 
 def walk(addr, limit=60):
-    """(operand widths, calls-an-expression, is-a-branch) for one handler."""
+    """Facts about one handler, read from its instructions.
+
+    Returns (operand widths, calls-an-expression, branch-shape or None). The branch
+    shape is what recursive traversal needs and every branch handler in this VM is
+    built from the same four parts:
+        lodsb/lodsw   how wide the displacement is
+        inc si        a skipped byte after it, so the base is one further on
+        jz/jnz        a test, so the fall-through is live as well as the target
+        es:[bp-0ah]   a return address pushed into the frame stack, i.e. a call
+    """
     ops, expr, branch, off, n = [], False, False, addr, 0
+    skip, cond, call = False, False, False
     while n < limit:
         n += 1
         if off not in CODE:
@@ -71,6 +90,12 @@ def walk(addr, limit=60):
             ops.append("b")
         elif mn == "lodsw":
             ops.append("w")
+        elif mn == "inc" and a.startswith("si"):
+            skip = True
+        elif mn in ("jz", "jnz", "je", "jne"):
+            cond = True
+        elif "bp-0ah" in a:
+            call = True
         elif mn in ("call", "jmp") and re.search(r"069a[689b5]", a):
             expr = True
         elif mn == "add" and a.startswith("si,"):
@@ -83,7 +108,12 @@ def walk(addr, limit=60):
         off = min(nxt)
         if off in STARTS and off != addr:
             break
-    return ops, expr, branch
+    shape = None
+    if branch and ops:
+        width = 1 if ops[0] == "b" else 2
+        base = 1 + width + (1 if skip else 0)
+        shape = (base, width, cond, call)
+    return ops, expr, shape
 
 
 INFO = {o: walk(a) for o, a in STMT.items()}
@@ -155,6 +185,66 @@ def step(d, pc):
     for w in ops:
         pc += 1 if w == "b" else 2
     return pc
+
+
+# ---- control flow --------------------------------------------------------
+# Linear walking always ends in a data block eventually: `main.io` has a word table
+# at 823 reached only by a jump, and stepping into it stalls on 0xff (T39b). Following
+# branches avoids data entirely and needs no evaluation -- take both sides.
+#
+# Targets read from each handler:
+#   0x0a  lodsw / inc si / add si,ax        -> pc+4+i16, unconditional
+#   0x08  lodsb / cbw   / add si,ax         -> pc+2+i8,  unconditional
+#   0x14  test dx,dx / jnz(add si,3) / ...  -> taken pc+4+i16, else pc+4
+#   0x1a  cmp dx,cx  / jnz(add si,3) / ...  -> taken pc+4+i16, else pc+4
+#   0x06  lodsw / push si / add si,ax       -> pc+3+i16, and returns to pc+3
+def i16(d, o):
+    v = d[o] | (d[o + 1] << 8)
+    return v - 0x10000 if v & 0x8000 else v
+
+
+def i8(d, o):
+    return d[o] - 256 if d[o] & 0x80 else d[o]
+
+
+def successors(d, pc):
+    """Where control can go from the statement at pc, or None if unknown."""
+    if pc + 1 >= len(d):
+        return None
+    opc = d[pc]
+    info = INFO.get(opc)
+    if info and info[2] and step_var(d, pc) is None:
+        base, width, cond, call = info[2]
+        if pc + 1 + width > len(d):
+            return None
+        disp = i8(d, pc + 1) if width == 1 else i16(d, pc + 1)
+        after = pc + base
+        out = [after + disp]
+        if cond or call:            # a test keeps the fall-through; a call returns to it
+            out.append(after)
+        return out
+    nxt = step(d, pc)
+    return None if nxt is None else [nxt]
+
+
+def traverse(d, entry):
+    """Recursive-descent: every statement reachable from entry, and bytes covered."""
+    seen, todo, unknown = set(), [entry], set()
+    while todo:
+        pc = todo.pop()
+        if pc in seen or pc < 0 or pc >= len(d):
+            continue
+        seen.add(pc)
+        succ = successors(d, pc)
+        if succ is None:
+            unknown.add(pc)
+            continue
+        todo.extend(succ)
+    covered = 0
+    for pc in seen:
+        n = step(d, pc)
+        covered += (n - pc) if (n and n > pc) else 1
+    return seen, covered, unknown
 
 
 def main():
