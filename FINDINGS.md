@@ -849,6 +849,34 @@ against the table read from the static image.
 
 ### 6.4 Attributing opcodes to actions, and why input is the blocker (T29c)
 
+**CORRECTED (T29c2): the game does use the mouse.** The paragraph below is right about
+what it measured and wrong about what it concluded, and the reason is the "a trace taken
+mid-game cannot see what startup did" scar. Traced from a **cold start**, the game makes
+eight INT 33h calls during boot -- `AX=0x00` reset (x2), `0x0f` mickey/pixel ratio (x2),
+`0x04` set position, `0x07` and `0x08` ranges, and finally **`AX=0x0c`, install event
+handler, with the callback at `ES:DX = 017d:1249`** (`mouse_event_handler` in
+`ishar.chani`). After that it never calls INT 33h again, so a mid-game window sees nothing.
+
+**The blocker is real but it is Spice86's, not the game's.** With the callback address
+known, driving the harness's mouse -- moves and clicks, and with the *correct* units, see
+below -- produces **0 hits on the callback** and **0 hits on the BIOS INT 74h handler**,
+against **507** for a control breakpoint at `vm_run` in the same session. So injected
+mouse input never raises IRQ12, INT 74h never runs, and Spice86's mouse driver never
+reaches the callback it has correctly registered. The machinery exists
+(`MouseDriver.cs:129-157` invokes the user callback, and `BiosMouseInt74Handler` is
+installed) -- the trigger does not arrive.
+
+**`send_mouse_move` takes normalised 0.0-1.0 coordinates, not pixels.** `{"x":160,"y":100}`
+answers `Mouse moved to (1.000, 1.000)` -- clamped to the corner, so the pointer never
+moves and no event could fire. Both unit conventions were tried here and neither reaches
+the callback, so this is not the cause, but any future mouse work has to use fractions.
+
+**Evidence:** INT 33h entry breakpoint from a paused cold start, catching all eight calls
+with `ip` checked against the armed address; callback and INT 74h probes with the same
+check and a live control; Spice86 source at the paths named.
+
+**Superseded reasoning follows.**
+
 **The game does not use the BIOS mouse.** A breakpoint on the INT 33h handler records
 **zero calls in 20 seconds** of the game running, and the mouse IRQ vectors are all still
 the BIOS stub -- INT 0Bh (COM2), INT 0Ch (COM1) and INT 74h (PS/2) point at `f000:00xx`.

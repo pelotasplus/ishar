@@ -1571,4 +1571,15 @@ attr[seg_0e97:06d5]: type = code; name = viewport_fill_rect; comment = [[[
     `rep stosb / add di,bx / mov cx,dx / dec bp / jnz / ret` -- a rectangle fill with a
     per-row stride in BX. The sky and ground bands.
 ]]]
+attr[seg_0000:1249]: type = code; name = mouse_event_handler; comment = [[[
+    The INT 33h event handler the game installs at startup, caught live: during boot
+    it calls AX=0x00 reset, 0x0f ratio, 0x04 set position, 0x07/0x08 ranges, then
+    **AX=0x0c with ES:DX = 017d:1249** -- this routine. After that it never calls INT
+    33h again, which is why a mid-game trace recorded 'the game does not use the
+    mouse' (FINDINGS 6.4) -- the wrong window, not a wrong conclusion about the code.
+    It does not fire under the harness: 0 hits while injecting moves and clicks,
+    against 507 for a control at vm_run. Spice86 never raises IRQ12 for injected
+    mouse input, so INT 74h never runs and the driver never reaches this callback
+    (T29c2).
+]]]
 end

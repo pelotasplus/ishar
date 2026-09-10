@@ -1475,7 +1475,7 @@ Compose rewrite has to do.
       statements at offset 40). The 10,000-sample live gate needs most of ~110 handlers
       modelled by hand; see T39b.*
 
-- [ ] **T29c2 · Recheck T29c's "no mouse the harness can reach" blocker**
+- [!] **T29c2 · Recheck T29c's "no mouse the harness can reach" blocker**
       T29c is `[!]` because combat and magic are mouse-driven and INT 33h showed 0 calls.
       Blockers here have a poor record: T07, T10, T11g3 and T08 were all blocked on
       conditions that had stopped being true, and T11p's blocker named the wrong region
@@ -1486,6 +1486,20 @@ Compose rewrite has to do.
       keyboard, the mouse is not needed and the blocker is dead.*
       **Done when:** either ten primitives are attributed as T29c asks, or it is shown with a
       keyboard trace that combat genuinely cannot be entered without a pointer.
+      *Blocker confirmed real, but **relocated and root-caused** (FINDINGS 6.4). It is not
+      "the game has no mouse": traced from a cold start the game makes eight INT 33h calls
+      during boot and installs an event handler, `AX=0x0c`, callback `017d:1249`, now
+      `mouse_event_handler` in `ishar.chani`. The old zero-call reading came from measuring
+      mid-game, after the only call that matters.
+      The blocker is **Spice86's**: injected mouse input produces 0 hits on that callback and
+      0 on the BIOS INT 74h handler, against 507 for a control at `vm_run`. IRQ12 is never
+      raised, so the driver never reaches the callback it has correctly registered — the
+      machinery is all there (`MouseDriver.cs:129-157`, `BiosMouseInt74Handler` installed).
+      Also worth knowing: `send_mouse_move` takes **normalised 0.0-1.0** coordinates, not
+      pixels — `{x:160,y:100}` answers "moved to (1.000, 1.000)", i.e. clamped to the corner.
+      Both conventions were tried; neither reaches the callback.
+      Ten primitives not attributed. **Unblocked by T29c3**, which is now a Spice86 fix
+      rather than an emulation-limits argument.*
 
 - [x] **T38b · ~~Is the start of `main.io` a catalogue rather than script?~~** — *premise dead; the real cause found instead*
       `vmdis` decodes from offset 0 and emits `db` at 88, 95 and 151; a live sample put
@@ -1733,3 +1747,19 @@ Compose rewrite has to do.
       displacement, which is the signature of starting a statement at the wrong byte.
       For contrast `0x14` is 178/178 = 100% against a 90.2% chance baseline, so its shape is
       certainly right. The 7.2d target check already stops these propagating.*
+
+- [ ] **T29c3 · Make Spice86 deliver injected mouse input to the game**
+      T29c2 root-caused the mouse blocker: the game registers an INT 33h event handler at
+      `017d:1249`, Spice86 registers it correctly and has the code to call it
+      (`MouseDriver.cs:129-157`), but injected moves and clicks never raise IRQ12, so
+      `BiosMouseInt74Handler` never runs and the callback is never reached. Measured 0 hits
+      on both against a live control of 507.
+      This is the gate on combat, magic and inventory — T29c, T21, T22 and T23 all wait on
+      it — and it is a change to a checkout we own rather than a limit of the game.
+      *Method: follow `send_mouse_move`/`send_mouse_button` from the MCP layer into the
+      mouse device and find where a real pointer event would set `LastTrigger` and raise
+      IRQ12; the driver's own gate is `(LastTrigger & TriggerMask) == 0`, so the trigger
+      mask the game passed with `AX=0x0c` is worth logging too. Prefer a fix in Spice86
+      over faking INT 33h returns, so the game's own code path runs.*
+      **Done when:** a breakpoint on `seg_0000:1249` fires while the harness injects mouse
+      movement, and clicking a visible ACTION-menu entry changes the screen.
