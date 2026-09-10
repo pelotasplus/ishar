@@ -253,6 +253,31 @@ def plausible(d, pc):
     return 0 <= pc < len(d) and d[pc] in STMT
 
 
+def traverse_all(d, entries):
+    """Traverse from several entry points and merge.
+
+    A script has more than one: `main.io` is entered at 24 by the loader and at 19919
+    by the engine, and the second region has no static in-edge from anywhere in the file
+    -- five of its statements have zero candidate in-edges and the rest are reachable
+    only from those (T39d). Traversing from 24 alone reaches 73.5% of the statements the
+    VM actually executes; adding 19919 reaches 100%.
+    """
+    seen, cov, unk, rej = set(), 0, set(), []
+    for e in entries:
+        s, c, u = traverse(d, e)
+        seen |= s
+        unk |= u
+        rej += traverse.rejected
+    for pc in seen:
+        n = step(d, pc)
+        cov += (n - pc) if (n and n > pc) else 1
+    traverse_all.rejected = rej
+    return seen, cov, unk
+
+
+MAIN_ENTRIES = (24, 19919)      # loader entry, engine handler entry
+
+
 def traverse(d, entry):
     """Recursive-descent: every statement reachable from entry, and bytes covered.
 

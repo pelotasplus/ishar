@@ -1696,7 +1696,7 @@ Compose rewrite has to do.
       which is itself evidence that **24 is not their entry**. Whatever sets a script's
       initial PC is still the missing piece.*
 
-- [ ] **T39d · The in-edges traversal cannot compute**
+- [x] **T39d · The in-edges traversal cannot compute**
       Traversal from `main.io`'s entry reaches 73.5% of the statements the VM actually
       executes (FORMATS 7.2d). All nine misses are places reached by an **incoming edge**
       that is not a static displacement — 19919 is the fall-through of an unconditional
@@ -1709,8 +1709,15 @@ Compose rewrite has to do.
       if none does, the offset is an engine entry point and belongs with T37e.*
       **Done when:** live coverage of `main.io` is over 90%, or each remaining miss is
       classified as computed-branch or engine-entry with the evidence.
+      *Met, both ways (FORMATS 7.2e). The misses are **engine-entry**: five of the nine have
+      zero candidate in-edges anywhere in the file and the other four are reachable only from
+      those, so the region is a closed subgraph nothing in the script jumps into. Adding
+      **19919** as a second entry takes live coverage from 25/34 to **34/34 = 100.0%** and
+      byte coverage 42.6% -> 47.0%, still with no stalls.
+      The wider lesson: **a script has more than one entry point.** T37e should be looking
+      for a set per asset, not a single offset.*
 
-- [ ] **T39e · Why do only 70% of `0x06` targets land on an opcode?**
+- [x] **T39e · Why do only 70% of `0x06` targets land on an opcode?**
       231 of 256 byte values are valid statement opcodes, so ~90% of *random* targets pass
       the "is it an opcode" test. `0x06` (script call, d16 base +3) manages 61/87 = 70%,
       which is worse than chance and says those sites are being decoded at PCs that are
@@ -1718,3 +1725,11 @@ Compose rewrite has to do.
       **Done when:** it is established whether the sub-chance rate comes from bogus `0x06`
       sites reached down a wrong path, or from `0x06` targets being computed rather than
       immediate — with a count either way.
+      *Met: **bogus sites**, count 47 of 257 `0x06`/`0x0a` sites (FORMATS 7.2f). Evidence,
+      three ways: the displacement is a signed immediate (signed 72.7% valid vs unsigned
+      52.5%, so not computed); 26 of `0x06`'s 27 failures target *outside the file*, and a
+      script call cannot leave its own buffer; and **57% of the 47 failing sites carry `0x42`
+      as their operand's high byte** — the terminator opcode being eaten as half a
+      displacement, which is the signature of starting a statement at the wrong byte.
+      For contrast `0x14` is 178/178 = 100% against a 90.2% chance baseline, so its shape is
+      certainly right. The 7.2d target check already stops these propagating.*

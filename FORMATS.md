@@ -1427,6 +1427,60 @@ traversal does not compute**. The remaining gap is missing in-edges, not wrong l
 **Verified by:** the before/after table above; the base sweep; and the live comparison
 against `.ish/live-offsets.json`, sampled with `r["ip"] == entry` checked at every stop.
 
+### 7.2e `main.io` has two entry points, and traversal then covers 100% of live execution (T39d)
+
+The nine statements the VM executed that traversal from offset 24 never reached are not a
+sizing problem. Searching the **whole file** for any static displacement that lands on
+them:
+
+- **five have zero candidate in-edges anywhere in `main.io`** (19919, 19929, 20071, 20100,
+  20104);
+- the other four are reachable only *from those five* (19929 -> 20064, 20071 -> 20091,
+  20100 -> 20130, 20125 -> 20130).
+
+So the region is a closed subgraph with no way in from the rest of the script. It is not
+called; it is **entered by the engine**, exactly as 7.5's `es:[bp-8]` model allows.
+
+Adding **19919** as a second entry:
+
+| entries | statements | bytes | live coverage |
+|---|---|---|---|
+| 24 | 4,755 | 42.6% | 25/34 = 73.5% |
+| 24 + 19919 | 5,433 | 47.0% | **34/34 = 100.0%** |
+
+Every statement observed executing is now reached statically, with no stalls. `19919` is
+the better root than `19929`: from it the region covers all nine misses, from `19929` only
+eight.
+
+**So a script has more than one entry point**, and the loader entry (24) is only the first.
+That is what T37e should be looking for in other assets -- not one offset per asset.
+
+### 7.2f Why some branch targets are wrong: misaligned decodes (T39e)
+
+`0x14` targets land on a valid opcode **178/178 = 100%**, against a chance baseline of
+90.2% (231 of 256 byte values are opcodes). `0x0a` manages 87.3% and `0x06` only 72.7% --
+*below* chance, which means those sites are not real instructions rather than that their
+shape is wrong.
+
+Three measurements say what is happening:
+
+- **The displacement is a signed immediate.** Signed gives 72.7% valid for `0x06`,
+  unsigned 52.5%. Not computed, not unsigned.
+- **26 of `0x06`'s 27 failures target outside the file entirely**, rather than landing on
+  a bad byte inside it. A script call cannot leave its own buffer, so those sites cannot
+  be calls.
+- **57% of all 47 failing sites have `0x42` as their operand's high byte** -- and `0x42` is
+  the *terminator opcode* (7.2c). The decode is eating an opcode as half of a
+  displacement, which is the signature of starting a statement at the wrong byte.
+
+**Conclusion: bogus sites, not computed targets.** They are places traversal entered at a
+wrong offset, and the target check added in 7.2d already stops them propagating. Count:
+47 of 257 `0x06`/`0x0a` sites reached.
+
+**Verified by:** the in-edge search over the whole file; the entry/coverage table above
+against `.ish/live-offsets.json` (IP-verified samples); the signed/unsigned sweep; and the
+operand-byte histogram.
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image
