@@ -648,7 +648,7 @@ Compose rewrite has to do.
       also fails -- pointer move and ACTION click both leave the screen byte-identical -- so
       `ss:[0ca3]` or an event flag gates the read as well. See T29e.*
 
-- [ ] **T29e · Make the pointer usable, one way or another**
+- [x] **T29e · Make the pointer usable, one way or another**
       Every pointer-driven part of Ishar -- ACTION, ATTACK, and therefore combat, magic and
       inventory -- is unreachable while Spice86 drops INT 33h `AX=0x0c` callbacks
       (FINDINGS.md 6.5). Three routes, cheapest first:
@@ -661,6 +661,13 @@ Compose rewrite has to do.
       (c) Fix Spice86: it is a local checkout at `../Spice86`, and INT 33h function 0x0c is a
       small amount of code. This also helps every other DOS game.*
       **Done when:** clicking an ACTION menu entry from the harness changes the screen.
+      *Done — by fixing the emulator, which none of the three routes here anticipated
+      (T29c3). Spice86's `Mouse` and `MouseDriver` subscribed to the GUI while the keyboard
+      subscribed to the `InputEventHub`; in headless mode the GUI never raises mouse events,
+      so injected input was dropped before it reached the driver. One line each. The game's
+      INT 33h callback now fires, its cursor tracks the pointer, and clicking ACTION-menu
+      entries works — the premise "Spice86 drops AX=0x0c callbacks" was wrong: it registers
+      them correctly and was never given an event to deliver.*
 
 - [x] **T11g2 · What the `cont*.fic` files hold**
       `cont1`-`cont6` are each **exactly 4,860 bytes** of small integers with `0xcd`
@@ -932,13 +939,18 @@ Compose rewrite has to do.
       **Done when:** either the base of 16 is explained from the code, or the palette the
       title actually runs is located and `INDEX_SHIFT` is deleted.
 
-- [ ] **T11m2c · Check a 4bpp sprite against the framebuffer**
+- [x] **T11m2c · Check a 4bpp sprite against the framebuffer**
       4bpp sprites are opaque (FORMATS.md 3.13), established from `expand_4bpp` writing both
       nibbles with `stosw` and never testing zero. That is code-reading, not measurement, and
       the transparency rule it replaces was itself a measurement generalised too far.
       *Method: the same comparison that proved `logo.io` -- capture the framebuffer while a
       known 4bpp sprite is on screen and compare pixel for pixel, including the zeros.*
       **Done when:** one 4bpp sprite matches the framebuffer with colour 0 drawn, not keyed.
+      *Done by T36b, and it disproved this entry's premise. `buste.io`'s portrait (mode 0x10,
+      64x36 at 6986) matches VRAM on **1233/1233 non-zero pixels** and on **0 of 1071**
+      zero-nibble pixels — so 4bpp is **not** opaque: modes 0x00 and 0x10 key the nibble,
+      before the palette base is added. FORMATS 3.13b/3.13c carry the corrected five-mode
+      table. The "Done when" here ("colour 0 drawn, not keyed") could never have been met.*
 
 - [ ] **T31 · FORMATS.md's section numbering is broken**
       Sections run 3.0, 3.1, 3.2, 3.5, 3.4, 3.3, 3.6, 3.7 ... then 4, 5, 6, 7, and **3.11
@@ -1021,7 +1033,8 @@ Compose rewrite has to do.
       **Done when:** FINDINGS.md names the variable that holds the language and shows English
       and French runs requesting different asset ids for the same content.
 
-- [ ] **T36 · What the `b9 04` string tag is as an instruction**
+- [ ] **T41 · What the `b9 04` string tag is as an instruction**
+      *Renumbered from T36, which collided with the closed corpus-verification task.*
       Strings in the language files are stored as `b9 04 <ASCII> 00` (FORMATS.md 10.3), and
       scanning for that tag reads them all out. But `0xb9` maps to `seg_0000:2a78`, which sets
       `ss:[0bac]` to 2 and calls the expression evaluator -- it does not obviously consume an
@@ -1352,7 +1365,8 @@ Compose rewrite has to do.
 - M5 is deliberately last except T18, which gets promoted the moment the two-minute
   crash budget costs more than fixing it.
 
-- [ ] **T19c · Why the traced run faults in the intro when a manual run does not**
+- [x] **T19e · Why the traced run faults in the intro when a manual run does not**
+      *Renumbered from T19c, which was already taken by the chani re-seed task above.*
       Three GDB-traced boots died at `017D:194D` (§5.0) before reaching gameplay, yet
       ordinary `run.sh` play reaches Dragonia. So the fault is a property of *how we
       drive it*, not of the intro. Bisect the difference one flag at a time: GDB
@@ -1361,6 +1375,10 @@ Compose rewrite has to do.
       **Done when:** one named difference flips the outcome across two runs each way, or
       all of them are eliminated and the fault reproduces in a plain `run.sh` session
       too — in which case §5.0 is the game/FPU issue and T08 needs a different route.
+      *Folded into T19d, which measured what this proposed. The premise here — "the fault is
+      a property of how we drive it" — is false: it fires around 45s **regardless of audio
+      flags**, and runs with identical configuration both fault and survive (FINDINGS 5.3).
+      So there is no flag to bisect; the variable is timing, which is what T19d chases.*
 
 - [ ] **T19d · The intro fault is intermittent — find what varies**
       Five faults, all in `seg_0e97:0ec6..0f2a`, all entering the ISR prologue at
@@ -1841,7 +1859,8 @@ Compose rewrite has to do.
       **Done when:** the portrait's screen origin (0, 147) is predicted from data in the
       file or from a named engine variable, rather than measured.
 
-- [ ] **T29e · Attribute VM opcodes, not x86 routines**
+- [ ] **T29g · Attribute VM opcodes, not x86 routines**
+      *Renumbered from T29e, which collided with the pointer task now closed above.*
       T29c's call-count diff works at the x86 level but buries VM primitives: a UI action is
       one or two script statements against thousands of engine calls, so only 2 of ~231
       opcodes surfaced across four actions (FINDINGS 4.16).

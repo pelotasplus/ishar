@@ -792,6 +792,26 @@ about the guest. And two related traps caught here:
 - The emulator is a checkout we own. "The emulator cannot do it" is a claim to check
   against its source, not a stopping point.
 
+### Sweep the roadmap for tasks your work just killed
+
+A consolidation pass over 49 open entries found three whose premise this project had
+already disproved and two duplicated task ids:
+
+- `T29e` wanted three routes to "make the pointer usable" around Spice86 dropping INT 33h
+  callbacks. Spice86 registers them correctly; it was never handed an event. Fixed
+  elsewhere, entry left open.
+- `T11m2c` asked to confirm "4bpp sprites are opaque" and its Done-when was *"one 4bpp
+  sprite matches the framebuffer with colour 0 drawn, not keyed"* -- a criterion that
+  could never be met, because 4bpp modes 0x00 and 0x10 do key the nibble.
+- `T19c` proposed bisecting flags to explain a fault that fires regardless of flags.
+
+None of these was hard to spot once looked at; none had been looked at. **When a task
+closes, grep the open ones for the claim it just changed** -- the roadmap is what the next
+session inherits, and an entry whose premise died reads exactly like work still to do.
+
+Duplicate ids come from the same habit: filing a follow-up without checking whether the
+letter is taken. `grep -o '\*\*T[0-9a-z]*' ROADMAP.md | sort | uniq -d` is the whole check.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their
