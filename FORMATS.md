@@ -481,7 +481,32 @@ instruction in `main.io` (section 7), across all 94 assets the script loads.
 
 
 
-#### How much of the assets is actually understood: 42%
+#### How much of the assets is actually understood: 43.3%, and the shape matters more
+
+**Updated.** `main.io`'s script is now readable -- 12,399 of its 26,384 bytes are reached by
+traversal from its two entry points, with boundaries confirmed against live execution
+(7.2e) -- which takes the total from 673,966 to **686,365 of 1,583,646 bytes, 43.3%**.
+
+The percentage moved by less than a point, and that is the honest picture: what changed
+this round is not how much is named but how much is *proven*.
+
+| | status |
+|---|---|
+| container + decompression | **solved, proven twice**: 98/98 files, and a decoder written from this document alone is byte-identical to one written from the disassembly |
+| 8bpp pixels | **machine-verified**: `logo.io` 12,850/12,875 opaque pixels identical to VRAM, the 25 differences being a second sprite composited on top |
+| 4bpp pixels | **machine-verified**: `buste.io` 1,233/1,233 drawn pixels identical, 0 of 1,071 keyed pixels drawn |
+| transparency | **corrected**: five modes, three different rules, read from the dispatcher (3.13c) -- the old "4bpp is opaque" was wrong |
+| palettes | group is `word3`'s low byte used directly, confirmed from the code and from a blind reverse search |
+| art on disk | 803 sprites extracted as RGBA with real alpha |
+| text | strings, the four-language suffix scheme, confirmed live against a running game |
+| script | **newly readable**: `main.io` 47%, 231 opcodes tabulated, two entry points known |
+| **layout** | **not started** -- every screen position in 4.15 was measured, not derived |
+
+The remaining 56.7% is dominated by script in assets other than `main.io`, and the blocker
+there is entry points rather than the encoding: five assets are confirmed running bytecode
+and only two have known entries (T37f).
+
+#### The original accounting
 
 Summing everything this document can name -- the 16-byte asset header (3.15), sprite records
 (3.10), palette records (3.9) and strings (10.3) -- across the 98 decodable `.io` files:
