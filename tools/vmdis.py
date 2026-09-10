@@ -36,13 +36,20 @@ for opc in range(231):
 CODE = {}
 NAME = {}
 for ln in open(os.path.join(HERE, "ishar-listing.txt")):
+    # A label line -- `seg_0000:273f vm_op_jump_word:` -- matches the instruction
+    # pattern too, with `vm` as the "mnemonic" (the underscore ends [a-z0-9]*), and
+    # it comes BEFORE the real instruction, so setdefault kept the label and threw
+    # the `lodsw` away. Every handler that got a name in ishar.chani thereby lost its
+    # operand width and decoded one or two bytes short: vm_op_jump_word reported
+    # "operands -" and two of them appeared one byte apart. Skip labels first. (T38)
+    m2 = re.match(r"^seg_0000:([0-9a-f]{4})\s+([A-Za-z_]\w*):\s*$", ln)
+    if m2:
+        NAME[int(m2.group(1), 16)] = m2.group(2)
+        continue
     m = re.match(r"^seg_0000:([0-9a-f]{4})\s+([a-z][a-z0-9]*)\s*(.*?)\s*$", ln)
     if m and m.group(2) not in ("loc", "db", "dw"):
         o = int(m.group(1), 16)
         CODE.setdefault(o, (m.group(2), m.group(3)))
-    m2 = re.match(r"^seg_0000:([0-9a-f]{4})\s+([A-Za-z_]\w*):\s*$", ln)
-    if m2:
-        NAME[int(m2.group(1), 16)] = m2.group(2)
 
 
 HANDLERS = set()          # filled after TABLE is built; every handler start

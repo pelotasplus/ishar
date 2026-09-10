@@ -697,6 +697,27 @@ it is not evidence. Here the falsifiable version is T38 -- sample the script's o
 program counter at the VM fetch and require every sample to land on an instruction
 boundary, which a misaligned listing fails immediately.
 
+### Naming a routine silently broke the tool that reads the listing
+
+`tools/vmdis.py` derives each opcode's operand width by reading the handler's
+instructions out of `ishar-listing.txt`, matching `^seg_0000:(addr)\s+([a-z][a-z0-9]*)`.
+A label line matches that too -- `seg_0000:273f vm_op_jump_word:` yields `vm` as the
+"mnemonic", since `_` ends the class -- and it comes *before* the instruction, so a
+`setdefault` kept the label and dropped the `lodsw`.
+
+So every handler that got a name lost its operand width, and the disassembler decoded
+those instructions one to three bytes short. Annotating the database -- the thing this
+file insists on doing -- degraded a tool that consumes it, and nothing complained.
+
+Two habits from it:
+
+- **When a tool parses generated output, adding to that output is a change to the tool's
+  input.** After annotating, re-run whatever reads the listing and check a number that
+  should not have moved.
+- The tell here was invisible in the headline (97% before and after) and obvious in a
+  spot check: two `vm_op_jump_word` one byte apart, when the handler plainly reads three.
+  **Read a few lines of the output, not only the summary.**
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

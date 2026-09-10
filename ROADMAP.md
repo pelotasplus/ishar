@@ -1416,7 +1416,7 @@ Compose rewrite has to do.
       re-extracted. The acceptance case passes exactly: 1071 alpha-zero pixels, the same
       count the VRAM split predicted, and 1233/1233 = 100.0000% on the opaque ones.*
 
-- [ ] **T38 · Prove the `main.io` disassembly against execution**
+- [~] **T38 · Prove the `main.io` disassembly against execution**
       `tools/vmdis.py main.io --stats` reports 97% "decoded as instructions", and that number
       is worthless on its own: T37 records that 219 of 231 byte values are valid opcodes, so
       a linear walk from any offset decodes to ~100% whether or not it is aligned. T30's
@@ -1430,6 +1430,19 @@ Compose rewrite has to do.
       **Done when:** `tools/vmcheck.py` reports the share of sampled `DS:SI` values that are
       instruction boundaries, it is over 99% across at least three phases, and any region
       that fails is named in FORMATS.md as not-yet-aligned rather than quietly counted.
+      *Partly done (FINDINGS 4.14). The tool exists and it earned its keep immediately: it
+      found that `vmdis` was reading **label lines as mnemonics**, so every handler named in
+      `ishar.chani` lost its operand width — our own annotations were degrading the
+      disassembler, and the 97% headline did not move when it was fixed. Gameplay phase now
+      scores **34/34 = 100.000%**, and the pre-fix failure at 3352 is resolved.
+      Not met: one phase, not three, and 34 samples, not thousands. Sampling **saturates** —
+      the game idles through the same statements, so 140s gives the same 34 distinct offsets
+      as 45s; more activity would help, more time will not. `vm_run` yields no samples at all
+      during the intro or a cold boot.
+      Still open: offsets 103 and 150 are not boundaries. That reading came from the weaker
+      anchoring since replaced, so it is not trustworthy alone — but vmdis emits `db` at 88,
+      95 and 151 independently, and offsets under ~160 are where main.io's catalogue lives
+      (T11e). Decoding a catalogue as instructions would look exactly like this. See T38b.*
 
 - [ ] **T39 · Implement the VM and run `main.io` against the emulator**
       The asset half was only ever settled by building a decoder from FORMATS.md alone and
@@ -1455,3 +1468,26 @@ Compose rewrite has to do.
       keyboard, the mouse is not needed and the blocker is dead.*
       **Done when:** either ten primitives are attributed as T29c asks, or it is shown with a
       keyboard trace that combat genuinely cannot be entered without a pointer.
+
+- [ ] **T38b · Is the start of `main.io` a catalogue rather than script?**
+      `vmdis` decodes from offset 0 and emits `db` at 88, 95 and 151; a live sample put
+      instruction boundaries at 103 and 150 where vmdis has neither (FINDINGS 4.14). But
+      T11e says `main.io` carries a catalogue, and offsets under ~160 are where it sits — a
+      catalogue decoded as instructions produces exactly this picture.
+      *Method: read the catalogue's layout from T11e/FORMATS and mark that byte range as
+      data in `tools/vmdis.py` so the listing starts at the first real statement instead of
+      at 0. Then re-run `tools/vmcheck.py`: if 103 and 150 fall inside the catalogue, they
+      were never script and the disagreement dissolves; if they survive, the misalignment is
+      real and the region needs its own entry point.*
+      **Done when:** vmdis skips the catalogue, and either the two offsets are inside it —
+      recorded as such — or they remain and are named in FORMATS.md as a misaligned region.
+
+- [ ] **T38c · Get vmcheck out of its saturation trap**
+      The check saturates at ~34 distinct offsets because the idle game re-runs the same
+      statements, and a stop costs a pause/resume so raw time does not help.
+      *Method: drive varied activity while sampling — open the character sheet, the ACTION
+      menu (F1, FINDINGS 6.4), walk into a wall, change level — and merge the distinct
+      offsets across runs into one cumulative set rather than reporting per-run. Consider
+      sampling `vm_dispatch` (`seg_0000:69a6`) too, which T11p found is far hotter.*
+      **Done when:** the cumulative distinct-offset count is over 500 and the boundary rate
+      across all of them is reported as one number.

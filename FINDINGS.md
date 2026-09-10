@@ -483,6 +483,56 @@ Two things confirmed on the way, both from directions that did not know the answ
 
 **Evidence:** `.ish/fb3.bin` captured live in Dragonia (`captures/t36b-panel-verified.png`); the per-nibble split above.
 
+### 4.14 T38: checking the `main.io` listing against the running VM
+
+`vmdis --stats` says 97% of `main.io` "decoded as instructions". That number cannot
+fail -- 219 of 231 byte values are valid opcodes, so a linear walk scores ~97% from any
+offset. `tools/vmcheck.py` is the check that can: `vm_run` (`seg_0000:26eb`) is
+`sub ah,ah / lodsb`, so at its entry `DS:SI` is the address of the next opcode -- an
+instruction boundary by definition. Sample it live, and ask how many vmdis agrees with.
+
+**It immediately found a real bug, and one we caused.** `vmdis` builds its instruction
+table from `ishar-listing.txt` with `^seg_0000:(addr)\s+([a-z][a-z0-9]*)`. That pattern
+also matches a **label** line -- `seg_0000:273f vm_op_jump_word:` matches with `vm` as the
+"mnemonic", because `_` ends the character class -- and the label precedes the real
+instruction, so `CODE.setdefault` kept the label and discarded the `lodsw`.
+
+Every handler that was given a name in `ishar.chani` thereby lost its operand width.
+`vm_op_jump_word` reported `operands -` and two of them decoded one byte apart. So
+*annotating the database silently degraded the disassembler*, and the headline percentage
+did not move when it was fixed -- 97% before, 97% after -- exactly as designed.
+
+**Result after the fix, gameplay phase:** 34 of 34 sampled `DS:SI` values are instruction
+boundaries, **100.000%**. Before the fix the same check failed at offset 3352, which is
+now a boundary.
+
+**What is not yet established.** The Done-when asks for three phases and thousands of
+samples; neither is met:
+
+- Sampling is slow (a stop is a pause/resume; ~0.3 useful samples/second) and it
+  **saturates**: the game idles through the same statements, so 140s yields the same 34
+  distinct offsets as 45s. More time does not buy more coverage; different *activity*
+  would.
+- `vm_run` produced **no** samples during the intro or a cold boot in 160s, so those
+  phases are untested rather than passing.
+- An early boot run reported failures at offsets 103 and 150, which are still not
+  boundaries. That measurement used a weaker anchoring method (below) and is not
+  trustworthy on its own -- but vmdis independently emits `db` bytes at 88, 95 and 151,
+  which is its own signal that the region is misaligned, and offsets under ~160 are where
+  `main.io`'s catalogue lives (T11e). A catalogue decoded as instructions would look
+  exactly like this. **Open question, not a passed check.**
+
+**A retraction from this work.** Two consecutive runs reported live scripts executing
+inside `frise.io` and then `gerdep.io` -- which would have been a direct answer to T37,
+whose blocker is that embedded scripts have no known entry point. Both were wrong. The
+anchoring matched a 24-byte run and took the first asset alphabetically that contained
+it, without checking uniqueness *across* assets. Re-tested at 24, 64 and 128 bytes against
+all 98 assets, every sample matched `main.io` and nothing else. `vmcheck.py` now requires
+a 64-byte run unique within `main.io` and absent from every other asset.
+
+**Evidence:** `.ish/vmcheck-gameplay.json`; the fix in `tools/vmdis.py`; the cross-asset
+ambiguity test.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
