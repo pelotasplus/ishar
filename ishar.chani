@@ -222,11 +222,27 @@ attr[seg_0000:26ed]: type = code
 attr[seg_0000:26f3]: type = code
 attr[seg_0000:26fe]: type = code
 attr[seg_0000:270f]: type = code
-attr[seg_0000:2711]: type = code
+attr[seg_0000:2711]: type = code; name = vm_op_call_word; comment = [[[
+    Opcode 0x06 of vm_statement_table. Script CALL, word displacement: lodsw, then
+    push the return offset into the frame (es:[bp-0ah] is a descending stack of
+    saved SI, decremented by 2 per call), then add the displacement to SI.
+    Read from its own instructions, not inferred. Used by the language-menu script
+    in main.io (FINDINGS 6.9).
+]]]
 attr[seg_0000:271b]: type = code
 attr[seg_0000:2723]: type = code
-attr[seg_0000:2736]: type = code
-attr[seg_0000:273f]: type = code
+attr[seg_0000:2736]: type = code; name = vm_op_jump_byte; comment = [[[
+    Opcode 0x08. Unconditional relative jump, signed byte displacement:
+    lodsb / cbw / add si,ax. Distinct from vm_op_jump_rel8 at 2744, which does the
+    same fetch and then goes through vm_branch_take.
+]]]
+attr[seg_0000:273f]: type = code; name = vm_op_jump_word; comment = [[[
+    Opcode 0x0a. Unconditional relative jump, word displacement:
+    lodsw / inc si / add si,ax -- note the skipped byte, so the target is
+    (opcode+4)+disp. Five of these in the language-menu script converge on one
+    address, which is the shape of a switch: displacements 0x28/0x20/0x16/0x0c/0x02
+    at script offsets 17436/17446/17456/17466/17476 all land on 17480-17482.
+]]]
 attr[seg_0000:2744]: type = code; name = vm_op_jump_rel8; comment = [[[
     Relative jump, signed byte displacement: lodsb / cbw / jmp vm_branch_take.
 ]]]
@@ -241,12 +257,19 @@ attr[seg_0000:2837]: type = code; name = vm_op_loop; comment = [[[
 attr[seg_0000:286e]: type = code
 attr[seg_0000:2885]: type = code
 attr[seg_0000:2890]: type = code
-attr[seg_0000:289c]: type = code
+attr[seg_0000:289c]: type = code; name = vm_op_jump_if_zero; comment = [[[
+    Opcode 0x14. Conditional branch on the accumulator: test dx,dx / jnz past the
+    fetch, otherwise lodsw / inc si / add si,ax like vm_op_jump_word. DX is the VM
+    accumulator, so this is "branch if the last expression was false".
+]]]
 attr[seg_0000:28a9]: type = code
 attr[seg_0000:28ac]: type = code
 attr[seg_0000:28b4]: type = code
 attr[seg_0000:28c4]: type = code
-attr[seg_0000:2915]: type = code
+attr[seg_0000:2915]: type = code; name = vm_op_eval_reset; comment = [[[
+    Opcode 0x1e. Resets the evaluation stack pointer (bx = 277ch, the stack base)
+    and calls the expression evaluator at 069a9, falling through into 291b.
+]]]
 attr[seg_0000:291b]: type = code
 attr[seg_0000:2937]: type = code; name = vm_stmt_eval; comment = [[[
     Statement: set the eval stack (BX = 0x277c) and run the expression evaluator.

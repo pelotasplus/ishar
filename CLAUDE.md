@@ -169,8 +169,20 @@ selection and was reported as stuck. It was the intro playing. Cycles were advan
 the entire time and that was already visible in the samples taken.
 
 Before calling anything hung: cycles advancing? screen actually static across two
-screenshots a while apart? known timing for this phase? Ishar's intro is minutes long
-and mostly dark.
+screenshots a while apart? known timing for this phase?
+
+**And the mirror of it: a still screen is not a slow screen either.** The sentence that
+used to end this scar -- "Ishar's intro is minutes long and mostly dark" -- was wrong,
+and it was then read back out of this file and offered to the user as the explanation
+for a frozen frame. The intro is about three screens. What was actually happening was a
+fault: `#UD ... modrm mod=3` at `017D:194D`, sitting in the log the whole time.
+
+So the check is not "which story explains the still screen" -- it is **`tools/ish
+status` first, story never**. The log answers it in a second and cannot be talked into
+an answer. `tools/gdbtrace.py` now reads that log every 2s and aborts with `EMULATOR
+FAULTED` rather than running out its budget against a dead machine, because a rule that
+depends on remembering to look is a rule that gets walked past (see the top of this
+file).
 
 ### A plausible cause is not a cause
 
@@ -584,6 +596,53 @@ Two rules:
 - **A zero-hit result is a claim about the instrument until proven otherwise.** Before
   reporting that a routine does not execute, arm the same probe on something known to run
   -- `seg_0000:93a6` runs thousands of times a second -- and check it reports hits.
+
+### nudge.py keys do not reach the game; MCP keys do
+
+A trace sent Escape/Space through `tools/nudge.py` every 3 seconds for 180 seconds
+and the title screen never moved. `tools/ish boot`, sending the *same three keys*
+over MCP `send_keyboard_key`, was in the game in **16 seconds and 3 nudges**. Same
+keys, same emulator, opposite outcome -- and the failing side looks exactly like a
+game that is hung, or protected, or waiting on something clever.
+
+`--drive` now sends over MCP. When a key appears not to work, send it the other way
+before concluding anything about the game: three sessions of "the title screen is
+frozen" were this.
+
+### A key pressed before the screen exists is a key thrown away
+
+`--drive english` pressed `Kp1` once at t=3s. The language menu does not appear
+until ~85s into a cold boot, after `auteur.IO`. The press landed on the title
+screen, was discarded, and the run then sat on the menu for its remaining minute
+looking like the selection had failed.
+
+The opposite fix broke it differently: pressing `Kp1` every 3s *from the start*
+disrupted the boot so badly that `MAIN.IO` never opened (8 file calls in 190s). The
+working shape is late **and** repeated -- start after the phase that precedes the
+screen, then keep offering it.
+
+### "It did not crash" is not "it worked"
+
+`tools/t08run.sh` retried a trace until it stopped faulting, and reported success
+on a French run that survived its whole 300s budget stuck on the language menu with
+8 file opens. The retry loop then exited, satisfied.
+
+An acceptance condition has to name the thing you wanted, not the failure you were
+avoiding. It now greps for `plaine.IO`, the first outdoor asset, which cannot
+appear unless the game proper is running.
+
+### One A and one B is not an A/B -- again
+
+Audio-on faulted at 46.2s; `--audio none` ran 210s clean and played the intro. That
+was written into `FINDINGS.md` as "the crash is the sound driver", with a table.
+The very next `--audio none` run faulted at 45.1s. The finding survived about ten
+minutes.
+
+`A plausible cause is not a cause` is already in this file, from the CFG-reload
+mistake, and describes this exactly. What it was missing is the count: **two runs
+are not evidence for a flag, whichever way they fall.** Before a flag goes into a
+findings file, run it both ways at least twice each -- and if that is too expensive
+to do, the honest write-up is "not established", not a table.
 
 ## Unsupervised sessions
 

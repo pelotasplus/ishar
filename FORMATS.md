@@ -1571,6 +1571,32 @@ script's fall-through case (FINDINGS 6.8).
 `sos.io`/`sosd`/`sose`/`sosi` follow the same naming but are **not text** -- they hold
 filenames such as `foret.io`, `foret.co`, `foret.ao`.
 
+**Confirmed live (T08).** Two cold boots traced to the first gameplay frame, one
+selecting English and one French, open **33 files each and differ in exactly two**:
+
+| | English run | French run |
+|---|---|---|
+| messages | `messagee.IO` | `message.IO` |
+| filename table | `sose.IO` | `sos.IO` |
+| everything else | identical, 31 files | identical, 31 files |
+
+So the language choice changes the loaded set by two files and nothing else -- the
+suffix scheme above is what the running game actually does, not just what the
+directory listing suggests.
+
+Two corrections that came out of the same diff:
+
+- **`EN1.FIC` is not English.** It is loaded by *both* runs, so `EN` is not a
+  language tag; it is a region/area file (`CONT1.FIC` and `TAB1.FIC` load beside
+  it). It reads like a language code and is not one.
+- **`textin*` is not loaded during boot at all.** Neither run opens `textin.io` or
+  any variant on the way to the first gameplay frame, so the narrative set is
+  pulled later, on demand. Only the `message*` and `sos*` sets are startup files.
+
+**Verified by:** `.ish/t08-english-final.json` and `.ish/t08-french.json`, both
+traced with `tools/gdbtrace.py --drive`, each ending in the Dragonia outdoor scene
+(`captures/t08-english-gameplay.png`).
+
 ### 10.2 All four variants share one asset id
 
 Every `message*.io` decodes with **asset id 14 (`0x0e`)** in word 0 of its payload

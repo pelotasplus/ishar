@@ -20,16 +20,110 @@ of logo.IO -- MCP polling took ~420s and this takes 7.5s.
     tools/ish start --gdb --pause
     tools/gdbtrace.py --until menu-language
     tools/gdbtrace.py --stop-after logo.IO --seconds 120
+    tools/gdbtrace.py --drive english --seconds 240   # drives the game ITSELF
+
+--drive owns both halves of the run. Coordinating a separate nudge loop against a
+separate trace window was got wrong three times in one session -- 70s windows on a
+process that takes ~170s, so the interesting loads happened with nothing attached
+and the trace honestly reported "0 calls". The tracer now sends the keys, so the
+span it covers and the span it drives cannot disagree.
 
 Writes .ish/io-trace-gdb.json and prints the table.
 """
 import json
 import os
+import re
+import subprocess
 import sys
+import threading
 import time
 import urllib.request
 
+# (keys sent once, keys repeated afterwards). Repeating the language key re-enters
+# the menu instead of skipping the intro, which cost a 380s run that never left it.
+# The language key belongs in the REPEAT list, not the one-shot list. The menu
+# only appears ~88s into a cold boot (it waits on auteur.IO), so a single Kp1 at
+# t=3s is pressed into the title screen and thrown away -- measured: the run sat
+# on the menu for the remaining 60s. `ish boot` gets in because it cycles
+# Kp1/Escape/Space every nudge, so the language key is still being offered when
+# the menu finally shows up.
+# (language key, keys pressed the whole time). The language key must arrive LATE
+# and KEEP arriving:
+#   * once at t=3s  -> pressed into the title screen and discarded; the run then
+#                      sat on the language menu for its last 60s.
+#   * every 3s from t=0 -> disrupts the early boot; MAIN.IO never even opened,
+#                      8 file calls in 190s.
+# So it starts after LANG_AFTER seconds and then repeats until the game takes it.
+DRIVES = {
+    "english": ("Kp1", ["Escape", "Space"]),
+    "french":  ("Kp2", ["Escape", "Space"]),
+    "german":  ("Kp3", ["Escape", "Space"]),
+    "italian": ("Kp4", ["Escape", "Space"]),
+    "walk":    (None,  ["Down", "Right", "Up", "Left"]),
+}
+LANG_AFTER = 45.0   # the menu shows up ~55-88s in; auteur.IO is the last file before it
+
+
+def start_driver(name, seconds, send=None):
+    """Send keys from a separate process for the whole trace, not a guessed window.
+
+    Keys must come from another process: a blocking tracer that also wakes on a
+    timer pays a pause per wake, measured at 3.5s -> 27s -> 61s as the timer gets
+    faster (CLAUDE.md). A thread here only spawns nudge.py, it never touches the
+    GDB socket.
+    """
+    seq = DRIVES.get(name)
+    if not seq:
+        raise SystemExit(f"--drive must be one of {', '.join(DRIVES)}")
+    here = os.path.dirname(os.path.abspath(__file__))
+
+    lang, repeat = seq
+
+    def press(keys):
+        """Send over MCP when a sender is given -- nudge.py did not reach the game.
+
+        Measured: 180s of nudge.py Escape/Space left the title screen untouched,
+        while `ish boot`, which sends the same keys over MCP, was in the game in
+        16s and 3 nudges. Same keys, different transport, opposite outcome.
+        """
+        if send:
+            for k in keys:
+                send(k)
+        else:
+            subprocess.run([os.path.join(here, "nudge.py")] + keys, capture_output=True)
+
+    def run():
+        start = time.time()
+        end = start + seconds
+        time.sleep(3)
+        while time.time() < end:
+            keys = list(repeat)
+            if lang and time.time() - start >= LANG_AFTER:
+                keys = [lang] + keys
+            press(keys)
+            time.sleep(3)
+
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    return t
+
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def faulted(logpath):
+    """Read the emulator log for a fault. Cheap: no MCP call, so no pause.
+
+    A tracer that does not do this runs its whole budget against a dead machine
+    and reports "no events", which reads like the game never did the thing.
+    """
+    try:
+        txt = open(logpath, errors="ignore").read()
+    except Exception:
+        return None
+    if "Emulation failed" not in txt and "halted" not in txt:
+        return None
+    m = re.search(r"Error is: (.+)", txt)
+    return m.group(1).strip() if m else "emulation halted"
 sys.path.insert(0, os.path.join(HERE, "tools"))
 from rsp import Rsp  # noqa: E402
 import png  # noqa: E402
@@ -40,6 +134,9 @@ OPS = {0x3C: "create", 0x3D: "open", 0x3E: "close", 0x3F: "read",
 
 
 def main():
+    drive = None
+    if "--drive" in sys.argv:
+        drive = sys.argv[sys.argv.index("--drive") + 1]
     st = json.load(open(os.path.join(HERE, ".ish", "state.json")))
     if not st.get("gdb"):
         sys.exit("no GDB port -- start with `tools/ish start --gdb --pause`")
@@ -63,6 +160,17 @@ def main():
     # only when the length of the run is the point.
     budget = int(argv[argv.index("--seconds") + 1]) if "--seconds" in argv else 60
     stop_after = argv[argv.index("--stop-after") + 1].lower() if "--stop-after" in argv else None
+    if drive:
+        # start the keys AFTER the budget is known, so the driver runs exactly as
+        # long as the trace does -- the mismatch this prevents is the whole point
+        def send_key(k):
+            mcp("send_keyboard_key", {"key": k, "isPressed": True})
+            time.sleep(0.1)
+            mcp("send_keyboard_key", {"key": k, "isPressed": False})
+            time.sleep(0.2)
+
+        start_driver(drive, budget, send=send_key)
+        print(f"driving '{drive}' for the full {budget}s of the trace", flush=True)
     ref = region = None
     if "--until" in argv:
         _, _, ref = png.read(os.path.join(CAPS, argv[argv.index("--until") + 1] + ".png"))
@@ -84,8 +192,20 @@ def main():
     NUDGE_KEYS = (key_arg, "Escape", "Space", "Escape")
     nudge_i = 0
     events, t0 = [], time.time()
-    last_check = last_event = time.time()
+    last_check = last_event = last_fault = time.time()
+    logpath = st["log"]
+    died = None
     while time.time() - t0 < budget:
+        # Before anything else: is the machine still alive? A static screen is
+        # not evidence of a slow phase, and a run that faults at second 12 will
+        # otherwise sit out its full budget and report "no events".
+        if time.time() - last_fault > 2:
+            last_fault = time.time()
+            died = faulted(logpath)
+            if died:
+                print(f"\nEMULATOR FAULTED after {time.time()-t0:.1f}s -- {died}",
+                      file=sys.stderr)
+                break
         g.cont()
         # Short waits, so the screen check and the nudges still happen during a
         # quiet phase. Blocking for the whole budget on a stop that is not
@@ -167,10 +287,16 @@ def main():
                 print(f"target screen reached after {len(events)} calls", file=sys.stderr)
                 break
 
-    mcp("clear_breakpoints")
-    g.cont()
+    # Save FIRST. A crashed emulator refuses the MCP socket, and cleaning up before
+    # writing threw the traceback over a 44s trace and lost every event it had.
     json.dump(events, open(os.path.join(HERE, ".ish", "io-trace-gdb.json"), "w"), indent=1)
-    print(f"\n{len(events)} DOS file calls in {time.time()-t0:.1f}s of wall clock\n")
+    for fn in (lambda: mcp("clear_breakpoints"), g.cont):
+        try:
+            fn()
+        except Exception as e:
+            print(f"(cleanup skipped: {type(e).__name__}) ", file=sys.stderr)
+    print(f"\n{len(events)} DOS file calls in {time.time()-t0:.1f}s of wall clock"
+          + (f"  -- RUN ENDED IN A FAULT: {died}" if died else "") + "\n")
     print(f"{'#':>3}  {'op':<9} {'file / detail':<38} {'caller':>11} {'outer':>6} "
           f"{'wall s':>7}")
     for i, e in enumerate(events):

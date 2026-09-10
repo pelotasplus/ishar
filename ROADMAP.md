@@ -109,7 +109,7 @@ Compose rewrite has to do.
       anything is the next phase, which is what T08 covers -- it was written into this entry
       by mistake and blocked it for months.*
 
-- [!] **T08 · File I/O trace: language menu → first in-game screen**
+- [x] **T08 · File I/O trace: language menu → first in-game screen****
       Same instrument, next phase. Note which files are re-read per language.
       **Done when:** the table is extended through the intro to the first gameplay
       frame, and the per-language files are identified by diffing an English run
@@ -121,6 +121,39 @@ Compose rewrite has to do.
       register", i.e. execution in garbage again, a sibling of §5.1. Next attempt should
       be two-phase: drive to the menu and select the language over MCP with no GDB
       client attached, then attach the tracer for the intro → gameplay stretch.*
+      *Unblocked and half done. The stated blocker was stale: driving keys from a separate
+      process (`tools/nudge.py`) traces fine, and the actual obstacle was simpler -- the menu
+      takes **`Kp1`**, not `1`, because the top row needs `remap-digits.sh` (it is in
+      `cmd_boot`'s docstring and was not read).
+      Traced logo -> title -> menu: **presen.IO, preson.IO, presti.IO, iboishar.IO** load
+      after `logo.IO`, then nothing. Displaying the menu and pressing a language both cost
+      **0 DOS file calls in 70s** -- the menu is script inside `main.io`, already resident
+      (FINDINGS 6.9).
+      Remaining: the per-language diff. Nothing is re-read at selection time, so whichever
+      `message*`/`textin*` variant is used must be chosen later, when the game proper starts.
+      The trace has to reach the first gameplay frame to see it.*
+      *Correction: only **half** the old blocker was stale. Key-driving was; the emulator
+      fault was not -- it recurred on 2026-09-09 at `017D:194D` (FINDINGS 5.0), and three
+      traced runs died in the intro before reaching gameplay. It was then misreported to
+      the user as a long intro.
+      But gameplay **is** reachable: the user got there in a plain `run.sh` session, so the
+      fault is not inherent to the intro. That makes the next step a bisect, not a
+      workaround -- find what the traced run does that a manual one does not (GDB attached,
+      breakpoint armed, nudged keys, dummy audio, fixed clock), rather than assuming the
+      path is impassable. `tools/gdbtrace.py` now aborts on the fault instead of running
+      out its budget, so each attempt costs seconds rather than twenty minutes.*
+      *DONE. Both halves. Two cold boots traced through to the Dragonia outdoor frame,
+      one English one French, 34 opens each (FINDINGS 4.10), and the per-language diff is
+      exactly two files: `messagee.IO`/`message.IO` and `sose.IO`/`sos.IO` (FORMATS 10.1,
+      now confirmed live rather than inferred from the directory listing).
+      What actually blocked it was never the emulator. Three things were:
+      (1) `nudge.py` keys do not reach the game while MCP keys do -- 180s of Escape/Space
+      moved nothing, `ish boot` was in the game in 16s with the same keys;
+      (2) the language key was pressed at t=3s, ~85s before the menu exists;
+      (3) the intro fault is intermittent (FINDINGS 5.3), so a trace has to be retried --
+      `tools/t08run.sh` does that, and `gdbtrace.py` aborts on the fault in ~2s.
+      Two corrections fell out: `EN1.FIC` is not English (both runs load it) and `textin*`
+      is not a startup file at all.*
 
 - [x] **T09 · Name the files**
       For each file, say what it is: splash image, menu font, text block, sprite set,
@@ -1257,3 +1290,39 @@ Compose rewrite has to do.
   unattended goals.
 - M5 is deliberately last except T18, which gets promoted the moment the two-minute
   crash budget costs more than fixing it.
+
+- [ ] **T19c · Why the traced run faults in the intro when a manual run does not**
+      Three GDB-traced boots died at `017D:194D` (§5.0) before reaching gameplay, yet
+      ordinary `run.sh` play reaches Dragonia. So the fault is a property of *how we
+      drive it*, not of the intro. Bisect the difference one flag at a time: GDB
+      attached vs not, breakpoint armed vs not, keys from `tools/nudge.py` vs by hand,
+      dummy audio, fixed clock, `--ReloadCfgGraph`.
+      **Done when:** one named difference flips the outcome across two runs each way, or
+      all of them are eliminated and the fault reproduces in a plain `run.sh` session
+      too — in which case §5.0 is the game/FPU issue and T08 needs a different route.
+
+- [ ] **T19d · The intro fault is intermittent — find what varies**
+      Five faults, all in `seg_0e97:0ec6..0f2a`, all entering the ISR prologue at
+      `seg_0e97:0ec9` mid-instruction, and in every case Spice86's reported opcode is not
+      the byte at its reported CS:IP (FINDINGS 5.3). It fires around 45s regardless of
+      audio flags, and some runs sail past it. Supersedes the FPU reading in 5.2.
+      *Method: break on `seg_0e97:0ec9`, log the return address and the interrupt frame on
+      every entry, and compare a run that faults against one that does not. The entry
+      offset is the variable — find who calls or vectors into it at `0ec6` instead.*
+      **Done when:** the caller or vector that enters the handler at the wrong offset is
+      named, or the fault is reproduced on demand rather than by retrying.
+
+- [ ] **T09e · Name the setup-phase files the T08 trace exposed**
+      `souris.IO`, `objet.IO`, `gerdep.IO`, `frise.IO`, `param.IO`, `encont.IO`, `dplt.IO`,
+      `scomb.IO`, `bormin.IO`, `kiriela.IO`, `samb.IO` all load between the menu and the
+      first frame (FINDINGS 4.10) and none is described in FORMATS.md. `souris` is French
+      for mouse, which is a lead, not evidence.
+      **Done when:** each has a line in FORMATS.md saying what it holds, with the evidence
+      being what is drawn or what the decoded bytes are — not the filename.
+
+- [ ] **T08b · Why is `EN1.FIC` opened twice?**
+      The trace opens `EN1.FIC`, then `TAB1.FIC`, then `param.IO`, then `EN1.FIC` again
+      (FINDINGS 4.10). Both runs do it, so it is not language-related.
+      **Done when:** the two call sites are distinguished and it is said what each read is
+      for — a size probe, a re-read after `param.IO` changes something, or a genuine
+      second load.

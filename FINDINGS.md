@@ -273,6 +273,77 @@ run (`tools/symbols.py`). The rest is reached through near calls and indirect ju
 
 ---
 
+### 4.9 What the splash sequence actually does, file by file
+
+Traced from a cold boot with `tools/gdbtrace.py --drive english` (T08). Wall times
+are from one clean run; they vary, the order does not.
+
+| t | file | what is on screen |
+|---|---|---|
+| 0.3s | `START.STP` | launcher; setup//config blob, read before any graphics |
+| 3.5s | `blancpc.io` | white/blank frame -- the screen clear between stages |
+| 7.7s | `MAIN.IO` | **the script program itself** (section 7); everything after this is driven by VM bytecode, not by executable code |
+| 14.5s | `findfirst main.io`, `findfirst mcave.io` | directory probes, not loads -- how the game checks what is installed |
+| 14.8s | `logo.IO` | Silmarils publisher logo (`captures/t08-silmarils-logo.png`) |
+| 29.8s | `presen.IO` | Ishar title card -- "LEGEND OF THE FORTRESS" over the archway |
+| 60.8s | `preson.IO` | second presentation stage |
+| 79.5s | `presti.IO` | title lettering; the 4bpp dithered asset from 3.14 |
+| 85.4s | `iboishar.IO` | last asset before the menu |
+| ~88s | `auteur.IO` | credits card |
+| after | *(nothing)* | **the language menu costs 0 file calls** -- it is script in `main.io`, already resident (6.9) |
+
+Two things worth keeping from this:
+
+**The gaps are the show, not loading.** `logo.IO` closes at 20s and `presen.IO`
+does not open until 29.8s. Nothing is read in between: the 10 seconds are the logo
+being *displayed*. Every stage works that way, which is why the boot takes ~90s to
+the menu and why a still frame during it is normal.
+
+**The menu has four entries, and the script says four.** The screen shows
+`1 - ENGLISH / 2 - FRANCAIS / 3 - DEUTSCH / 4 - ITALIANO`
+(`captures/t08-language-menu.png`). Independently, the menu script at `main.io` offset
+17436-17476 contains five `vm_op_jump_word` (opcode 0x0a) instructions whose
+displacements 0x28/0x20/0x16/0x0c/0x02 resolve to 17480, 17482, 17482, 17482,
+17482 -- **four converging on one address**, the shape of a four-way switch, plus
+one lead-in. Four cases, four languages, arrived at from two directions.
+
+**Evidence:** the trace tables in `.ish/t08-*.json`; the jump targets computed from
+the handler's own instructions (`lodsw / inc si / add si,ax`, so target =
+opcode+4+disp), now annotated as `vm_op_jump_word` at `seg_0000:273f`.
+
+### 4.10 The full load order, menu to first gameplay frame (T08)
+
+The 34 files a cold boot opens on the way into the game, in order, English run:
+
+`START.STP`, `blancpc.io`, `MAIN.IO`, `logo.IO`, `presen.IO`, `preson.IO`,
+`presti.IO`, `iboishar.IO`, `auteur.IO`, `souris.IO`, `objet.IO`, `gerdep.IO`,
+`frise.IO`, `EN1.FIC`, `TAB1.FIC`, `param.IO`, `EN1.FIC`, `CONT1.FIC`, `geren.IO`,
+`affobj.IO`, `encont.IO`, `dplt.IO`, **`messagee.IO`**, **`sose.IO`**, `scomb.IO`,
+`buste.IO`, `bormin.IO`, `kiriela.IO`, `samb.IO`, `plaine.IO`, `fond.IO`,
+`rplaine.IO`, `arbre.IO`, `lacustre.IO`
+
+Three phases are visible in it:
+
+1. **Splash** (`START.STP` .. `auteur.IO`) -- see 4.9. Ends at the language menu,
+   which costs no file calls of its own.
+2. **Engine setup** (`souris.IO` .. `dplt.IO`) -- mouse, objects, the palette bank
+   `geren.io` (3.9), the object table `affobj.io` (section 8), and the world map
+   `CONT1.FIC`. `EN1.FIC` is opened **twice**, before and after `param.IO`.
+3. **The scene** (`buste.IO` .. `lacustre.IO`) -- portraits, then the outdoor
+   assets: `plaine` (plain), `fond` (backdrop), `arbre` (tree), `lacustre`
+   (lakeside). These are the first frame of Dragonia
+   (`captures/t08-english-gameplay.png`).
+
+**The per-language diff is two files.** An English run and a French run open 33
+files each and differ only in `messagee.IO`/`message.IO` and `sose.IO`/`sos.IO`
+(FORMATS 10.1). Nothing else is re-read for the language, which is consistent with
+6.9: the menu itself is script in `main.io` and selecting a language reads nothing.
+
+**Evidence:** `.ish/t08-english-final.json`, `.ish/t08-french.json`; both runs
+driven by `tools/gdbtrace.py --drive {english,french}` from a cold boot and both
+ending in gameplay, verified by the panel match in `tools/ish boot`'s `in_game()`
+and by screenshot.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
@@ -283,8 +354,65 @@ family as §5.1 but a different symptom, and it happened while keys were being s
 a second process during a GDB trace. Not yet characterised; noted so it is not mistaken
 for §5.1 when it recurs.
 
-**Evidence:** `.ish/spice86.log` from the T08 attempt; the tracer's socket was reset
-when the emulator exited.
+Seen again on 2026-09-09, same text, at `CS:IP=017D:194D`, `Cycles=712803714`, during
+a T08 trace that was driving keys through the language menu and intro.
+
+**It is not "the intro crashes".** Ordinary play reaches gameplay: the user produced a
+screenshot of the party standing outside the tree in Dragonia in a normal `run.sh`
+session. So the fault is specific to some runs -- the traced/key-driven ones so far --
+and any claim of the form "the game dies during the intro" is unsupported.
+
+Two failures around this are worth keeping, because both were expensive:
+
+- The frozen frame during the trace was reported to the user as "the intro is minutes
+  long". It was this fault, already in the log. See the still-screen scar in
+  `CLAUDE.md`.
+- The run was left going for roughly twenty minutes after the machine was already dead,
+  because nothing was watching. `tools/gdbtrace.py` now polls the log every 2s and
+  aborts with `EMULATOR FAULTED`.
+
+**Evidence:** `.ish/spice86.log` from the T08 attempts; the tracer's socket was reset
+when the emulator exited. Contrast case: user screenshot of live gameplay from
+`run.sh`.
+
+### 5.3 The intro crash is intermittent, and it is not the FPU
+
+Four faults, then a fifth, all inside one ~100-byte window of `seg_0e97`, and in
+every one the opcode Spice86 names is **not** the byte at the CS:IP it names:
+
+| reported | byte actually there |
+|---|---|
+| `1014:0EC6` | inside the 5-byte `call [0e97:0ec9]` at `0ec3` |
+| `1014:0ECD` | `57` = `push di` |
+| `1014:0F08` | `0f`, the displacement of the `jmp short` at `0f07` |
+| `1014:0F0A` | `26`, an ES: prefix mid-instruction |
+| `1014:0F2A` | same window |
+
+`seg_0e97:0ec9` is an ISR prologue -- `push ax/bx/cx/dx/di/si/ds/es/bp`. So each
+fault is execution entering that handler **at the wrong offset**, landing mid
+instruction. That is a stale/garbage entry, the 5.1 family -- not an unimplemented
+x87 escape. It supersedes 5.2's guess that 5.0 is FPU-related: 5.2's own `0xDA at
+1014:0F0A` sits in this window, and `0f0a` holds `26`, not `da`.
+
+**It is intermittent.** Same drive, same budget:
+
+| run | audio | outcome |
+|---|---|---|
+| 1 | on | faulted 46.2s |
+| 2 | `--audio none` | clean 210s, intro rendered (`captures/t08-audionone.png`) |
+| 3 | `--audio none` | faulted 45.1s, `0xDA at 1014:0F2A` |
+
+Run 2 was written up here as "the crash is the sound driver" on the strength of
+runs 1 and 2 alone. Run 3 disproved it within minutes. One A and one B is not an
+A/B -- the scar for this was already in `CLAUDE.md` ("A plausible cause is not a
+cause") and got walked past anyway.
+
+So: the fault is **not** caused by audio, fires at ~45s regardless, and a run that
+survives it is luck. Traces must be retried, and a tracer must abort on the fault
+rather than burn its budget -- which is what `tools/gdbtrace.py` now does.
+
+**Evidence:** the three runs above; bytes read from `start-unpacked.exe` at each
+reported address.
 
 ### 5.2 Spice86 does not implement the FPU opcodes this game uses
 
@@ -715,3 +843,40 @@ language, and where the menu writes it, are still open** (T11e2).
 **Evidence:** the byte sequences above read from decoded `main.io`; the skip targets
 computed from each operand and confirmed to land exactly on a load instruction or on the
 block's end; the handlers read from `ishar-listing.txt`.
+
+### 6.9 The language menu is script, not code (T08)
+
+Displaying the language menu reads **no files at all**. Tracing INT 21h across the whole
+stretch -- Silmarils logo to title screen to menu, and then across the menu keypress --
+records **0 DOS file calls in 70 seconds**. Everything it needs is already in memory.
+
+It is not hardcoded in the executable either. Sampling the interpreter's program counter
+while the menu is on screen puts `DS:SI` at **`main.io` offsets 17410-17415**, ten samples
+in a row, immediately after the menu's own strings at 17299-17396 (FORMATS 7.2). So:
+
+- the strings live in `main.io` (`"1 - ENGLISH"`, `"2 - FRANCAIS"`, `"3 - DEUTSCH"`,
+  `"4 - ITALIANO"`),
+- the code that draws them is **also** in `main.io`, as VM bytecode, starting around 17410,
+- and `main.io` was read once at boot (3.0), which is why the menu costs no I/O.
+
+**This is the second verified entry point into a script**, after the one at 3270 that
+established `main.io` is executed at all (FORMATS 7). Disassembling from 17410 produces
+instruction boundaries at 17410, 17411, 17412, 17413 and 17415 -- exactly the offsets the
+live program counter visited -- so the listing there is correctly aligned:
+
+```
+17410  38  vm_stmt_38
+17411  6a  ...
+17412  4a  vm_stmt_4a
+17415  3a  vm_stmt_3a
+17416  14  ... 0x0003
+```
+
+**Why `ishar.chani` gains nothing from this.** The database annotates the *executable*, and
+the menu is not in the executable -- it is bytecode in an asset. The native side is only the
+interpreter, which is already named (`vm_run`, `vm_dispatch`). What would belong in chani is
+the routine that renders a glyph, which is still unfound (T13).
+
+**Evidence:** `tools/gdbtrace.py` across the transition, 0 calls in 70.8s; ten consecutive
+samples of `DS:SI` at the `vm_dispatch` fetch, each matched byte-for-byte into decoded
+`main.io`; `captures/t08-language-menu.png` showing the menu on screen at the time.
