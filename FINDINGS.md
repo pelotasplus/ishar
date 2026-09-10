@@ -374,8 +374,8 @@ order, which names the letters the parser matches:
 
 | field | choices, in order | letters from the parser |
 |---|---|---|
-| SOUND | PC Speaker, Ad Lib, Sound Blaster, Sound OFF, Sound Galaxy | `I`=0 `A`=1 `B`=2 `N`=3 `G`=4 |
-| KEYBOARD | AZERTY, QWERTY, QWERTZU | `A`=0 `Q`=1 `Z`=2 |
+| SOUND (`captures/t09c-sound-choices.png`) | PC Speaker, Ad Lib, Sound Blaster, Sound OFF, Sound Galaxy | `I`=0 `A`=1 `B`=2 `N`=3 `G`=4 |
+| KEYBOARD (`captures/t09c-keyboard-choices.png`) | AZERTY, QWERTY, QWERTZU | `A`=0 `Q`=1 `Z`=2 |
 | JOYSTICK | 0, 1, 2 | digit, range-checked against 3 |
 
 All five sound values and all three keyboard values match the parser exactly, from
