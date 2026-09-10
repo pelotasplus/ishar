@@ -1763,3 +1763,16 @@ Compose rewrite has to do.
       over faking INT 33h returns, so the game's own code path runs.*
       **Done when:** a breakpoint on `seg_0000:1249` fires while the harness injects mouse
       movement, and clicking a visible ACTION-menu entry changes the screen.
+
+- [ ] **T40 · Where do on-screen positions come from?**
+      FINDINGS 4.15 maps every UI region to its asset — `frise.io` for the chrome at three
+      palette bases, `buste.io` for portraits — but every screen origin in that map was
+      *measured* from a framebuffer, not derived. A rewrite needs the layout, not just the
+      pixels.
+      *Method: the sprite blitter takes its destination from a pointer and its coordinates
+      from somewhere; break on the mode-0x10 path (`seg_0e97:0b4c`) with the panel drawing
+      and record the destination offset alongside the sprite's own header, then find which
+      script statement or engine variable supplied it. Opcode `0x29` (a block initialiser
+      writing into the engine variable block) is a candidate source.*
+      **Done when:** the portrait's screen origin (0, 147) is predicted from data in the
+      file or from a named engine variable, rather than measured.

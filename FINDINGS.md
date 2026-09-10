@@ -533,6 +533,47 @@ a 64-byte run unique within `main.io` and absent from every other asset.
 **Evidence:** `.ish/vmcheck-gameplay.json`; the fix in `tools/vmdis.py`; the cross-asset
 ambiguity test.
 
+### 4.15 What actually draws the game screen
+
+Probing a live gameplay framebuffer region by region and matching each run of pixels back
+to a decoded asset (8bpp directly, 4bpp by subtracting a candidate base and repacking):
+
+| screen region | drawn from | depth / palette base |
+|---|---|---|
+| the 3D viewport | **no asset matches** | — |
+| right-hand panel (compass, dial, DISK) | `frise.io` | 4bpp, base 208 (group 13) |
+| ACTION / ATTACK bar | `frise.io` | 4bpp, base 192 (group 12) and 176 (group 11) |
+| LIFE bars | `frise.io` | 4bpp, base 192 |
+| character portraits | `buste.io` | 4bpp, base 208 (group 13) |
+
+**So the whole UI chrome is one asset.** `frise.io` supplies the right panel, the action
+bar and the life bars, drawn at three different palette bases -- the same sprite data
+recoloured by group, which is what the `word3` base is for (3.13c). Portraits come from
+`buste.io`, which holds 27 sprites of 64 pixels wide; the one verified byte-for-byte
+against VRAM is at payload offset 6986, mode `0x10`, 64x36, `word3 = 0x00d0` -> base 208,
+drawn at screen (0, 147) (3.13b).
+
+**The viewport is the exception and it is not a blit.** No asset matches it at either
+depth, over 1,517 probe runs in T36 and 72 more here. It is composed by its own routines
+(`viewport_row_loop`, `viewport_expand_4bpp`, `viewport_fill_rect` -- FORMATS 3.13d) which
+walk source and destination with independent per-row steps, sampled live at 15 and 321. A
+destination step of 321 on a 320-wide buffer shears every row one pixel sideways; that is
+where the perspective comes from, and it is why viewport pixels can never appear verbatim
+in any file.
+
+**How a frame reaches the screen.** Everything is drawn into an offscreen buffer at
+segment `e000` and copied to `a000` by `blit_to_screen` (`seg_0e97:0192`, `rep movsw`),
+same offsets, rows 320 apart -- so the back buffer is 320 wide and maps 1:1 onto VRAM.
+
+**What is still unknown:** where the *positions* come from. The portrait's screen origin
+was measured, not derived; the script presumably supplies layout, which is T39b/T30
+territory. And the viewport's scale factors are read from `cs:[002c]`/`cs:[002e]` at
+runtime -- what computes them is not known.
+
+**Evidence:** region probe against `.ish/fb3.bin` (a live gameplay frame); the
+byte-for-byte portrait comparison in FORMATS 3.13b; the blit source/destination read at a
+breakpoint on `blit_to_screen`.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
