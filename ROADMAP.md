@@ -1918,3 +1918,26 @@ Compose rewrite has to do.
       **Done when:** entry-point sets are recorded in FORMATS for `frise.io`, `dplt.io` and
       `samb.io`, and `tools/vmi.py` traversing from each set reaches over 90% of that asset's
       IP-verified live `DS:SI` samples — the measure that worked for `main.io`.
+
+- [ ] **T42 · The input model of the boot sequence**
+      The boot sequence is **input-gated, not timed** (FINDINGS 4.9, corrected): left alone
+      it stops after the first frame; driven with a key each second it advances through four
+      stages. So the wall times recorded for it are an artefact of the tracer, and a
+      recreation needs to know what advances each stage instead.
+      *Method: `tools/t42-timeline.py` already logs transitions without a breakpoint. Run it
+      sending only one key at a time — Escape alone, then Space alone, then Return alone —
+      and see which stages advance under which. Then leave one stage running for several
+      minutes to test for a timeout, since the intro is reported to loop back to the menu
+      unattended.*
+      **Done when:** FINDINGS names, for each stage from the Silmarils logo to the language
+      menu, the key that advances it and whether it also times out.
+
+- [ ] **T43 · The intro after language selection — the gate and Krogh**
+      Everything documented about the boot sequence stops at the language menu. What follows
+      — the door/gate frame, the fire, the hooded figure — is undocumented: no asset names,
+      no order, no idea whether it is script-driven like the splash.
+      *Method: the same file trace that produced FINDINGS 4.10 but continued past selection,
+      now that `tools/t42-timeline.py` can timestamp transitions cheaply and the intro fault
+      (5.3) aborts a trace in ~2s rather than wasting a budget.*
+      **Done when:** FINDINGS lists the intro's assets in load order with the screen each
+      one produces, as 4.9 does for the splash.

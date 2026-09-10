@@ -294,10 +294,36 @@ are from one clean run; they vary, the order does not.
 
 Two things worth keeping from this:
 
-**The gaps are the show, not loading.** `logo.IO` closes at 20s and `presen.IO`
-does not open until 29.8s. Nothing is read in between: the 10 seconds are the logo
-being *displayed*. Every stage works that way, which is why the boot takes ~90s to
-the menu and why a still frame during it is normal.
+**CORRECTED: the gaps are not a timed show, they are the game waiting for input.**
+The paragraph that stood here read the 10-second gap between `logo.IO` closing and
+`presen.IO` opening as the logo being *displayed* for ten seconds. It is not.
+
+Measured without any breakpoint, by screenshotting once a second and logging frames that
+change by more than 25% (`tools/t42-timeline.py`):
+
+| run | transitions in ~150s |
+|---|---|
+| no input sent | **one**, at t=4.0s, then nothing |
+| Escape/Space/Kp1 once a second | 4.0s, 42.6s, 43.9s, 60.9s, 62.2s, 94.3s, 95.6s |
+
+Left alone the sequence **stops after the first frame and stays there** -- the same
+behaviour seen independently in T37c, where the Silmarils logo sat unchanged for 100
+seconds until a key was sent. So each stage is gated on a keypress, and the wall times in
+the table above are an artefact of two things stacked: the tracer stopping on every DOS
+file call, and the tracer's nudge interval deciding when each stage was allowed to end.
+
+Note the transitions come in pairs about 1.3s apart -- 42.6 + 43.9, 60.9 + 62.2,
+94.3 + 95.6 -- which is a clear-then-draw, matching `blancpc.io` being the "screen clear
+between stages".
+
+**What this means for recreating the sequence:** the asset order is right and is the
+useful part; the timings are not a property of the game and should not be reproduced. A
+faithful recreation needs the *input model* instead, and that is not yet established --
+specifically which key advances which stage, and whether any stage has a timeout (the
+intro is reported to loop back to the menu if left alone, so at least one probably does).
+
+**Evidence:** two runs of `tools/t42-timeline.py`, one silent and one driven, on an
+emulator started without GDB; corroborated by the unattended 100s stall in T37c.
 
 **The menu has four entries, and the script says four.** The screen shows
 `1 - ENGLISH / 2 - FRANCAIS / 3 - DEUTSCH / 4 - ITALIANO`
