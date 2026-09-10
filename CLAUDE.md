@@ -735,6 +735,23 @@ felt already checked.
 **A task you wrote is not a premise you verified.** Re-read the finding it rests on
 before acting on it, especially when it is your own.
 
+### An instruction whose length is in its own operands defeats every table
+
+Three tasks in a row -- T38, T38b, T39 -- were spent on two offsets where the `main.io`
+listing disagreed with the running VM, and every hypothesis was about *operand widths*:
+maybe `0x5a` takes a byte not a word, maybe `0x1a` does, maybe a second dispatch table
+changes the meaning. All wrong in the same way.
+
+Opcode `0x29` is `5 + 2*count` bytes, with `count` read from its own third operand. The
+bytes being argued over were **data inside the preceding instruction**, so no width
+assigned to `0x5a` or `0x1a` could ever have fixed it -- those opcodes were never there.
+
+The tell was in the data and got looked past twice: a clean run of nine identical 5-byte
+records that resumed on exactly the two disputed offsets. When a listing disagrees with
+execution, **check whether the disputed byte is an opcode at all** before theorising about
+what kind of opcode it is. And when the format has any variable-length instruction, a
+table-driven disassembler is wrong in kind, not in detail -- the fix is a stepper.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

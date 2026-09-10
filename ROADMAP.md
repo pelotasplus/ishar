@@ -1447,7 +1447,7 @@ Compose rewrite has to do.
       95 and 151 independently, and offsets under ~160 are where main.io's catalogue lives
       (T11e). Decoding a catalogue as instructions would look exactly like this. See T38b.*
 
-- [ ] **T39 · Implement the VM and run `main.io` against the emulator**
+- [~] **T39 · Implement the VM and run `main.io` against the emulator**
       The asset half was only ever settled by building a decoder from FORMATS.md alone and
       comparing its output to the machine (T36/T36b). The game-logic half needs the same
       gate, and nothing weaker will do: a disassembly that looks plausible is not evidence,
@@ -1459,6 +1459,21 @@ Compose rewrite has to do.
       exactly the feedback the sprite work got from a framebuffer diff.*
       **Done when:** the interpreter reproduces at least 10,000 consecutive `DS:SI` values
       from a live trace with no divergence, and every opcode it had to guess at is listed.
+      *Started, and it already paid for itself. `tools/vmi.py` reads all four dispatch tables
+      out of the image (statement 230, load 112, store 54, add-assign 27) and steps.
+      **It settled T38's two disagreements outright** (FORMATS 7.4): opcode `0x29` is a
+      block initialiser of length `5 + 2*count`, count taken from its own third operand
+      byte. At offset 96 its loop swallows `5a 00` and at 143 it swallows `1a 00` — so the
+      `5a` and `1a` vmdis was decoding as statements are operand *data*. Next offsets 103
+      and 150, which are exactly what the live VM reported. No operand-width fix could ever
+      have worked, because the length is not a property of the opcode.
+      Also learned: automatic width derivation is not sufficient — `walk()` gave `0x29` the
+      signature `w,b,b,w` by counting the loop body's `lodsw` as a fixed operand. Handlers
+      have to be read.
+      Far from done. The stepper walks 138 statements from offset 96 before meeting an
+      opcode it cannot size, and offset 0 is not a valid entry point (dies after 23
+      statements at offset 40). The 10,000-sample live gate needs most of ~110 handlers
+      modelled by hand; see T39b.*
 
 - [ ] **T29c2 · Recheck T29c's "no mouse the harness can reach" blocker**
       T29c is `[!]` because combat and magic are mouse-driven and INT 33h showed 0 calls.
@@ -1510,3 +1525,26 @@ Compose rewrite has to do.
       sampling `vm_dispatch` (`seg_0000:69a6`) too, which T11p found is far hotter.*
       **Done when:** the cumulative distinct-offset count is over 500 and the boundary rate
       across all of them is reported as one number.
+
+- [ ] **T39b · Model the statement handlers one at a time**
+      `tools/vmi.py` steps correctly where it has been taught and stops at the first opcode
+      it cannot size (offset 758 walking from 96). FORMATS 7.4 shows why a scan of each
+      handler's `lodsb`/`lodsw` is not enough: `0x29`'s loop body reads a word per
+      iteration and the scan counted it as a fixed operand.
+      *Method: order the opcodes by how often `tools/vmdis.py --stats` sees them, read those
+      handlers in `ishar-listing.txt` one by one, and add each to `vmi.py` with a comment
+      naming the instructions it was read from. Re-walk after each: the distance before the
+      first unknown opcode is the progress measure, and it must only ever grow.*
+      **Done when:** stepping from a live-verified anchor covers over 90% of `main.io`
+      without meeting an unsized opcode, and each modelled handler cites its code.
+
+- [ ] **T39c · Find `main.io`'s real entry point**
+      Stepping from offset 0 dies after 23 statements at offset 40, so the file does not
+      begin with executable script. The live anchors that do work were found by matching
+      bytes against a running `DS:SI`, which needs the emulator.
+      *Method: the loader calls the script somewhere — find where `vm_run` is first entered
+      after `MAIN.IO` is read (the trace in FINDINGS 4.10 gives the moment) and record SI at
+      that first entry. That offset is the entry point, and it is also the shape of the
+      answer T37 needs for every other asset.*
+      **Done when:** the entry offset is recorded in FORMATS section 7 and stepping from it
+      reaches at least as far as stepping from offset 96 does.

@@ -56,9 +56,22 @@ def main():
     secs = int(args[0]) if args else 30
     want = int(sys.argv[sys.argv.index("--samples") + 1]) if "--samples" in sys.argv else 4000
 
-    bset = boundaries()
+    if "--stepper" in sys.argv:
+        # T39: boundaries from the stepper (tools/vmi.py) rather than vmdis's table.
+        import importlib.util
+        sp = importlib.util.spec_from_file_location("vmi", os.path.join(HERE, "tools", "vmi.py"))
+        vmi = importlib.util.module_from_spec(sp); sp.loader.exec_module(vmi)
+        d = vmi.decode(open(os.path.join(GAME, "main.io"), "rb").read())[0]
+        bset, pc, seen = set(), 0, 0
+        while pc is not None and pc < len(d) and seen < 200000:
+            seen += 1
+            bset.add(pc)
+            pc = vmi.step(d, pc)
+        print(f"stepper: {len(bset)} boundaries, walked to {max(bset)} of {len(d)}")
+    else:
+        bset = boundaries()
     script = decode(open(os.path.join(GAME, "main.io"), "rb").read())[0]
-    print(f"vmdis: {len(bset)} instruction boundaries over {len(script)} bytes of main.io")
+    if "--stepper" not in sys.argv: print(f"vmdis: {len(bset)} instruction boundaries over {len(script)} bytes of main.io")
 
     load = mcp("read_dos_program_state")["CurrentProgramSegmentPrefix"] + 0x10
     entry = load * 16 + 0x26eb                      # vm_run, before its lodsb

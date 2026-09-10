@@ -1202,6 +1202,56 @@ header instead.
 is a stronger statement than a pixel comparison, and it independently confirms T11r, which
 was established by rendering alone.
 
+### 7.4 Some statements are variable-length, and that is what broke the listing (T39)
+
+Opcode `0x29` (handler `seg_0000:5713`) is a **block initialiser** whose length depends on
+its own operands:
+
+```
+lodsw            ; destination offset
+lodsb            ; cx = count
+lodsb            ; one byte stored
+inc cx
+jmp .test
+.body: lodsw     ; one further WORD from the stream per iteration
+.test: sub di,2 / loop .body
+```
+
+`loop` decrements before testing, so the body runs `count` times and the instruction is
+**`5 + 2*count` bytes**.
+
+This resolves the two disagreements T38 found between the listing and the running VM, and
+it resolves them exactly:
+
+| at | bytes | count | body swallows | next |
+|---|---|---|---|---|
+| 96 | `29 80 00 01 01` | 1 | `5a 00` | **103** |
+| 143 | `29 68 15 01 02` | 1 | `1a 00` | **150** |
+
+103 and 150 are precisely the offsets the live VM reported as instruction boundaries.
+The `5a` and `1a` that `vmdis` was decoding as statements are **operand data inside the
+preceding instruction**, not opcodes at all -- which is why no adjustment to `0x5a`'s or
+`0x1a`'s operand width could ever have fixed it.
+
+**Two consequences.**
+
+*No table can describe this format.* An instruction whose length is read from its own
+operand stream cannot have a per-opcode width, so `tools/vmdis.py` is unfixable in kind,
+not merely in detail. `tools/vmi.py` steps instead, and reproduces the whole run of nine
+`0x29` records including both disputed boundaries.
+
+*Deriving widths from the listing automatically is not enough.* `walk()` reads a handler's
+`lodsb`/`lodsw` in order and gave `0x29` the signature `w,b,b,w` -- it saw the loop body's
+`lodsw` once and counted it as a fixed operand. The handler has to be *read*, not scanned.
+
+**Status:** partial. `tools/vmi.py` walks 138 statements from offset 96 before meeting an
+opcode it cannot size, and offset 0 is **not** a valid entry point -- stepping from it dies
+after 23 statements at offset 40. Every handler modelled so far is listed in the file.
+
+**Verified by:** the handler at `seg_0000:5713` read instruction by instruction; the
+stepper reproducing offsets 96 -> 103 -> ... -> 143 -> 150 -> 155; and live `DS:SI` samples
+at `vm_run` naming 103 and 150 independently (FINDINGS 4.14).
+
 ### 7.1 Disassembling a script (T30)
 
 `tools/vmdis.py` decodes a script with a table built from the handlers themselves: the
