@@ -591,7 +591,7 @@ Compose rewrite has to do.
       per second, so the game loop is script-driven. Domain verbs fire once per event and a
       walk diff cannot see them. See T29c.*
 
-- [ ] **T29c · Attribute primitives to combat, magic and the party**
+- [~] **T29c · Attribute primitives to combat, magic and the party**
       T29 named every statement handler's signature but not its meaning. Domain verbs fire
       once per event, so the walk diff that worked for the language core cannot see them.
       *Method: `tools/t11p-diff.py` takes a call-count snapshot, runs an action, and diffs --
@@ -601,6 +601,19 @@ Compose rewrite has to do.
       first target: it runs only while walking and is not an operand-skip helper.*
       **Done when:** at least ten primitives are attributed to combat, magic, inventory or
       the party, each with the action whose diff revealed it, and named in `ishar.chani`.
+      *Not met — four routines named, not ten primitives (FINDINGS 4.16). The blocker is
+      gone and the instrument works: `tools/t29c-action.py` measures an idle window against
+      an equal action window and reports the excess, because a plain diff is useless here
+      (264 functions move while the party stands still). It validates by independently
+      re-finding `vm_op_draw_menu` (opcode 0x4b) for the ACTION menu.
+      Named: `ui_menu_draw_loop` 35ae, `ui_click_dispatch` 42f5, `map_decompress_inner` 7ceb,
+      `party_member_select` 9386.
+      **Why it falls short:** a UI action costs one or two script statements and thousands of
+      engine calls, so VM primitives sit under the noise floor — only `0x4b` and `0x08`
+      mapped to opcodes across four actions. Attribution at the x86 level works; at the
+      opcode level it needs a different instrument. See T29e.
+      Combat gave no signal: clicking ATTACK with no enemy adjacent changes almost nothing.
+      Needs a fight, which needs finding a monster — see T29f.*
       *Blocked on input, not on method. One primitive attributed -- `vm_op_draw_menu`
       (opcode 0x4b, `seg_0000:3a84`) with its helper `menu_draw_item` -- confirmed across
       five triggers. The blocker: **the game uses no mouse the harness can reach.** INT 33h
@@ -1791,3 +1804,27 @@ Compose rewrite has to do.
       writing into the engine variable block) is a candidate source.*
       **Done when:** the portrait's screen origin (0, 147) is predicted from data in the
       file or from a named engine variable, rather than measured.
+
+- [ ] **T29e · Attribute VM opcodes, not x86 routines**
+      T29c's call-count diff works at the x86 level but buries VM primitives: a UI action is
+      one or two script statements against thousands of engine calls, so only 2 of ~231
+      opcodes surfaced across four actions (FINDINGS 4.16).
+      *Method: count opcodes directly instead. `vm_run` (`seg_0000:26eb`) has the opcode byte
+      in the stream at `DS:SI`, so a breakpoint there histogrammed by `d[SI]` gives an exact
+      per-action opcode profile — expensive per stop (2.6/s) but an action is short. Or use
+      the traversal: `tools/vmi.py` can now reach 100% of executed statements from the two
+      entries, so the statements between two live `DS:SI` samples are computable rather than
+      sampled.*
+      **Done when:** ten opcodes are attributed to named actions with counts, and each is
+      annotated in `ishar.chani`.
+
+- [ ] **T29f · Get into a fight**
+      Combat cannot be attributed without combat. Clicking ATTACK with nothing adjacent
+      changes almost nothing on screen and moves no interesting counts (FINDINGS 4.16).
+      There is a figure visible in the Dragonia starting scene that may be an NPC or a
+      monster.
+      *Method: walk toward the figure with the mouse now working, or use the map to find a
+      populated area; `tools/t29c-action.py` is ready once a fight starts. Watch the LIFE
+      bars for the confirmation that damage is being taken.*
+      **Done when:** a screenshot shows combat under way (a monster in the viewport and a
+      LIFE bar changing), and one call-count diff is taken across an attack.

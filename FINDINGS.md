@@ -574,6 +574,40 @@ runtime -- what computes them is not known.
 byte-for-byte portrait comparison in FORMATS 3.13b; the blit source/destination read at a
 breakpoint on `blit_to_screen`.
 
+### 4.16 Attributing routines to game actions, now that the mouse works (T29c)
+
+With mouse input delivered (T29c3), actions can be performed and the emulator's per-function
+call counts diffed around them. A plain before/after diff is useless -- the interpreter runs
+flat out while the party stands still, so **264 functions move during an idle window** -- so
+`tools/t29c-action.py` measures an idle window and an equal action window and reports the
+excess.
+
+**Validation:** the ACTION menu diff independently re-finds `vm_op_draw_menu` (opcode
+`0x4b`, 159 calls, zero while idle), which T29c had established by a different route.
+
+| action | routines that ran only during it |
+|---|---|
+| ACTION menu (F1) | `ui_menu_draw_loop` `35ae` (4,248), `vm_op_draw_menu` `3a84` (159, opcode `0x4b`) |
+| MAP from the menu | `map_decompress_inner` `7ceb` (15,963), `7cbf` (5,999), `7ce9` (5,272) |
+| any mouse click | `ui_click_dispatch` `42f5`, with `01a8` and `0008` in lockstep |
+| portrait click | `party_member_select` `9386` (28), `9396`, `9375`, `8e2b` |
+
+Two of these are worth more than their counts. **`ui_click_dispatch` is not
+action-specific** -- it fires on all four different clicks and never while idle, so it is
+the click path itself, which makes it the hook for driving any UI action. And **choosing
+MAP decompresses an asset** (the `0x7cxx` range is the container decoder, FORMATS 3.2)
+rather than drawing something resident.
+
+**What this does not yet do** is attribute ten *VM primitives*. Almost everything the
+diffs surface is an engine routine rather than a statement handler: a UI action costs one
+or two script statements and thousands of engine calls, so the primitives are buried under
+the noise floor. Only `0x4b` and `0x08` mapped to opcodes across four actions. Combat
+specifically produced no strong signal -- clicking ATTACK with no enemy adjacent changes
+almost nothing, which is a fair result rather than a failed measurement.
+
+**Evidence:** `tools/t29c-action.py`, idle-vs-action windows of equal length; the
+validation against the independently-known `0x4b`; `.ish/t29c-*.json`.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault

@@ -1582,4 +1582,28 @@ attr[seg_0000:1249]: type = code; name = mouse_event_handler; comment = [[[
     mouse input, so INT 74h never runs and the driver never reaches this callback
     (T29c2).
 ]]]
+attr[seg_0000:35ae]: type = code; name = ui_menu_draw_loop; comment = [[[
+    Runs 4,248 times while the ACTION menu is drawn and **zero** times in an equal idle
+    window; the largest mover of any handler for that action. Sits with vm_op_draw_menu
+    (opcode 0x4b, 159 calls in the same window), so this is the per-item drawing loop the
+    menu opcode drives. Attributed by call-count diff, F1 vs idle (T29c).
+]]]
+attr[seg_0000:42f5]: type = code; name = ui_click_dispatch; comment = [[[
+    Runs on **every** mouse click and never while idle -- 953 calls for a menu-entry click,
+    125 for a click on the ATTACK button, 69 for a click on a portrait -- always in lockstep
+    with seg_0000:01a8 and seg_0000:0008. Not action-specific: this is the click handling
+    path itself. Attributed by call-count diff across four different clicks (T29c).
+]]]
+attr[seg_0000:7ceb]: type = code; name = map_decompress_inner; comment = [[[
+    15,963 calls when MAP is chosen from the ACTION menu, zero while idle, alongside
+    seg_0000:7cbf (5,999) and seg_0000:7ce9 (5,272). The 0x7cxx range is the container
+    decompression code (FORMATS 3.2), so choosing MAP decompresses an asset rather than
+    drawing from something resident. Attributed by call-count diff (T29c).
+]]]
+attr[seg_0000:9386]: type = code; name = party_member_select; comment = [[[
+    Runs only when a character portrait is clicked (28 calls), with seg_0000:9396 (28),
+    seg_0000:9375 (26) and seg_0000:8e2b (26). The click changes 3.9% of the screen -- a
+    selection highlight, not a new screen. Attributed by call-count diff, portrait click vs
+    idle (T29c).
+]]]
 end

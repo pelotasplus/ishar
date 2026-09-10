@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""Move the harness mouse to a normalised (x,y) and optionally click. T29c3 made this work."""
+import json, os, sys, time, urllib.request
+HERE=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+st=json.load(open(os.path.join(HERE,".ish","state.json")))
+def mcp(t,a):
+    b=json.dumps({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":t,"arguments":a}}).encode()
+    r=urllib.request.Request(f"http://127.0.0.1:{st['port']}/mcp",data=b,method="POST",
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream"})
+    urllib.request.urlopen(r,timeout=20).read()
+x,y=float(sys.argv[1]),float(sys.argv[2])
+for i in range(4):                     # a few moves so the driver sees motion
+    mcp("send_mouse_move",{"x":min(1,max(0,x+i*0.002)),"y":y}); time.sleep(0.06)
+if "--click" in sys.argv:
+    mcp("send_mouse_button",{"button":"left","isPressed":True}); time.sleep(0.12)
+    mcp("send_mouse_button",{"button":"left","isPressed":False})
