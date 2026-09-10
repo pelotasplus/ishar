@@ -1367,7 +1367,7 @@ Compose rewrite has to do.
       T11p — it is composed with perspective scaling, not blitted. Verify against the UI
       panel, not the 3D view.*
 
-- [ ] **T36c · Find the masked 4bpp expander**
+- [x] **T36c · Find the masked 4bpp expander**
       FORMATS 3.13 documents `expand_4bpp` (`seg_0e97:0ad1`), which writes both nibbles
       with `stosw` and tests nothing. It cannot have drawn `buste.io`'s portrait, which
       the framebuffer shows skipping every nibble-zero pixel (3.13b). So a second, masked
@@ -1377,10 +1377,21 @@ Compose rewrite has to do.
       via the caller of the portrait blit, and read its inner loop for the `jz`.*
       **Done when:** the masked expander is named and annotated in `ishar.chani`, and 3.13
       says which of the two is used for which sprites.
+      *Done. It is `expand_4bpp_masked` at `seg_0e97:0b63`, now annotated. The dispatcher at
+      `seg_0e97:0a30` sends mode 0x10 to `0b4c` and mode 0x00 to `0b40`, and both fall into
+      that loop; only mode 0x12 reaches `expand_4bpp_opaque` (0ad1), which fires 0 times in
+      20s of walking against 5 for a control. FORMATS 3.13c is the full five-mode table.
+      Two refinements: the base is `word3`'s low byte used directly, not `(word3>>4)*16`,
+      and mode 0x00 is keyed too — so `presti.io`'s "holes" were correct all along.*
 
-- [ ] **T36d · Re-extract the 4bpp assets with correct transparency**
+- [x] **T36d · Re-extract the 4bpp assets with correct transparency**
       Everything in `captures/assets/` rendered from a 4bpp sprite has a solid rectangle of
       `base + 0` where transparency belongs (3.13b). `tools/ioscan.py` and
       `tools/io2png.py` both need the nibble-0 key, and the PNGs need regenerating.
       **Done when:** a re-extracted portrait from `buste.io` has an alpha-zero background
       and its opaque pixels still match VRAM 1:1.
+      *Done. `tools/png.py` now writes RGBA (colour type 6) when given 4-tuples, so
+      transparency is a real alpha channel rather than a green sentinel — a marker colour is
+      indistinguishable from a sprite that legitimately uses green. All 803 PNGs
+      re-extracted. The acceptance case passes exactly: 1071 alpha-zero pixels, the same
+      count the VRAM split predicted, and 1233/1233 = 100.0000% on the opaque ones.*

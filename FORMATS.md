@@ -1318,8 +1318,48 @@ another 4bpp expander -- a masked one -- and 3.13 describes a real routine that 
 one in use here. That is the scar in `CLAUDE.md` ("a routine you found by reading is not
 the routine in use") landing on this file. Finding it is T36c.
 
-**Consequence for the extracted art:** anything rendered with 4bpp treated as opaque has a
-solid rectangle of `base + 0` where transparency belongs. That is most of `captures/assets/`.
+### 3.13c The complete transparency table, from the dispatcher (T36c)
+
+`sprite_mode_dispatch` (`seg_0e97:0a30`) routes each mode to its own expander, and the
+five differ. Read from the code, and now consistent with the framebuffer:
+
+| mode | bpp | header | base | transparency | route |
+|---|---|---|---|---|---|
+| `0x00` | 4 | 6 | forced 0 | **nibble 0 keyed** | `0b40` -> `jmp 0b58` -> masked loop |
+| `0x10` | 4 | 8 | `[si+6]` | **nibble 0 keyed** | `0b4c` -> falls to `0b58` -> masked loop |
+| `0x12` | 4 | 8 | `[si+6]` | opaque | `0aca` -> falls into `expand_4bpp_opaque` |
+| `0x14` | 8 | 8 | 0 | index 0 keyed | `0a84`: `lodsb / test al,al / jz / stosb` |
+| `0x16` | 8 | 8 | 0 | opaque | `0a5b`: `rep movsw` |
+
+The masked loop is `expand_4bpp_masked` (`seg_0e97:0b63`):
+
+```
+lodsb / mov ah,al / shr ah,1 x4 / test ah,ah / jz +7 / add ah,bh / mov es:[di],ah
+inc di / and al,0fh / jz .. / add al,bh / stosb / loop
+```
+
+`test` before `add`: the key is on the **nibble**, never on the final index. Skipping is
+`inc di`, so the pixel already on screen survives.
+
+Modes `0x00` and `0x10` share the loop, so **mode `0x00` is keyed too** -- which means the
+old "holes in `presti.io`'s letters" were the *correct* behaviour for a mode `0x00` asset
+(base 0, so `index == 0` and `nibble == 0` coincide there), and making it opaque replaced
+real transparency with `palette[0]`. Both readings of that bug were half right: keying the
+*index* is wrong for `0x10` and right for `0x00`; keying the *nibble* is right for both.
+
+**The base is `word3`'s low byte used directly** (`mov al,[si+6]` / `mov bh,al`), added to
+each nibble -- not `(word3 >> 4) * 16`. The two agree only because that byte's low nibble
+is always zero in the shipped assets.
+
+`expand_4bpp_opaque` (`seg_0e97:0ad1`) never fires during gameplay: 0 hits in 20s of
+walking, against 5 for a control at `seg_0000:93a6`.
+
+**Consequence for the extracted art:** anything rendered with 4bpp treated as opaque had a
+solid rectangle of `base + 0` where transparency belongs. `tools/ioscan.py` now keys the
+nibble and `tools/png.py` writes RGBA, so `captures/assets/` carries real alpha instead of
+a sentinel colour (T36d). Re-extracted: 803 PNGs, all RGBA. The verified case,
+`buste.io`'s portrait, comes out with **1071 alpha-zero pixels** -- exactly the count the
+VRAM comparison predicted -- and its **1233 opaque pixels still match VRAM 1:1**.
 
 **Verified by:** live VRAM at `0xA0000` with the game in Dragonia, compared against the
 payload from a decoder written only from this file; the sprite's `word3 = 0x00d0` predicts

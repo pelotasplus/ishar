@@ -104,6 +104,7 @@ def walk(data, start):
 # the mouse cursor at 256px. 150 is the least aggressive cut that removes the
 # slivers while keeping every genuine small sprite: rampart.io stays at 24 wall
 # tiles, dragon.io at 13, logo.io at 4 (T11s).
+TRANSPARENT = (0, 0, 0, 0)   # real alpha, not a sentinel colour
 MIN_AREA = 150
 
 
@@ -247,7 +248,16 @@ def render(data, off, w, h, pal):
     w0, _, _, w3 = struct.unpack_from("<4H", data, off)
     hdr, stride, _ = geometry(w0, w, h)
     bpp = MODES[w0 & 0xff][1]
-    keyed = (w0 & 0xff) == 0x14
+    mode_lo = w0 & 0xff
+    keyed = mode_lo == 0x14                    # 8bpp: test the final index
+    # 4bpp transparency is per mode, read off sprite_mode_dispatch (seg_0e97:0a30):
+    #   0x00 -> 0b40 -> jmp 0b58 |  both land in expand_4bpp_masked (0b63), which
+    #   0x10 -> 0b4c -> falls to |  does `test ah,ah / jz` on the NIBBLE, before the
+    #                            |  base in BH is added -- so zero nibbles are skipped.
+    #   0x12 -> 0aca -> falls into expand_4bpp_opaque (0ad1): no test at all.
+    # Verified against VRAM in T36b: buste.io's portrait (mode 0x10) matches 1233/1233
+    # non-zero pixels and 0 of 1071 zero-nibble ones.
+    keyed_nibble = mode_lo in (0x00, 0x10)
     # The base is word 3's LOW BYTE added directly (seg_0e97:0b4c: mov al,[si+6];
     # mov bh,al), and that byte is already group*16. Mode 0 forces it to zero.
     pbase = (w3 & 0xff) if MODES[w0 & 0xff][2] else 0
@@ -261,14 +271,15 @@ def render(data, off, w, h, pal):
                 v = data[base + y * stride + x]
                 # Only mode 0x14 tests for zero (seg_0e97:0a84 `lodsb/test al,al/jz`).
                 # Mode 0x16 is `rep movsw` -- opaque.
-                r.append((0, 255, 0) if (v == 0 and keyed) else pal[v])
+                r.append(TRANSPARENT if (v == 0 and keyed) else pal[v] + (255,))
                 continue
             b = data[base + y * stride + (x >> 1)]
             v = (b >> 4) if (x & 1) == 0 else (b & 15)
-            # 4bpp is opaque: expand_4bpp (seg_0e97:0ad1) writes both nibbles with
-            # `stosw` and never tests for zero. Keying index 0 here punched holes
-            # through every 4bpp sprite -- the green speckle inside presti's letters.
-            r.append(pal[(pbase + v) & 0xff])
+            # The test is on the nibble, before the base -- a test on the final index
+            # can never fire when the base is non-zero, which is why this looked like
+            # "4bpp is opaque" for so long.
+            r.append(TRANSPARENT if (v == 0 and keyed_nibble)
+                     else pal[(pbase + v) & 0xff] + (255,))
         rows.append(r)
     return rows
 

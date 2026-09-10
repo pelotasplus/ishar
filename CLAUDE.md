@@ -644,6 +644,30 @@ are not evidence for a flag, whichever way they fall.** Before a flag goes into 
 findings file, run it both ways at least twice each -- and if that is too expensive
 to do, the honest write-up is "not established", not a table.
 
+### The dispatcher decides, not the routine you landed on
+
+FORMATS 3.13 said "4bpp sprites are opaque", from `expand_4bpp` at `seg_0e97:0ad1`,
+which really does write both nibbles with `stosw` and test nothing. The framebuffer
+said otherwise, and the reason was four instructions up the call graph:
+`sprite_mode_dispatch` at `seg_0e97:0a30` sends mode `0x10` to `0b4c` and mode `0x00`
+to `0b40`, and neither reaches `0ad1` at all. Only mode `0x12` does.
+
+This is the same shape as the `tools/io.py` scar -- a real routine, correctly read,
+that the inputs you care about never reach. The check that costs nothing: **when a
+routine handles one case of a dispatch, read the dispatch**, and write down which
+cases arrive. A five-way switch means five answers, and the one you read is at best
+a fifth of the rule.
+
+### A sentinel colour is not transparency
+
+`ioscan.py` marked transparent pixels `(0, 255, 0)` because the PNG writer only did
+RGB. That is indistinguishable from a sprite that legitimately uses green, and it is
+why "green speckle" was read as a palette fault for weeks rather than as the
+extractor saying "transparent here".
+
+`tools/png.py` now writes RGBA when handed 4-tuples. When a value means "absent",
+give it a channel of its own -- never a magic value inside the data.
+
 ## Unsupervised sessions
 
 `/goal` runs until the objective is met. `ROADMAP.md` holds the tasks and their

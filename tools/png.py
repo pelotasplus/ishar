@@ -77,19 +77,26 @@ def read(path):
 
 
 def write(path, pixels):
+    """Write RGB or RGBA, decided by the tuple width of the first pixel.
+
+    Transparency in these assets is real (FORMATS 3.13b), so it is written as an
+    alpha channel rather than a sentinel colour -- a green marker is indistinguishable
+    from a sprite that legitimately uses green.
+    """
     h = len(pixels)
     w = len(pixels[0])
+    has_alpha = len(pixels[0][0]) == 4
     raw = bytearray()
     for row in pixels:
         raw.append(0)
-        for r, g, b in row:
-            raw += bytes((r, g, b))
+        for px in row:
+            raw += bytes(px)
     def chunk(typ, body):
         return (struct.pack(">I", len(body)) + typ + body
                 + struct.pack(">I", zlib.crc32(typ + body) & 0xFFFFFFFF))
     with open(path, "wb") as f:
         f.write(b"\x89PNG\r\n\x1a\n")
-        f.write(chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)))
+        f.write(chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6 if has_alpha else 2, 0, 0, 0)))
         f.write(chunk(b"IDAT", zlib.compress(bytes(raw), 9)))
         f.write(chunk(b"IEND", b""))
 

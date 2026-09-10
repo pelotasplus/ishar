@@ -1510,8 +1510,13 @@ attr[seg_0000:3d64]: type = code; name = wait_loop; comment = [[[
 attr[seg_0e97:0a30]: type = code; name = sprite_mode_dispatch; comment = [[[
     Switches on the sprite's word 0 low byte -- 0x10, 0x12, 0x14, 0x16 or 0 -- read as `mov al,[si]` just above. It selects the pixel-format variant, which is what that byte is for; it is not a colour count.
 ]]]
-attr[seg_0e97:0ad1]: type = code; name = expand_4bpp; comment = [[[
-    Expands 4bpp to 8bpp two pixels at a time: `lodsb`, high nibble via four `shr`, low nibble via `and 0fh`, `add` the palette base in BH to each, `stosw`. This is where `vga_index = base + nibble` actually happens.
+attr[seg_0e97:0ad1]: type = code; name = expand_4bpp_opaque; comment = [[[
+    Expands 4bpp to 8bpp two pixels at a time with NO zero test: `lodsb`, high nibble
+    via four `shr`, low nibble via `and 0fh`, `add` the base in BH to each, `stosw`.
+    NOT the routine mode 0x10 uses -- sprite_mode_dispatch sends 0x10 to 0b4c, whose
+    inner loop at expand_4bpp_masked (0b63) skips zero nibbles. A breakpoint here does
+    not fire during gameplay (0 hits in 20s of walking, control 5 hits). FORMATS 3.13
+    was written from this routine and generalised to 4bpp; 3.13b corrects it.
 ]]]
 attr[seg_0e97:0a2c]: type = code; name = spr_0a2c
 attr[seg_0e97:0a37]: type = code; name = spr_0a37
@@ -1522,11 +1527,20 @@ attr[seg_0e97:0b4c]: type = code; name = sprite_base_from_word3_m10; comment = [
     The mode 0x10 path, and the one nearly every sprite takes: identical to sprite_base_from_word3 -- `mov al,[si+6]` then `mov bh,al` -- with an 8-byte header.
 ]]]
 attr[seg_0e97:0aa0]: type = code; name = spr_0aa0
-attr[seg_0e97:0b4c]: type = code; name = sprite_base_from_word3_m10; comment = [[[
-    The mode 0x10 path, and the one nearly every sprite takes: identical to sprite_base_from_word3 -- `mov al,[si+6]` then `mov bh,al` -- with an 8-byte header.
-]]]
 attr[seg_0e97:0a84]: type = code; name = spr_mode_0a84
 attr[seg_0e97:0a5b]: type = code; name = spr_mode_0a5b
+attr[seg_0e97:0b63]: type = code; name = expand_4bpp_masked; comment = [[[
+    The 4bpp expander mode 0x10 actually uses, and it KEYS ZERO NIBBLES:
+        lodsb / mov ah,al / shr ah,1 x4 / test ah,ah / jz +7 / add ah,bh / mov es:[di],ah
+        inc di / and al,0fh / jz .. / add al,bh / stosb / loop
+    The `test` is on the nibble BEFORE the base in BH is added, so a test on the final
+    palette index can never fire -- that distinction is the whole of FORMATS 3.13b.
+    Skipping is `inc di`/`inc di`, leaving whatever was already on screen.
+    Confirmed against VRAM: buste.io's portrait matches 1233/1233 non-zero pixels and
+    0 of 1071 zero-nibble pixels (T36b).
+    BH comes from `[si+6]`, the LOW BYTE of word 3, used directly as an additive base --
+    not (word3>>4)*16. The two agree only because that byte's low nibble is always 0.
+]]]
 attr[seg_0e97:0b40]: type = code; name = sprite_base_zero; comment = [[[
     The mode 0 path: `mov bh, 0`, so the base is zero, and `add si,6` -- a **6-byte** header rather than 8.
 ]]]
