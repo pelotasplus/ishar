@@ -1808,4 +1808,26 @@ attr[seg_0000:79a5]: type = code; name = asset_decode_chunked; comment = [[[
     ss:[2482]'s low byte. dead.io declares 0x0101c6 = 65,990 and its 64,000-byte
     page matched live VRAM byte for byte once the third byte was honoured.
 ]]]
+attr[seg_0000:5768]: type = code; name = vm_op_switch; comment = [[[
+    Statement 0x2f -- a jump-table switch, and the first multi-way branch found in this VM.
+
+        2f  <expression>  <count:u8>  [pad to even SI]  <bias:u16>  <count+1 x i16>
+
+    `call 069a6` evaluates the selector into DX; `lodsb` takes the case count into CX;
+    `test si,1 / inc si` aligns; `add dx,[si]` applies the bias; `js`/`cmp dx,cx / ja`
+    send out-of-range cases to the default at 578e, which skips the whole table
+    (`add si,4 / shl cx,1 / add si,cx`). In range, `shl dx,1 / add si,dx / add si,[si] /
+    add si,2` takes that case's signed displacement.
+
+    Found via the region caption: gerdep.io at 8829 and frise.io carry a 21-case switch
+    whose arms each print one region name, with count = 0x14 and bias = 1 (FINDINGS 4.19b).
+]]]
+attr[seg_0000:6acd]: type = code; name = vm_op_load_byte_global; comment = [[[
+    Expression 0x1e: DX = byte at es:[ss:[0bf6] + imm16], sign-extended. The second
+    variable area -- the frame at BP is the first.
+
+    Known global: **0x3eac is the party's region id**, 0..20, indexing the 21 names in
+    FINDINGS 4.19b. Read live it is 0 in FRAGONIR, 1 in ANGARAHN, 2 in OSGHIROD.
+    `tools/region.py` reads it.
+]]]
 end

@@ -1731,6 +1731,47 @@ eight.
 **So a script has more than one entry point**, and the loader entry (24) is only the first.
 That is what T37e should be looking for in other assets -- not one offset per asset.
 
+### 7.2g Statement `0x2f` is a jump-table switch
+
+The first multi-way branch found in this VM, and the reason a script can pick one of
+twenty-one strings without twenty-one tests. Handler `vm_op_switch` at `seg_0000:5768`:
+
+```
+2f  <expression>  <count:u8>  [pad so SI is even]  <bias:i16>  <count+1 x i16>
+```
+
+| step | instructions |
+|---|---|
+| selector | `call 069a6` -- the expression evaluator, result in DX |
+| count | `lodsb / sub ah,ah / mov cx,ax` |
+| align | `test si,1 / jz / inc si` -- the table is word-aligned |
+| bias | `add dx,[si]` -- so cases need not start at zero |
+| range | `js default` and `cmp dx,cx / ja default` |
+| dispatch | `add si,2 / shl dx,1 / add si,dx / add si,[si] / add si,2` |
+| default | `add si,4 / shl cx,1 / add si,cx` -- steps over the whole table |
+
+Note the displacement is relative to its **own slot**, not to the table's start, and the
+bias is a *signed* word added before the range check, so `js` catches selectors below the
+first case.
+
+**Worked example, the region caption** (FINDINGS 4.19b). `gerdep.io` offset 8829:
+
+```
+2f  1e ac 3e  14  01 00  7e 01  2a 00  39 00  48 00 ... 47 01
+^   ^         ^   ^      ^----- 21 signed displacements, 0x0f apart after the first
+|   |         |   bias = 1
+|   |         count = 0x14, so cases 0..20
+|   vm_op_load_byte_global 0x3eac -- the region id
+switch
+```
+
+Each arm is a 17-byte statement that prints one region name. This is what made the id
+findable: the operand of the selector expression names the variable outright.
+
+**Verified by:** the annotated handler, and the byte layout read off `gerdep.io` and
+`frise.io` matching it -- 21 cases for 21 names, with the live value of global `0x3eac`
+equal to 0, 1 and 2 in the three regions visited.
+
 ### 7.2f Why some branch targets are wrong: misaligned decodes (T39e)
 
 `0x14` targets land on a valid opcode **178/178 = 100%**, against a chance baseline of

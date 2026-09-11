@@ -751,9 +751,28 @@ The in-game text agrees: the NPC's line, "TO THE SOUTH, IN ANGARAHN COUNTRY, THE
 NICE LITTLE VILLAGE, ITS TAVERN..." (4.17) names a region from this list, and the French
 original names a tavern "LE RELAIS DE FRAGONIR".
 
-**What selects the region is not yet found.** It is not the cell value -- the party stands
-on `0x00` in both FRAGONIR and ANGARAHN. The name string lands in a DGROUP buffer at
-`ss:[0x0902]`, eight bytes, with a second copy three bytes earlier at `ss:[0x0805]`.
+**The region id is a VM global: byte `0x3EAC`.** The caption is drawn by a **switch** --
+statement `0x2f`, whose encoding this found (FORMATS 7.2g): an expression for the selector,
+a case count, a bias word, then one signed displacement per case. In `gerdep.io` at 8829
+the count is `0x14` (21 cases) and each arm prints one name, so the ladder is a switch on a
+single variable. Its selector expression is `1e ac 3e` = `vm_op_load_byte_global 0x3eac`.
+
+Read live at `es:[ss:[0bf6] + 0x3eac]` it is **0 in FRAGONIR, 1 in ANGARAHN, 2 in
+OSGHIROD** -- the index into the name list above. `tools/region.py` reads it, and that beats
+scraping the caption.
+
+**It is not the cell value.** Walking a row eastwards the region flips FRAGONIR -> ANGARAHN
+between **column 45 and column 46**, at row 11 and again at row 12, and the cells on both
+sides are `0x00`. Two identical adjacent cells in different regions rules the grid out as
+the source. What writes `0x3EAC` from the party's coordinates is still unknown (T11g3f).
+
+**`ss:[0x0902]` is a shared string workspace, not a region variable.** It holds the region
+name at rest, which makes it a cheap readout, but during a scene load it carries
+`main.io`, `EN1.FIC`, `foret.io` in turn, and during dialogue it carries message text. Any
+probe reading it has to check the value spells one of the 21 names before believing it --
+`tools/t11g3f-lattice.py` does. This is the same trap as the memory-write breakpoint in
+CLAUDE.md: a buffer you have only seen holding one kind of value is not a buffer that only
+holds that kind of value.
 
 **Buildings are the blocked singletons.** Walking to `(17,53)` puts a large wooden double
 door on screen (`captures/t11g3e-at1753.png`). Its cell neighbours `0xF0` to the west and
@@ -765,6 +784,20 @@ ACTION menu has **PICK LOCK**.
 
 **Not all low values are walkable.** `0x0A` refused a move, so `value < 0x40` is not a
 walkability test; the walkable/blocked split has to be per value.
+
+**There is a "bounce back to the start" event, and the game is gated by it.** Stepping
+north from `(13,57)` does not move the party: after a few attempts the scene reloads --
+`main.io`, `EN1.FIC`, `foret.io` pass through the string workspace -- and the party is
+returned to its starting cell `(11,29)`, still in `cont1`, still FRAGONIR. Reproduced
+twice, and again walking west from `(39,25)` in OSGHIROD. That is the **same outcome as the
+murder consequence** (4.17), which also returns the party to its starting position, so the
+two plausibly share one mechanism.
+
+So the world is larger than the party may walk: three separate attempts to leave the
+opening area ended back at the start. That is a gate, not terrain -- the cells involved are
+ordinary `0x00` -- and it explains why every wander-based experiment in this project has
+stayed within a dozen cells of the start. No new script runs while it fires (1,772
+attributed samples, no `encont.io`).
 
 **Evidence:** the panel caption across two positions with `cont1.fic` verified resident and
 unchanged; the name run extracted from both assets' decoded bytes; the DGROUP diff between
