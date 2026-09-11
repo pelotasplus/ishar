@@ -1419,13 +1419,65 @@ byte planes gives two planes with statistically identical profiles (52 vs 54 dis
 values, 30% vs 30% above 100) that both autocorrelate at lag 45 -- which is exactly what
 splitting a 90-wide grid by parity produces, not evidence of two fields.
 
-**Not established:** which value is which tableau. That needs ground truth -- the party's
-position on the grid against what is on screen. Two attempts failed on the harness rather
-than the idea: `read_memory` over MCP takes ~45s for 4KB, and the GDB path returned no
-changed words before the emulator stalled at 1% CPU. See T11g3b.
+**The ground truth arrived (6.7b).** The party's cell is now readable and `0xCD` is
+established as blocking, which corrects the "uninitialised fill" reading below: however
+those bytes got there, the game treats them as terrain it refuses to enter.
 
 **Evidence:** connected-component counts over `cont1.fic` and `cont2.fic`; the parity-plane
 comparison over three files.
+
+### 6.7b Where the party is, and what stops it (T11g3)
+
+**The party's map cell is the two bytes immediately after the resident map grid.** Found
+by snapshotting all 64 KB from SS across driven steps and keeping the bytes that move by a
+constant amount: Up and Down move `ss:[0x644c]` by +1/-1, Left and Right move `ss:[0x644d]`
+by +1/-1, and neither key touches the other byte.
+
+Those are the addresses as seen from SS, and the SS-relative form is incidental. What they
+actually are is structural: `ss:[0x644c]` is linear `0x13ccc`, and the level grid sits at
+`0x129d0` and is 4,860 bytes long -- so it ends at `0x13ccc` **exactly**. The row and column
+are the first two bytes past the grid, in the same block. That is also why the listing has
+no `ss:[644c]` reference anywhere: the address is allocated, not linked.
+
+**So movement is absolute, not relative.** The arrow keys are north/south/east/west, and
+the party does not turn -- which is why T29f's "six forward steps per turn" ended against a
+hedge, and why the earlier probe that demanded a coordinate change of exactly +-1 after a
+*turn* found nothing.
+
+**The grid is indexed `row * 90 + col`.** The alternative orientation puts the walked path
+outside the map. Confirmed against the level in memory: `cont1.fic` is resident at linear
+`0x129d0`, matching the file byte for byte, so the game keeps the grid verbatim -- a
+rewrite can read `cont*.fic` straight off disk with no transform.
+
+**`0xCD` is impassable and nothing else observed is.** Attempting all four moves from a
+series of cells and reading `0x644c`/`0x644d` afterwards separates refused from accepted:
+
+| | count | cell values |
+|---|---|---|
+| refused (blocked) | 4 | `0xCD` only |
+| accepted (walkable) | 17 | `0x00`, `0x13`, `0x14`, `0x15`, `0x16`, `0x18`, `0x1b`, `0x1f` |
+
+The two sets are disjoint. Four refusals is a thin sample and is stated as such, but a
+refused move is unambiguous -- the coordinate simply does not change.
+
+**Three side readings.** Several other DGROUP bytes track the party's row exactly
+(`ss:[0x8716]`, `[0x9457]`, `[0x90a0]`, `[0x97dc]`, `[0x9cc6]`, `[0x9dfa]`, `[0x9e9a]`), so
+the position is copied into more than one structure. Two more are *mirrors* of it --
+`ss:[0x9962]` holds `40 - row` and `ss:[0x99f7]` holds `27 - row`, constant sums across
+every step -- which is the shape of a distance from the party to a fixed scene object, and
+therefore a lead for the viewport renderer (4.18). And the walked path crosses eight
+distinct walkable values in eighteen cells, far too varied for "open ground", which is
+consistent with 6.7's reading that low values are per-cell scenery markers.
+
+**Honest limit on the adjacency.** The grid end and the row byte coinciding to the byte is
+one observation, on one level, in one session. Whether the position is *structurally* part
+of the level block or merely allocated next to it is untested -- loading a second level and
+re-checking the offset would settle it (T11g3c).
+
+**Evidence:** the DGROUP diff over five driven steps with the screen change (13-31% per
+step) confirming each step happened; the four-direction refusal sweep over eight cells
+(`.ish/t11g3-walk.json`); `cont1.fic` located in memory by a 64-byte probe and verified
+across all 4,860 bytes. Tools: `tools/t11g3-pos2.py`, `t11g3-watch.py`, `t11g3-probe.py`.
 
 ### 6.8 How the language choice reaches a different file (T11e, partial)
 

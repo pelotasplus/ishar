@@ -2317,3 +2317,16 @@ Compose rewrite has to do.
       from short decodes.
       **Done when:** the generator lives in `tools/`, 3.6's table is regenerated, and it
       agrees with FINDINGS 4.19 asset for asset.
+
+- [ ] **T11g3c · Is the party's position structurally part of the level block?**
+      The party's row and column are the two bytes immediately after the resident map grid
+      -- grid at linear `0x129d0`, 4,860 bytes, row byte at `0x13ccc`, coinciding exactly
+      (FINDINGS 6.7b). One observation, one level, one session. If it is structural, a
+      rewrite can model a level as `grid[4860] + row + col + ...`; if it is allocation luck,
+      the address must be found again per session and nothing follows from it.
+      *Method: walk into a second region so another `cont*.fic` loads, find that grid in
+      memory the same way (a 64-byte probe from the file), and check whether the bytes that
+      move under the arrow keys are again at grid_end and grid_end+1. Dump the 64 bytes
+      after the grid in both cases and diff the shape.*
+      **Done when:** FINDINGS says whether the offset holds across two levels, and if it
+      does, what else the bytes after the grid hold.

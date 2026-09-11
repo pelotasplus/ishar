@@ -1137,7 +1137,8 @@ What is known about the cell values:
 |---|---|
 | `0x00` | empty / open. 26-97% of each grid |
 | `0xCE` (206) | **the boundary outline.** Present in all six, and each cell has a mean of 1.96-1.99 orthogonal neighbours of the same value -- what a one-cell-wide closed curve gives and nothing else does |
-| `0xCC`, `0xCD` | outside the playable area. The MSC uninitialised-memory fill, so the grid was written from a partly-filled buffer |
+| `0xCD` | **impassable.** Every refused move in the walk sweep targeted a `0xCD` cell and no accepted move did (FINDINGS 6.7b). `0xCC`/`0xCD` are also the MSC uninitialised-memory fill, so that is plausibly how the bytes got there -- but the game treats them as terrain, not as absence |
+| `0xCC` | same blob population as `0xCD`; not yet hit by a move attempt |
 | `0x9D` (157) | common and partly line-like; walls or paths, not established |
 | others | 53-91 distinct values per file: terrain and object types, not yet decoded |
 
@@ -1145,9 +1146,15 @@ What is known about the cell values:
 160 bytes per row is 320 pixels at 4bpp -- so it is the rendered map *picture* shown to
 the player, not the grid the game walks on.
 
+**The grid is indexed `row * 90 + col`, and the game keeps it verbatim.** `cont1.fic` is
+resident at linear `0x129d0` during play, matching the file across all 4,860 bytes, and the
+party's cell is `ss:[0x644c]` (row) / `ss:[0x644d]` (col) -- so a rewrite reads `cont*.fic`
+off disk with no transform. See FINDINGS 6.7b.
+
 **Verified by:** autocorrelation over three files independently agreeing on 90; the
-rendering itself; and the neighbour-count test that isolates `0xCE` as an outline in all
-six files.
+rendering itself; the neighbour-count test that isolates `0xCE` as an outline in all
+six files; and the walked path, which is inside the map under `row * 90 + col` and outside
+it under the transpose.
 
 ## 7. Scripts are stored in `.io` assets (T27, partial)
 
