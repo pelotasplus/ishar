@@ -674,6 +674,48 @@ and blind exploration is not a method.
 
 **Evidence:** `tools/t29c-action.py` idle-vs-action windows; the three captures above.
 
+### 4.17b The game's verb list, and what `encont.io` is not
+
+**ACTION opens a ten-entry verb menu** (`captures/t29f-action-menu.png`), which is the
+whole of the game's non-combat interaction:
+
+| | |
+|---|---|
+| **GIVE ITEM**, **GIVE MONEY** | transfers, so NPCs take payment |
+| **KILL**, **DISMISS**, **RECRUIT** | party management -- the party is assembled from NPCs met in the world, and disbanded the same way |
+| **PICK LOCK** | a skill check on doors or containers |
+| **ORIENTATION** | the party has a facing that the arrow keys do not change (6.7b), and this is what sets it |
+| **FIRST AID** | healing outside magic |
+| **MAP** | the player-facing map, which is `map.io` (FORMATS 3.12) |
+| **EXIT** | closes the menu |
+
+`RECRUIT` and `DISMISS` are the mechanical answer to how a party of five is built, and
+`ORIENTATION` is the missing half of the movement model: movement is absolute N/S/E/W, and
+facing is set explicitly by a verb rather than by turning.
+
+**`encont.io` is not the encounter trigger for anything the player does.** Polling
+`vm_run` while driving the game attributes execution to assets; across every window tried,
+`encont.io` appears in none:
+
+| window | attributed samples | `encont.io` |
+|---|---|---|
+| idle, walking, turning, approaching an NPC (T44) | 1,400-2,400 each | 0 |
+| killing an NPC, through the party-wipe screen | 6,552 | 0 |
+| **144 steps across varied terrain**, 12 distinct cell values | **18,863** | 0 |
+| the ACTION menu, including ORIENTATION, MAP and KILL | 4,888 | 0 |
+
+The 144-step walk is the decisive one: if encounters were driven by movement or by the
+terrain walked over, that window would have caught them. `encont.io` executes exactly once,
+in the 0.3s burst at 123.0s where ten scripts start together as the game proper begins, and
+then waits. Whatever wakes it is not movement, not terrain, not a menu verb and not combat
+against an NPC.
+
+Remaining candidates, none tried: a region change (FORMATS 3.12 -- the six grids are not
+tiles, so region changes are scripted), entering a building, and time passing. See T44.
+
+**Evidence:** `tools/t44-when.py` windows, each filtered to samples where `CS == load` and
+`IP` is inside `vm_run`'s fetch loop; the ACTION menu capture.
+
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
 Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all
@@ -1490,11 +1532,28 @@ cells of solid `0xCE`, and anything involving `cont6`, which is 97% zero. Each r
 closed by its own `0xCE` outline, so movement between them has to be scripted -- which is a
 lead for `telep.io` (*téléportation*).
 
-**What the walkable variety probably is.** Twelve distinct walkable values turned up in
-38 cells, far too many for "grass". `cont1` spends 2,131 cells on `0x00` and then scatters
-roughly fifty low values over another ~1,275, about 25 cells each. A base of open ground
-with per-cell scenery markers -- which tree, which bush, which patch of flowers -- is what
-that distribution looks like, and it matches the viewport changing character every step.
+**Bit 6 separates the two populations, exactly.** FINDINGS 6.7 split the values into
+scattered singletons and large blobs by counting connected components. The split is not
+statistical -- it falls on `0x40`:
+
+| | mean component size | values |
+|---|---|---|
+| `0x00`-`0x3F` | **1.17 - 1.36 cells** | 24-35 per file |
+| `0x40`-`0xFF` | **11 - 55 cells** | 5-16 per file |
+
+Across `cont1`-`cont5` the only value below `0x40` that forms blobs is `0x00`, the base
+(plus `0x28` in `cont2`), and the only ones above it that do not are the building-wall
+values `0xDF`-`0xE2` and `0x64`-`0x67`, which are one-cell-wide lines because that is what
+a wall is. **So the low half is per-cell objects and the high half is area terrain**, and a
+rewrite can branch on `value & 0x40` before looking anything up.
+
+**The tile sets are per region.** Only **five** values occur in all six grids -- `0x00`,
+`0x0C`, `0x0F`, `0x10` and `0xCD`. `cont1` uses low values `0x00`-`0x39` and high ones
+`0xAB`-`0xFF` with nothing between; `cont2` uses `0x00`-`0x3F` plus `0x40`, `0x50` and
+`0x9D`-`0xE2`. Each region therefore carries its own meaning table, which fits its own set
+of scene assets (`plaine.io`, `arbre.io`, `lacustre.io`, `rplaine.io` for `cont1`'s plains,
+trees and lake). **A single global tile table would be wrong.**
+
 **Not established**: no value has been tied to a specific sprite yet (T11g3d).
 
 **Three side readings.** Several other DGROUP bytes track the party's row exactly

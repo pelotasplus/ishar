@@ -1142,6 +1142,16 @@ What is known about the cell values:
 | `0x9D` | the interior fill of the built structures -- the walled town in `cont2`, the fortress filling `cont5`. Read off the rendering, not walked |
 | `0xDF`-`0xE2` | the enclosure walls of those structures |
 | low values (`0x03`-`0x1f` seen) | **walkable**, and numerous -- ~50 values of ~25 cells each in `cont1`. Per-cell scenery markers over a base of `0x00`, not yet tied to sprites |
+
+**Bit 6 is the population split.** Values `0x00`-`0x3F` form components averaging 1.17-1.36
+cells -- isolated markers; values `0x40`-`0xFF` average 11-55 -- area terrain. Measured over
+`cont1`-`cont5`, the only exceptions are `0x00` itself (the base) and the building-wall
+values, which are thin lines because walls are. Branch on `value & 0x40`.
+
+**The tile sets are per region**: only `0x00`, `0x0C`, `0x0F`, `0x10` and `0xCD` occur in all
+six grids. `cont1` uses `0x00`-`0x39` and `0xAB`-`0xFF` with nothing between; `cont2` uses
+`0x00`-`0x3F`, `0x40`, `0x50` and `0x9D`-`0xE2`. A single global tile table would be wrong.
+See FINDINGS 6.7b.
 | others | 53-91 distinct values per file: terrain and object types, not yet decoded |
 
 **The six grids are separate regions, not tiles.** No edge of any file continues into any

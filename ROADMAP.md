@@ -2228,11 +2228,15 @@ Compose rewrite has to do.
       Two findings alongside: `gerdep.io` is the busiest script in the game (about twice
       `frise.io`), and `plaine.io`/`arbre.io` execute **only when the view changes** — scene
       assets carry per-scene script, not just pixels.
-      To finish: find the trigger. Candidates not yet tried are combat, entering a building,
-      a level transition and time passing. The party-wipe screen has been tried and is not
-      it: attacking an NPC produces the demon frame, and a 6,552-sample window across the
-      kill attributes nothing to `encont.io` (nor to `dead.io`, which turns out not to be a
-      script at all -- see T48).*
+      To finish: find the trigger. The list of what it is **not** is now long enough to be
+      the finding (FINDINGS 4.17b). Zero `encont.io` samples in: idle, walking, turning,
+      approaching an NPC (1,400-2,400 samples each); killing an NPC through the party-wipe
+      screen (6,552 -- and `dead.io` turns out not to be a script at all, T48); **144 steps
+      across varied terrain covering twelve distinct cell values (18,863)**; and the ACTION
+      menu including ORIENTATION, MAP and KILL (4,888). The terrain walk is decisive against
+      movement- or cell-driven encounters.
+      Candidates left, none tried: a **region change** (the six grids are not tiles, so these
+      are scripted -- T11g3e is the same experiment), entering a building, and time passing.*
 
 - [x] **T45 · What are `affobj.io`'s two conditions?**
       `affobj.io` is four near-identical ~126-byte handlers over a 2x2 matrix of two binary
