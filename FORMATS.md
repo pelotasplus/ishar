@@ -1137,10 +1137,17 @@ What is known about the cell values:
 |---|---|
 | `0x00` | empty / open. 26-97% of each grid |
 | `0xCE` (206) | **the boundary outline.** Present in all six, and each cell has a mean of 1.96-1.99 orthogonal neighbours of the same value -- what a one-cell-wide closed curve gives and nothing else does |
-| `0xCD` | **impassable.** Every refused move in the walk sweep targeted a `0xCD` cell and no accepted move did (FINDINGS 6.7b). `0xCC`/`0xCD` are also the MSC uninitialised-memory fill, so that is plausibly how the bytes got there -- but the game treats them as terrain, not as absence |
-| `0xCC` | same blob population as `0xCD`; not yet hit by a move attempt |
-| `0x9D` (157) | common and partly line-like; walls or paths, not established |
+| `0xCC`, `0xCD` | **water, impassable.** Every refused move in the walk sweep targeted `0xCD` and no accepted move did; rendered, the regions braid like a river system and terminate against the `0xCE` outline (FINDINGS 6.7b). The earlier "MSC uninitialised fill" reading is withdrawn -- `0xCC`/`0xCD` really are that compiler's fill pattern, which is a coincidence, not an explanation |
+| `0xE6` | **impassable**, one refusal; one of the large-blob area classes |
+| `0x9D` | the interior fill of the built structures -- the walled town in `cont2`, the fortress filling `cont5`. Read off the rendering, not walked |
+| `0xDF`-`0xE2` | the enclosure walls of those structures |
+| low values (`0x03`-`0x1f` seen) | **walkable**, and numerous -- ~50 values of ~25 cells each in `cont1`. Per-cell scenery markers over a base of `0x00`, not yet tied to sprites |
 | others | 53-91 distinct values per file: terrain and object types, not yet decoded |
+
+**The six grids are separate regions, not tiles.** No edge of any file continues into any
+other except degenerately (`cont5`'s right column and `cont4`'s left are both 54 cells of
+`0xCE`; `cont6` is 97% zero). Each is closed by its own `0xCE` outline, so region changes
+must be scripted.
 
 **`map.io` is not the same thing.** It decodes normally and autocorrelates at lag 160 --
 160 bytes per row is 320 pixels at 4bpp -- so it is the rendered map *picture* shown to

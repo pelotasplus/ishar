@@ -1454,11 +1454,48 @@ series of cells and reading `0x644c`/`0x644d` afterwards separates refused from 
 
 | | count | cell values |
 |---|---|---|
-| refused (blocked) | 4 | `0xCD` only |
-| accepted (walkable) | 17 | `0x00`, `0x13`, `0x14`, `0x15`, `0x16`, `0x18`, `0x1b`, `0x1f` |
+| refused (blocked) | 4 | `0xCD`, `0xE6` |
+| accepted (walkable) | 20 | `0x00`, `0x03`, `0x04`, `0x05`, `0x06`, `0x13`, `0x14`, `0x15`, `0x16`, `0x18`, `0x1b`, `0x1f` |
 
-The two sets are disjoint. Four refusals is a thin sample and is stated as such, but a
-refused move is unambiguous -- the coordinate simply does not change.
+The two sets are disjoint over 38 move attempts across 38 cells. Four refusals is a thin
+sample and is stated as such, but a refused move is unambiguous -- the coordinate simply
+does not change.
+
+**`0xCC`/`0xCD` are water.** Three things agree and none of them is the byte value:
+
+1. Every refused move targeted one (above).
+2. **Rendered, they are hydrography.** `captures/map-cont1.png` colours the classes: the
+   `0xCC`/`0xCD` regions branch like a river system, run continuously across the landmass
+   and terminate against the `0xCE` outline -- 182 of their edge neighbours are `0xCE`.
+   An uninitialised-memory artefact does not braid.
+3. The player remembers impassable water in Ishar.
+
+The old reading -- "outside the playable area, the MSC uninitialised-memory fill" -- came
+from the byte values `0xCC`/`0xCD` being that compiler's fill pattern. That is a real
+coincidence and it was taken for an explanation. FORMATS 3.12 is corrected.
+
+**`0xCE` is the shoreline** and it encloses each landmass: one cell wide, mean 1.96-1.99
+orthogonal same-value neighbours in all six files, and it is what the water runs into.
+
+**`0x9D` is the interior fill of the built structures.** `cont2` holds a walled town in its
+left half and `cont5` is almost entirely one walled fortress (`captures/map-cont2.png`,
+`captures/map-cont5.png`); in both, the enclosure is drawn in values `0xDF`-`0xE2` and the
+space inside it is `0x9D`, 440 of whose 600-odd edge neighbours are itself. Not walked on
+yet, so this is a reading of the rendering, not a measurement.
+
+**The six grids are separate regions, not tiles of one world.** Testing every edge of every
+file against every other edge for terrain-class continuity produces no non-degenerate match:
+the only 100% scores are `cont5`'s right column against `cont4`'s left, which are both 54
+cells of solid `0xCE`, and anything involving `cont6`, which is 97% zero. Each region is
+closed by its own `0xCE` outline, so movement between them has to be scripted -- which is a
+lead for `telep.io` (*téléportation*).
+
+**What the walkable variety probably is.** Twelve distinct walkable values turned up in
+38 cells, far too many for "grass". `cont1` spends 2,131 cells on `0x00` and then scatters
+roughly fifty low values over another ~1,275, about 25 cells each. A base of open ground
+with per-cell scenery markers -- which tree, which bush, which patch of flowers -- is what
+that distribution looks like, and it matches the viewport changing character every step.
+**Not established**: no value has been tied to a specific sprite yet (T11g3d).
 
 **Three side readings.** Several other DGROUP bytes track the party's row exactly
 (`ss:[0x8716]`, `[0x9457]`, `[0x90a0]`, `[0x97dc]`, `[0x9cc6]`, `[0x9dfa]`, `[0x9e9a]`), so
@@ -1475,8 +1512,9 @@ of the level block or merely allocated next to it is untested -- loading a secon
 re-checking the offset would settle it (T11g3c).
 
 **Evidence:** the DGROUP diff over five driven steps with the screen change (13-31% per
-step) confirming each step happened; the four-direction refusal sweep over eight cells
-(`.ish/t11g3-walk.json`); `cont1.fic` located in memory by a 64-byte probe and verified
+step) confirming each step happened; the four-direction refusal sweep over 38 cells
+(`.ish/t11g3-walk.json`); the class renderings in `captures/map-cont{1,2,5}.png`; the
+edge-continuity test across all six files; `cont1.fic` located in memory by a 64-byte probe and verified
 across all 4,860 bytes. Tools: `tools/t11g3-pos2.py`, `t11g3-watch.py`, `t11g3-probe.py`.
 
 ### 6.8 How the language choice reaches a different file (T11e, partial)

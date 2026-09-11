@@ -688,7 +688,7 @@ Compose rewrite has to do.
       different artefact: it autocorrelates at 160, so it is the rendered map picture at
       4bpp, not the grid. FORMATS.md 3.12.*
 
-- [~] **T11g3 · What the map cell values mean**
+- [x] **T11g3 · What the map cell values mean**
       `cont*.fic` are 90x54 byte grids (FORMATS.md 3.12) with 53-91 distinct values each.
       `0x00` is open, `0xCE` the boundary, `0xCC`/`0xCD` outside; the rest are terrain and
       object types and are undecoded. This is the world's content -- where towns, dungeons
@@ -2330,3 +2330,28 @@ Compose rewrite has to do.
       after the grid in both cases and diff the shape.*
       **Done when:** FINDINGS says whether the offset holds across two levels, and if it
       does, what else the bytes after the grid hold.
+
+- [ ] **T11g3d · Tie a map cell value to the sprite it draws**
+      Twelve walkable values turned up in 38 cells and `cont1` scatters ~50 low values over
+      ~1,275 cells, ~25 each -- the shape of per-cell scenery markers over a base of `0x00`
+      (FINDINGS 6.7b). No value is tied to a specific sprite, so a rewrite can walk the world
+      but cannot draw it.
+      *Method: `tools/t11g3-look.py` walks a line and writes the viewport at each cell named
+      by that cell's grid value. Two cells sharing a value should show the same object; two
+      differing should not. Start with the values that recur -- `0x03`-`0x06` and
+      `0x13`-`0x1b` -- and compare the captures pairwise before trying to name anything.*
+      **Done when:** at least three cell values are matched to a named sprite from a scene
+      asset, with the two captures that establish each.
+
+- [ ] **T11g3e · How does the party change region?**
+      The six grids are self-contained -- no edge continues into another, each closed by its
+      own `0xCE` outline (FORMATS 3.12) -- so moving between them is scripted. `telep.io`
+      (*téléportation*, 2,016 bytes, script, no entry set) is the obvious suspect and has
+      never been seen to run.
+      *Method: walk to a region exit and poll for a second `cont*.fic` appearing in memory,
+      the way `cont1.fic` was located (a 64-byte probe from each file over a 640 KB dump).
+      The moment it loads, poll `vm_run` for which scripts execute -- that is also the run
+      that would finally give `telep.io` an entry set (T37e) and might catch `encont.io`
+      (T44).*
+      **Done when:** FINDINGS says what triggers a region change and which grid replaces
+      which, with the second grid located in memory.
