@@ -2513,6 +2513,50 @@ not yet found.
 `tools/ioscan.py` carries this as an explicit `INDEX_SHIFT` exception so the extraction is
 usable while the reason stays open. **It should not be read as understood.**
 
+## 7.9 When each script starts, and what `encont.io` turns out to be (T44)
+
+Polling `DS:SI` from a paused cold start timestamps the first execution of every script,
+which separates the boot scripts from the gameplay set cleanly:
+
+| t | asset |
+|---|---|
+| 57.5s | `main.io` (offset 24 -- the entry, 7.5) |
+| 58.5s | `logo.io` |
+| 78.0s | `presen.io` |
+| 91.1s | `presti.io` |
+| 115.5s | `param.io` |
+| 116.9s | `buste.io` |
+| **123.0-123.3s** | `arbre`, `samb`, `plaine`, `rplaine`, `dplt`, **`encont`**, `affobj`, `frise`, `geren`, `gerdep` -- **all within 0.3s** |
+| 124.4s | `lacustre`, `souris` |
+
+**Ten scripts start together** when the game proper begins, and `encont.io` is one of them --
+so it is **part of the gameplay script set, not a special-occasion handler**.
+
+**But it does not run during play.** Windows covering idle, walking, turning and approaching
+an NPC attribute 1,400-2,400 samples each, and `encont.io` appears in **none** of them:
+
+| asset | idle | walk | turn |
+|---|---|---|---|
+| `gerdep.io` | 690 | 666 | 647 |
+| `frise.io` | 345 | 349 | 357 |
+| `geren.io` | 158 | 145 | 153 |
+| `dplt.io` | 79 | 107 | 89 |
+| `plaine`/`arbre` | — | 46/38 | 64/63 |
+| **`encont.io`** | **0** | **0** | **0** |
+
+It starts with the others, then waits for something none of those actions triggers. That is
+**consistent with** the *encounter* reading and **does not establish it** -- "starts at
+gameplay, then stays quiet" fits several roles.
+
+**Two findings from the same measurement.** `gerdep.io` is the busiest script in the game,
+running constantly at about twice `frise.io`'s rate -- and `gerdep` reads as *gérer
+déplacement*, which constant execution during movement supports without proving. And
+`plaine.io`/`arbre.io` execute **only when the view changes**, so scene assets carry
+per-scene script that runs on redraw, not just pixels.
+
+**Verified by:** `tools/t37f-poll.py` first-execution timestamps from a paused cold start;
+`tools/t44-when.py` attributed-sample counts over four action windows.
+
 ## 7.8 What the small logic scripts do, and what `encont.io` is not
 
 With entry sets in hand (7.7) the small scripts disassemble. `tools/vmi.py <asset> --listing`

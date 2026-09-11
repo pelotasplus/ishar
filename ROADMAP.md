@@ -2191,7 +2191,7 @@ Compose rewrite has to do.
       **viewport** — and none coincides with a panel-redraw position. So instances carry
       viewport object positions and the panel chrome is placed by another mechanism again.*
 
-- [ ] **T44 · What is `encont.io`?**
+- [~] **T44 · What is `encont.io`?**
       It has never had a section in FORMATS, and the "*encontre* = encounter" reading that
       has been leaned on in planning is a pun on the filename, not a finding (FORMATS 7.8).
       Established: 2,008 bytes, loaded during engine setup, script not a table, 1,376 bytes
@@ -2204,6 +2204,17 @@ Compose rewrite has to do.
       `map_decompress_inner` were attributed.*
       **Done when:** FORMATS says what `encont.io` governs, with the evidence being executed
       statements or an attributed action — not the filename.
+      *Narrowed, not answered (FORMATS 7.9). It is **part of the gameplay script set**: ten
+      scripts first execute within 0.3s of each other when the game proper begins, and
+      `encont.io` is one of them. But it runs in **none** of idle, walking, turning or
+      approaching an NPC — windows attributing 1,400-2,400 samples each, where `gerdep.io`
+      takes 650-690 and `frise.io` ~350. So it starts and then waits for a trigger none of
+      those actions produces, which is consistent with *encounter* without establishing it.
+      Two findings alongside: `gerdep.io` is the busiest script in the game (about twice
+      `frise.io`), and `plaine.io`/`arbre.io` execute **only when the view changes** — scene
+      assets carry per-scene script, not just pixels.
+      To finish: find the trigger. Candidates not yet tried are combat, entering a building,
+      a level transition and time passing.*
 
 - [x] **T45 · What are `affobj.io`'s two conditions?**
       `affobj.io` is four near-identical ~126-byte handlers over a 2x2 matrix of two binary
