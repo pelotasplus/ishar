@@ -855,6 +855,28 @@ to be script (3.16) but have no entry set yet, so nothing in them can be read.
 **Evidence:** sprite counts from the re-extracted `captures/assets/`; entry sets from
 `.ish/t37f-entries.json`; text and name-table identification from section 10.
 
+### 6.10 The scripts can compute: the VM has a full operator set (T46)
+
+The encoding is in FORMATS 6.1b; what it means for the game belongs here. Ishar's scripts
+are not a list of canned commands. The expression table holds **fifteen operators in a
+row**, `0x42`..`0x5e`:
+
+`&` `|` `^` `^~` `==` `!=` `<=` `>=` `<` `>` `+` `-` `/` `%` `*`
+
+-- the three bitwise ops, all six comparisons, and five arithmetic ones including **integer
+division and remainder**. Operands are nested expressions, so they compose to arbitrary
+depth.
+
+That is a general-purpose expression language, and it reframes what the remaining unknowns
+look like. Combat damage, spell cost, a quest condition -- none needs a hidden table in the
+executable if a script can compute it inline. So the expectation for T21/T22/T23 should be
+that the rules live in **bytecode arithmetic**, not in data still to be found, and reading
+them is now possible: `tools/vmi.py --listing` renders expressions infix.
+
+**Evidence:** each operator classified by the arithmetic instruction it applies, the six
+comparisons by their conditional jump (`jz`, `jnz`, `jle`, `jge`, `jl`, `jg`, in opcode
+order); FORMATS 6.1b carries the full 112-row table.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
@@ -1249,7 +1271,14 @@ is sound -- it is the *actions* that are unreachable, not the measurement.
 **Evidence:** INT 33h breakpoint (0 hits/20s); interrupt vector dump; five action diffs
 with the idle baseline; screenshots `captures/t29c-before.png`, `t29c-f1.png`.
 
-### 6.5 Ishar's mouse, and why the harness cannot use it (T29d)
+### 6.5 Ishar's mouse (T29d) — ~~and why the harness cannot use it~~
+
+**The second half of this title was wrong and is struck out (T29c3).** The harness *can*
+drive the mouse. Spice86's `Mouse` and `MouseDriver` subscribed to the GUI while the
+keyboard subscribed to the `InputEventHub`, and in headless mode the GUI never raises mouse
+events, so injected input was dropped before reaching the driver -- one line each to fix.
+The game's callback at `017d:1249` now fires, its cursor tracks the pointer, and ACTION-menu
+entries can be clicked. The description of the game's own mouse setup below is unaffected.
 
 The game **does** use a mouse -- an earlier reading that it did not was drawn from a trace
 taken after startup. Breaking on the INT 33h handler from boot catches the whole setup:
