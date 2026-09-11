@@ -127,8 +127,14 @@ def decode(data):
     """-> (out, info). Raises ValueError when the stream does not add up."""
     if len(data) < HEADER:
         raise ValueError("shorter than a header")
-    size, mode_word, is_catalogue = struct.unpack_from("<HHH", data, 0)
-    mode = (mode_word >> 8) & 0xFE
+    # The size is 24 bits, not 16. Read as a u16 it wraps at 64 KB and its high byte
+    # lands in the mode word's low byte, which `>>8` then discards -- so the bug is
+    # invisible on the 88 assets under 64 KB and silently truncates the nine over it
+    # (dead.io decoded as 448 bytes of a 65,984-byte asset). Confirmed by running the
+    # bit stream to exhaustion on all 97 LZ assets: u24 predicts the end for 97.
+    size = int.from_bytes(data[0:3], "little")
+    mode = data[3] & 0xFE
+    is_catalogue = struct.unpack_from("<H", data, 4)[0]
     header_len = HEADER + (DIRECTORY if is_catalogue == 0 else 0)
     out_len = size - header_len
     info = {"size": size, "mode": mode, "is_catalogue": is_catalogue == 0,

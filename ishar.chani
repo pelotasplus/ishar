@@ -1789,4 +1789,23 @@ attr[seg_0000:6d67]: type = code; name = expr_mul; comment = [[[
     so it takes no inline operand of its own. One of the fifteen operators occupying
     0x42..0x5e consecutively (FORMATS 6.1).
 ]]]
+attr[seg_0000:793a]: type = code; name = asset_header_direct; comment = [[[
+    Direct (non-catalogue) asset header read. ss:[2480] is the low WORD of the size
+    and ss:[2482]'s low byte is its HIGH byte -- the size is 24-bit, not 16
+    (FORMATS 3.0). `and ah,0feh` keeps the mode in the same word's high byte, which
+    is why a size over 64K was invisible for so long: tools/io.py read the size as a
+    u16 and the overflow byte landed in the mode word's low half, where `>>8`
+    discarded it. Nine assets decoded short as a result.
+]]]
+attr[seg_0000:79a5]: type = code; name = asset_decode_chunked; comment = [[[
+    Decodes an asset 64K at a time. On entry CX = size low word - 6 (the `sub cx,6`
+    at 7965 sets the carry) and AX = the size's high byte; `jnb`/`dec ax` borrows
+    across, `and ax,0fh` caps it at 15, so the format tops out at 1 MB. Each round
+    sets CX = 0ffffh, advances DS by 0fffh paragraphs and `dec ax`. AX <= 0 takes
+    the single-chunk path at 79da.
+
+    This loop is the proof that the size field is 24 bits: nothing else consumes
+    ss:[2482]'s low byte. dead.io declares 0x0101c6 = 65,990 and its 64,000-byte
+    page matched live VRAM byte for byte once the third byte was honoured.
+]]]
 end

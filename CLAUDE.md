@@ -575,6 +575,37 @@ And when a model cannot be checked directly, render the alternatives and look. T
 identified the right group by eye from a 16-cell sheet in seconds, after two sessions of
 failing to prove it from the machine.
 
+### An anomaly counted and then rounded off is a bug you have already found
+
+FORMATS 3.0 said, in the sentence that tabulated the header across every asset:
+"`hdr_size >= file size` in 93 of 106". Thirteen assets declared a *decompressed* size
+smaller than their own *compressed* file. That is impossible, it was measured, it was
+written down, and it was left as a curiosity for months. The size field is 24 bits; the
+decoder read 16, and the overflow byte landed in the mode word's low half where `>>8`
+threw it away -- silent on the 88 assets under 64 KB, and silently truncating the nine
+over it. `dead.io` decoded as the first 448 bytes of a 65,984-byte asset and was written
+up as "too small to be the picture".
+
+The check is not more measurement. It is: **when a tabulated count has exceptions, say out
+loud what would have to be true for each exception, and see whether that is possible.**
+"93 of 106" invited rounding to "consistent with a decompressed size"; "13 files claim to
+decompress to less than they already are" does not.
+
+The same shape appears twice more in this file -- coverage sliding the wrong way after an
+edit that only adds information, and a component collapsing while the headline rises. A
+number that does not fit the model is the most valuable thing on the page.
+
+### A property proved for one asset is not a property of the format, part two
+
+`dead.io` and `auteur.io` are whole 320x200 VGA pages anchored at `palette_marker + 780`.
+The obvious next move was to run the same anchor over the seven other assets that grew, and
+three of them -- `presen.io`, `iboishar.io`, `stage.io` -- produced confident static, because
+assets with sprite chains carry palette records too.
+
+`tools/ioscan.py` finding **zero sprites** is the discriminator, and it was available before
+any of those renders. Before generalising a layout, name the property that makes the asset
+eligible and test *that* first.
+
 ### Spice86's GDB stub reports IP as a LINEAR address
 
 `registers()["ip"]` is not the segment offset. At a breakpoint on `seg_0000:93a6` with

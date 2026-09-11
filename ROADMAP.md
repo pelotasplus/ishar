@@ -1937,7 +1937,8 @@ Compose rewrite has to do.
       a panel; ATTACK then a click on the target is what acts. And attacking a friendly NPC
       triggers a **full-screen demon frame and resets the party to its start position**,
       which is Ishar's murder-consequence system, observed.
-      Attributed: `vm_op_attack_swing` (0x15, 7,805 calls on an attack against 0 idle) and
+      Attributed: `vm_op_15` (0x15, 7,805 calls on an attack against 0 idle -- named
+      `vm_op_attack_swing` here at first, since disproved by its 8 uses in `affobj.io`) and
       `vm_op_consequence_event` (0x57, 96 calls at the demon frame, absent from every other
       action measured). Both named in `ishar.chani`.
       Blind exploration is **not** a method: twelve rounds of six forward steps ended against
@@ -1994,7 +1995,16 @@ Compose rewrite has to do.
       Honest limit: a polled first-sighting is an **upper bound**, not proof of the engine's
       entry — `logo.io` reads 68 here against the 24 proven by breakpoint. They are sound as
       traversal seeds, which is what the disassembler needs. `main.io` came out at exactly 24,
-      which is the validation.*
+      which is the validation.
+      **A static substitute was tried for the assets that never run, and it does not work.**
+      `tools/t44-entries.py` traverses from every offset that could start a statement and
+      keeps the ones whose region closes cleanly; scored against `encont.io`'s known set it
+      picks 44/45/48 covering 13 bytes and misses every real entry. Ranking by bytes covered
+      instead is no better -- `encont.io`'s real entries rank 58th to 1903rd out of ~2,000.
+      Real regions contain statements the stepper cannot size and branch targets it rejects,
+      so "clean" and "large" are both the wrong signal. `monstre.io` and `telep.io` still have
+      no entries and the only route to them is making them execute; `dead.io` no longer needs
+      one, being a picture rather than a script (T48).*
 
 - [ ] **T42 · The input model of the boot sequence**
       The boot sequence is **input-gated, not timed** (FINDINGS 4.9, corrected): left alone
@@ -2214,7 +2224,10 @@ Compose rewrite has to do.
       `frise.io`), and `plaine.io`/`arbre.io` execute **only when the view changes** — scene
       assets carry per-scene script, not just pixels.
       To finish: find the trigger. Candidates not yet tried are combat, entering a building,
-      a level transition and time passing.*
+      a level transition and time passing. The party-wipe screen has been tried and is not
+      it: attacking an NPC produces the demon frame, and a 6,552-sample window across the
+      kill attributes nothing to `encont.io` (nor to `dead.io`, which turns out not to be a
+      script at all -- see T48).*
 
 - [x] **T45 · What are `affobj.io`'s two conditions?**
       `affobj.io` is four near-identical ~126-byte handlers over a 2x2 matrix of two binary
@@ -2262,3 +2275,40 @@ Compose rewrite has to do.
       expression, the remainder take pairs.
       `vmi.py --listing` now renders expressions infix: a statement reads
       `vm_stmt_eval e38[wordvar[48]]` instead of hex.*
+
+- [x] **T48 · The asset size field is 24 bits, and nine assets were decoding short**
+      `tools/io.py` read the `.io` header's size as a `u16`. It is 24 bits: `seg_0000:793a`
+      takes the low word from `ss:[2480]` and the high byte from `ss:[2482]`, and
+      `asset_decode_chunked` at `seg_0000:79a5` decodes 64 KB per round with `dec ax` per
+      round (`and ax,0fh` caps the format at 1 MB). The overflow byte landed in the *mode*
+      word's low half, where `>>8` discarded it, so the bug was silent on the 88 assets
+      under 64 KB.
+      **Done:** FORMATS 3.0 rewritten; 3.18 (`dead.io`/`auteur.io` are whole VGA pages) and
+      3.19 added; FINDINGS 4.20 and the 4.19 table corrected; `tools/io.py` fixed;
+      `captures/assets/` re-extracted for the nine. `dead.io`'s page matches live VRAM
+      **64,000/64,000**. Corpus-wide: the `u24` size predicts the LZ stream's end for 97 of
+      97 LZ assets. +470 KB of decoded content, +124 sprites.
+
+- [ ] **T47 · Read `theend.io` and `iboishar.io`**
+      275 KB of decoded content that nothing explains -- the largest unread region left.
+      Neither is a sprite chain (`tools/ioscan.py` finds zero in each) nor a set of 320x200
+      pages (`tools/fullscreen.py` renders static at every anchor, at 8bpp and 4bpp).
+      `theend.io` carries **no palette record at all**, which no other asset manages;
+      `iboishar.io` has three, at 62,445 / 77,192 / 78,295. Both grew 2 x 64 KB under T48,
+      so nothing about them was ever seen whole before.
+      *Method: these are the two files whose readers have never been traced. Breakpoint the
+      loader on each and follow where the decoded buffer goes -- which routine reads it and
+      with what stride -- rather than guessing a layout. `theend` is presumably the ending
+      sequence and `iboishar` the in-game Ishar screen, so both are reachable, though
+      `theend` needs the game finished.*
+      **Done when:** FORMATS says what the bytes are for at least one of the two, with the
+      evidence being a rendered image matched against the screen or a traced consumer.
+
+- [ ] **T50 · Regenerate the corpus classification after the size fix**
+      FORMATS 3.6's table (63 sprites / 4 palettes / 18 text / 13 data) and
+      `.ish/file-classification.json` were generated with the truncated decoder, and the
+      script that made them is not in `tools/`. Two rows are known wrong -- `auteur.io` and
+      `dead.io` are filed as "data" and are whole VGA pages -- and four sprite counts came
+      from short decodes.
+      **Done when:** the generator lives in `tools/`, 3.6's table is regenerated, and it
+      agrees with FINDINGS 4.19 asset for asset.

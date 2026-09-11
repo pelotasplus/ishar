@@ -656,13 +656,14 @@ panel is open. Clicking ATTACK and *then* clicking a target in the viewport is w
 demon frame -- a horned face over a glowing orb full of tiny falling figures
 (`captures/t29f-consequence-demon.png`) -- which waits for a mouse click, not a key, and
 then returns the party to its **starting position**. Ishar is known for punishing murder;
-this is that system, observed.
+this is that system, observed. **That frame is `dead.io`**, decoded and matched
+64,000/64,000 against VRAM while it was on screen (4.20).
 
 **Two opcodes attributed** by call-count diff against an idle window of equal length:
 
 | opcode | handler | evidence |
 |---|---|---|
-| `0x15` `vm_op_attack_swing` | `seg_0000:28a9` | **7,805 calls** when ATTACK is clicked with a target ahead, 0 idle -- the largest mover of any action measured. Not combat-exclusive (903 in another baseline), but driven ~9x harder |
+| `0x15` `vm_op_15` | `seg_0000:28a9` | **7,805 calls** when ATTACK is clicked with a target ahead, 0 idle -- the largest mover of any action measured. Not combat-exclusive (903 in another baseline), but driven ~9x harder. Named `vm_op_attack_swing` at first and **renamed**: it occurs 8x in `affobj.io`, which never fights (FORMATS 8.0b) |
 | `0x57` `vm_op_consequence_event` | `seg_0000:4b8f` | 96 calls at the moment of the demon frame, 0 idle, and absent from every other action measured -- menu draw, MAP, portrait select, click on empty ground |
 
 **What is still not done:** T29f asked for a monster in the viewport and a LIFE bar
@@ -749,7 +750,7 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 |---|---|---|---|---|
 | `affobj.io` | 1,432 | script | object-display logic — toggles entity visible flags (8.0) | reimplement — logic, no data |
 | `arbre.io` | 25,976 | art + script |  | **art usable** (15 sprites); logic to reimplement |
-| `auteur.io` | 448 | unknown | credits card | not classified |
+| `auteur.io` | 65,984 | full page | the credits card, a whole 320x200 VGA page (3.18) | **use directly** — one page |
 | `azal.io` | 18,368 | art |  | **use directly** — 5 sprites |
 | `barbare.io` | 17,792 | art |  | **use directly** — 27 sprites |
 | `blancpc.io` | 2,094 | unknown | blank/clear frame, the only stored-mode asset (3.11) | not classified |
@@ -758,7 +759,7 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 | `colcave.io` | 28,200 | art |  | **use directly** — 14 sprites |
 | `darkm.io` | 10,544 | art |  | **use directly** — 18 sprites |
 | `darkwiz.io` | 9,240 | art |  | **use directly** — 9 sprites |
-| `dead.io` | 448 | unknown | death sequence script (448 b, too small for the demon frame) | not classified |
+| `dead.io` | 65,984 | full page | **the demon frame** shown when the party is wiped — verified vs VRAM (3.18) | **use directly** — one page |
 | `dealer.io` | 12,352 | art |  | **use directly** — 19 sprites |
 | `dplt.io` | 3,376 | script |  | reimplement — logic, no data |
 | `dragon.io` | 16,296 | art |  | **use directly** — 13 sprites |
@@ -780,9 +781,9 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 | `gerdep.io` | 14,472 | script |  | reimplement — logic, no data |
 | `geren.io` | 13,088 | script | palette bank — 16 sub-palettes of 16 (3.9) | reimplement — logic, no data |
 | `goul.io` | 9,688 | art |  | **use directly** — 8 sprites |
-| `iboishar.io` | 1,656 | unknown |  | not classified |
+| `iboishar.io` | 132,728 | unknown | the largest asset in the game; layout unread (3.19, T47) | not classified |
 | `incave.io` | 15,752 | art |  | **use directly** — 12 sprites |
-| `intmais.io` | 14,120 | art |  | **use directly** — 2 sprites |
+| `intmais.io` | 79,656 | art | house interiors | **use directly** — 31 sprites (89% of the file) |
 | `inville.io` | 6,576 | art |  | **use directly** — 6 sprites |
 | `itaverne.io` | 44,160 | art |  | **use directly** — 9 sprites |
 | `kiriela.io` | 7,296 | art + script |  | **art usable** (9 sprites); logic to reimplement |
@@ -794,7 +795,7 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 | `main.io` | 26,384 | art + script | the setup program — loads every asset (7) | **art usable** (1 sprites); logic to reimplement |
 | `map.io` | 21,368 | unknown |  | not classified |
 | `marchand.io` | 40,888 | art |  | **use directly** — 2 sprites |
-| `mcave.io` | 21,008 | art |  | **use directly** — 4 sprites |
+| `mcave.io` | 86,544 | art | cave | **use directly** — 45 sprites |
 | `medus.io` | 15,536 | art |  | **use directly** — 13 sprites |
 | `message.io` | 8,712 | text |  | **use directly** — strings (10) |
 | `messaged.io` | 8,600 | text |  | **use directly** — strings (10) |
@@ -813,7 +814,7 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 | `pcave.io` | 5,384 | art |  | **use directly** — 4 sprites |
 | `plaine.io` | 32,488 | art + script |  | **art usable** (23 sprites); logic to reimplement |
 | `predator.io` | 14,352 | art |  | **use directly** — 9 sprites |
-| `presen.io` | 12,536 | art | Ishar title card | **use directly** — 4 sprites |
+| `presen.io` | 143,608 | art | Ishar title card | **use directly** — 7 sprites |
 | `preson.io` | 51,424 | unknown |  | not classified |
 | `presti.io` | 22,184 | art | title lettering, 4bpp dithered (3.14) | **use directly** — 9 sprites |
 | `rampart.io` | 28,008 | art |  | **use directly** — 24 sprites |
@@ -831,7 +832,7 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 | `souris.io` | 3,856 | script | mouse cursor sprite | reimplement — logic, no data |
 | `spectre.io` | 9,968 | art |  | **use directly** — 10 sprites |
 | `spider.io` | 4,712 | art |  | **use directly** — 4 sprites |
-| `stage.io` | 7,432 | art |  | **use directly** — 2 sprites |
+| `stage.io` | 72,968 | art |  | **use directly** — 2 sprites |
 | `stel.io` | 7,128 | art |  | **use directly** — 11 sprites |
 | `telep.io` | 2,016 | unknown |  | not classified |
 | `temple.io` | 49,872 | art |  | **use directly** — 14 sprites |
@@ -839,21 +840,30 @@ bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
 | `textind.io` | 11,568 | text |  | **use directly** — strings (10) |
 | `textine.io` | 11,480 | text |  | **use directly** — strings (10) |
 | `textini.io` | 11,472 | text |  | **use directly** — strings (10) |
-| `theend.io` | 11,816 | unknown |  | not classified |
+| `theend.io` | 142,888 | unknown | layout unread, and the only asset with no palette record (3.19, T47) | not classified |
 | `village.io` | 24,584 | art |  | **use directly** — 21 sprites |
-| `ville.io` | 35,176 | art |  | **use directly** — 33 sprites |
+| `ville.io` | 100,712 | art | town | **use directly** — 55 sprites |
 | `wardog.io` | 10,384 | art |  | **use directly** — 12 sprites |
 | `wiz1.io` | 9,816 | art |  | **use directly** — 13 sprites |
 | `zombi.io` | 11,272 | art |  | **use directly** — 21 sprites |
 
 **Two honest caveats.** "Art" means a sprite chain was found and rendered, and only
-`logo.io` (8bpp) and `buste.io` (4bpp) have been compared pixel-for-pixel against the
-running game -- the other 53 are decoded by the same verified code path but not individually
-checked. And "unclassified" is not "empty": `monstre.io`, `telep.io` and `dead.io` are known
-to be script (3.16) but have no entry set yet, so nothing in them can be read.
+`logo.io` (8bpp), `buste.io` (4bpp) and `dead.io` (a whole page) have been compared
+pixel-for-pixel against the running game -- the other 53 are decoded by the same verified
+code path but not individually checked. And "unclassified" is not "empty": `monstre.io` and
+`telep.io` are known to be script (3.16) but have no entry set yet, so nothing in them can
+be read.
+
+**Nine sizes in this table changed** when the header's size field turned out to be 24 bits
+rather than 16 (FORMATS 3.0). The old figures were what a truncated `u16` produced, and they
+are what made `dead.io` look "too small for the demon frame" and `intmais.io` look like a
+33 KB file with two sprites in it. The corrected reading adds ~470 KB of decoded content and
+124 sprites.
 
 **Evidence:** sprite counts from the re-extracted `captures/assets/`; entry sets from
-`.ish/t37f-entries.json`; text and name-table identification from section 10.
+`.ish/t37f-entries.json`; text and name-table identification from section 10; the nine
+corrected sizes from FORMATS 3.0, one of them (`dead.io`) checked byte-for-byte against
+live VRAM.
 
 ### 6.10 The scripts can compute: the VM has a full operator set (T46)
 
@@ -876,6 +886,44 @@ them is now possible: `tools/vmi.py --listing` renders expressions infix.
 **Evidence:** each operator classified by the arithmetic instruction it applies, the six
 comparisons by their conditional jump (`jz`, `jnz`, `jle`, `jge`, `jl`, `jg`, in opcode
 order); FORMATS 6.1b carries the full 112-row table.
+
+### 4.20 The death screen is a file, and eight other assets were being truncated
+
+Chasing which script draws the demon frame ended somewhere else entirely: **no script
+draws it.** `dead.io` *is* the picture — a 320x200 page of palette indices copied to
+`0xA0000` behind a short script and its palette (FORMATS 3.18).
+
+It did not look that way because the decoder was reading a 24-bit size field as 16 bits
+(FORMATS 3.0), so `dead.io` decoded as the first 448 bytes of a 65,984-byte asset. The
+same truncation hit **nine assets** — every one over 64 KB:
+
+| what changed | before | after |
+|---|---|---|
+| decoded content across the corpus | — | **+470 KB** |
+| `mcave.io` sprites | 4 | 45 |
+| `intmais.io` sprites | 2 | 31 (89% of the file accounted for) |
+| `ville.io` sprites | 33 | 55 |
+| `presen.io` sprites | 4 | 7 |
+| assets whose declared size >= their file size | 93 / 106 | **106 / 106** |
+
+The evidence that something was wrong had been sitting in FORMATS 3.0 since it was
+written: thirteen assets declared a decompressed size *smaller than their own compressed
+file*. That was recorded as a curiosity and rounded off.
+
+**Two things this settles.** The party-wipe screen (4.17) needs no `dead.io` entry set to
+reproduce — it is one page and one palette, ready to use. And "`dead.io` is 448 bytes, too
+small for the demon frame" (FORMATS 3.16) was a correct argument from a broken premise: the
+reasoning was fine, the number came from our own bug.
+
+**What it does not settle.** `theend.io` (142,888) and `iboishar.io` (132,728) are still
+unreadable — no sprite chain, no page that renders, and `theend.io` has no palette record
+at all. 275 KB, the largest unexplained region in the corpus (T47).
+
+**Evidence:** `dead.io`'s 64,000 bytes compared against the emulator's framebuffer at
+`0xA0000` with the demon frame on screen -- **64,000 / 64,000 identical**; the 24-bit width
+confirmed independently by the chunked decoder at `seg_0000:79a5` (`asset_decode_chunked`)
+and by running the LZ bit stream to exhaustion on all 97 LZ assets, where the `u24` size
+predicts the end for 97 and the `u16` for 88.
 
 ## 5. Known defects (ours and the game's)
 
