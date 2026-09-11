@@ -1650,10 +1650,41 @@ during a panel redraw. Nor does any byte offset in the `0x46` records of `frise.
 declarations, now reachable), `buste.io` (29) or `main.io` (8).
 
 So `draw_pos_from_entity` serves those two rectangle entities, and the panel's sprites get
-their position from one of the **other** writers of `ss:[0c2c]`/`[0c2e]` -- the clamped
-setters at `seg_0000:469d`/`46b6`, or the pair at `4768`-`4772` -- fed from a different
-structure. Which of them runs during a panel draw is the open question, and the call-count
-diff can answer it without a breakpoint.
+their position elsewhere. **T40e traced that path:**
+
+*Which routines run.* A call-count diff of an ACTION-menu draw against an equal idle window
+(no breakpoint, so the draw actually happens) moves exactly three functions in this region,
+all with **0** idle calls: `seg_0000:4535` (**306** calls, containing the clamped writer at
+`469a`), `seg_0000:4723` (**153**, containing the unclamped pair at `4768`) and
+`seg_0000:4170` (**153**, containing the bounding-box reset at `4179`).
+
+*Where their operand comes from.* Both writers take **`DI` as an input** -- they read
+`[di+0ch]`, `[di+0eh]`, `[di+10h]` in their first instructions and never set `DI`
+themselves. The caller at `seg_0000:3f83` supplies it:
+
+```
+mov di, es:[bx+2]     ; the pointer stored at entity+2
+```
+
+and `es:[bx+2]` is exactly where `vm_op_declare_entity` writes a pointer. So the chain is:
+
+**script declaration -> entity structure (at `ss:[0bf6]` + id) -> pointer at +2 -> an
+instance -> `+0x0c`/`+0x0e` are the X and Y the blitter uses.**
+
+*Where the instances live.* The `0x46` handler allocates them from a free list: `lds di,
+ss:[0be8]` / `add di, ss:[0bec]` / `mov ax,[di+4]` / `mov ss:[0bec], ax`. Read live, the
+pool is at `1848:0000` with the free head around `0x0b70`, so ~2.9 KB of instances are in
+use during play.
+
+**So panel layout is runtime state, not a constant in the file.** A rewrite cannot read the
+portrait's (0,147) straight out of an asset; it has to model the entity/instance structures
+and whatever initialises their position. That is a sharper answer than 3.17's earlier
+"layout is data" -- the *record* is data, but the *drawn position* is a field of a
+runtime instance.
+
+**Not established:** the instance's own layout. One pool scan put matching `(x,y)` pairs 38
+bytes apart, suggesting 38-byte instances, but a second run found no matches at all -- the
+pool shifts between redraws -- so the stride is not claimed.
 
 **Verified by:** the instruction sequence above read from `ishar-listing.txt`; the three
 constants read live from a running game; the x=0,y=147 sample matching 3.13b's

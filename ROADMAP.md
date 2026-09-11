@@ -2126,7 +2126,7 @@ Compose rewrite has to do.
       positioned by one of the **other** writers of `ss:[0c2c]`/`[0c2e]` — `seg_0000:469d`/
       `46b6` (clamped) or `4768`-`4772`. See T40e.*
 
-- [ ] **T40e · Which writer positions the panel sprites?**
+- [~] **T40e · Which writer positions the panel sprites?**
       T40d ruled out entity records: the entity block at `126b:02a0` holds only `main.io`'s
       two rectangle entities and nothing matching a panel position (FORMATS 3.17). The
       panel's coordinates therefore come from one of the other writers of `ss:[0c2c]`/
@@ -2138,3 +2138,29 @@ Compose rewrite has to do.
       DI points at when that writer runs, by polling rather than breaking.*
       **Done when:** FORMATS names the structure the panel's X/Y come from, and a polled
       position is predicted from it.
+      *Structure named, prediction not achieved (FORMATS 3.17). The call-count diff moves
+      exactly three functions on a menu draw, all 0 idle: `seg_0000:4535` (306 calls, holds
+      the clamped writer), `4723` (153, the unclamped pair) and `4170` (153, the bbox reset).
+      Both writers take **DI as an input**, and the caller at `seg_0000:3f83` sets it with
+      `mov di, es:[bx+2]` — the pointer `vm_op_declare_entity` stores at entity+2. So the
+      chain is **declaration -> entity (at `ss:[0bf6]`+id) -> pointer at +2 -> instance ->
+      `+0x0c`/`+0x0e` = X,Y**, with instances allocated from a free list at `ss:[0be8]`
+      (live: `1848:0000`, ~2.9KB in use).
+      **So panel layout is runtime state, not a constant in the file** — sharper than 3.17's
+      earlier "layout is data": the record is data, the drawn position is an instance field.
+      Not achieved: predicting a position from the instance. One pool scan put matching (x,y)
+      pairs 38 bytes apart; a second found none, as the pool shifts between redraws. See
+      T40f.*
+
+- [ ] **T40f · The instance structure's layout**
+      T40e established that a sprite's X,Y are fields `+0x0c`/`+0x0e` of a runtime instance,
+      reached from an entity's pointer at +2, allocated from the pool at `ss:[0be8]`
+      (FORMATS 3.17). What the instance looks like — its size, and what else it carries — is
+      unknown; one scan suggested 38-byte spacing and a second did not reproduce it.
+      *Method: do not scan the pool blind. Take a single entity whose id is known from a
+      `0x46` declaration, read its structure at `ss:[0bf6]`+id, follow the pointer at +2 to
+      one instance, and dump that instance repeatedly while the panel redraws. Watching which
+      of its bytes change identifies the live fields, and `+0x0c`/`+0x0e` should track a
+      position the `ss:[0c2c]` poll sees at the same moment.*
+      **Done when:** FORMATS gives the instance's size and names at least its position
+      fields, with one instance's X,Y matching a simultaneously polled draw position.
