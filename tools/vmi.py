@@ -18,7 +18,7 @@ Everything here is read out of the image and the listing; nothing is hand-entere
     tools/vmi.py <asset> --from N [--count N]     step and print
     tools/vmi.py --selftest                       widths and table sanity
 """
-import os, re, struct, sys
+import json, os, re, struct, sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
@@ -343,7 +343,15 @@ def main():
         args = [a for a in sys.argv[1:] if not a.startswith("--")]
         src = args[0] if args else "main.io"
         d = decode(open(os.path.join(GAME, src), "rb").read())[0]
-        ent = MAIN_ENTRIES if src == "main.io" else (24,)
+        # Entry sets discovered by tools/t37f-poll.py (T37f), so --listing works on any
+        # asset that has been observed executing, not just main.io.
+        ent = MAIN_ENTRIES
+        if src != "main.io":
+            try:
+                found = json.load(open(os.path.join(HERE, ".ish", "t37f-entries.json")))
+                ent = tuple(found[src]["entries"])
+            except Exception:
+                ent = (24,)
         for ln in listing(d, ent):
             print(ln)
         return

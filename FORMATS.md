@@ -2364,6 +2364,42 @@ not yet found.
 `tools/ioscan.py` carries this as an explicit `INDEX_SHIFT` exception so the extraction is
 usable while the reason stays open. **It should not be read as understood.**
 
+## 7.8 What the small logic scripts do, and what `encont.io` is not
+
+With entry sets in hand (7.7) the small scripts disassemble. `tools/vmi.py <asset> --listing`
+now reads the entry set for any asset that has been observed executing.
+
+**They share a template.** `encont.io` and `affobj.io` both begin with **47 bytes that are
+never reached**, then the same opening: `32 02 00` (`vm_op_jump_rel16`), a `00`, then
+`08 fa` (`vm_op_jump_byte`) branching back, then a `0a 01 00` jump forward. Byte for byte
+the same shape in two unrelated files, so the first ~50 bytes are a header plus a standard
+entry stub rather than content.
+
+**They are logic, not loaders.** Opcode profiles over the reachable statements:
+
+| | statements | `0x45` load_asset | `0x29` block_init | top opcodes |
+|---|---|---|---|---|
+| `main.io` | 5,433 | **115** | **118** | `00`, `42`, `3a`, `14`, `08` |
+| `encont.io` | 618 | **0** | 0 | `00`, `1e` eval_reset, `14` jump_if_zero, `3a` |
+| `affobj.io` | 397 | **0** | 0 | `14` jump_if_zero, `00`, `1e`, `3a` |
+| `dplt.io` | 1,084 | **0** | 0 | `00`, `3a`, `1e`, `12` |
+
+`main.io` is the only one that loads assets or initialises blocks -- it is the program that
+sets the game up. The others are dominated by conditional branching (`0x14`) and expression
+evaluation (`0x1e`, `0x1f`), which is the shape of decision logic operating on engine state.
+
+**`encont.io` is undocumented, and its name is a guess.** It has no section in this file and
+never has; it appears only in lists. The reading "*encontre* = encounter" is a **pun on the
+filename**, not a finding, and nothing in its disassembly supports it yet: no asset loads,
+no distinctive constants, and a statement mix nearly identical to `dplt.io`'s. What is
+established is only: 2,008 bytes, loaded during engine setup (FINDINGS 4.10), script rather
+than a table (3.16), 1,376 bytes reachable from entries `[47, 91, 116, 155, 291, 451, 805]`.
+
+**A correction this produced.** Opcode `0x15` was named `vm_op_attack_swing` in T29f after it
+spiked to 7,805 calls during an attack. Static disassembly finds it **8 times inside
+`affobj.io`**, the object-display script. It is renamed `vm_op_15`: a call count that spikes
+during one action does not make the opcode that action's own.
+
 ## 8. `affobj.io`, byte by byte
 
 730 bytes on disk, 1432 after decoding. Asset **id 7**. The name reads as *affichage

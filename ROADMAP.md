@@ -2190,3 +2190,17 @@ Compose rewrite has to do.
       Not met: matching a polled draw position. Instance X/Y run x 9..272, y 6..94 — the
       **viewport** — and none coincides with a panel-redraw position. So instances carry
       viewport object positions and the panel chrome is placed by another mechanism again.*
+
+- [ ] **T44 · What is `encont.io`?**
+      It has never had a section in FORMATS, and the "*encontre* = encounter" reading that
+      has been leaned on in planning is a pun on the filename, not a finding (FORMATS 7.8).
+      Established: 2,008 bytes, loaded during engine setup, script not a table, 1,376 bytes
+      reachable from `[47, 91, 116, 155, 291, 451, 805]`, no asset loads, and a statement mix
+      nearly identical to `dplt.io`'s.
+      *Method: it is now disassemblable, so read it rather than guess. Two angles — decode
+      the expression operands so the engine variables it tests and writes are visible, which
+      is what its `0x14`/`0x1e`/`0x1f` mix is doing; and use `tools/t29c-action.py` to find
+      which game action makes its statements run, the way `ui_click_dispatch` and
+      `map_decompress_inner` were attributed.*
+      **Done when:** FORMATS says what `encont.io` governs, with the evidence being executed
+      statements or an attributed action — not the filename.

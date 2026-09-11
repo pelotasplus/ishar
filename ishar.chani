@@ -1629,12 +1629,16 @@ attr[seg_0000:4b8f]: type = code; name = vm_op_consequence_event; comment = [[[
     vs idle (T29f). Not seen in any other action measured: menu draw, MAP, portrait select
     or a click on empty ground.
 ]]]
-attr[seg_0000:28a9]: type = code; name = vm_op_attack_swing; comment = [[[
+attr[seg_0000:28a9]: type = code; name = vm_op_15; comment = [[[
     Opcode 0x15. **7,805 calls** in the window where ATTACK is clicked with a target in
     front, against zero idle -- by far the largest mover of any action measured. It also
     appears at 903 calls in a plain idle-vs-idle baseline elsewhere, so it is not
     combat-exclusive; the attack drives it roughly nine times harder. Attributed by
     call-count diff (T29f).
+    **Renamed from vm_op_attack_swing**, which was over-specific: static disassembly finds
+    this opcode 8 times inside affobj.io, the object-display script, which has nothing to do
+    with attacking. A call count that spikes during one action does not make the opcode that
+    action's own.
 ]]]
 attr[seg_0e97:038b]: type = code; name = sprite_blit_ingame; comment = [[[
     **The in-game sprite blitter.** Fires 120 times when a character portrait is clicked
