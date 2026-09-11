@@ -483,9 +483,22 @@ instruction in `main.io` (section 7), across all 94 assets the script loads.
 
 #### How much of the assets is actually understood: 43.3%, and the shape matters more
 
-**Updated.** `main.io`'s script is now readable -- 12,399 of its 26,384 bytes are reached by
-traversal from its two entry points, with boundaries confirmed against live execution
-(7.2e) -- which takes the total from 673,966 to **686,365 of 1,583,646 bytes, 43.3%**.
+**Updated twice.** `main.io`'s script became readable first (12,399 of its 26,384 bytes,
+boundaries confirmed against live execution, 7.2e). Then T37f supplied entry-point sets for
+seven more assets, adding **58,453 bytes** of reachable script:
+
+| asset | reachable | of |
+|---|---|---|
+| `frise.io` | 36,967 | 53,808 |
+| `param.io` | 9,872 | 15,680 |
+| `geren.io` | 4,603 | 13,088 |
+| `samb.io` | 2,390 | 32,880 |
+| `dplt.io` | 2,372 | 3,376 |
+| `encont.io` | 1,352 | 2,008 |
+| `affobj.io` | 897 | 1,432 |
+
+Total: **744,818 of 1,583,646 bytes = 47.0%**, from 42.6% before any script was readable.
+`param.io`, `encont.io` and `affobj.io` were each at 0% beyond their header.
 
 The percentage moved by less than a point, and that is the honest picture: what changed
 this round is not how much is named but how much is *proven*.

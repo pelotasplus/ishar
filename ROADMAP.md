@@ -974,7 +974,7 @@ Compose rewrite has to do.
       name is a lead, not a conclusion.*
       **Done when:** FORMATS.md says what each of the seven holds, with the evidence.
 
-- [ ] **T33 · Find `affobj.io`'s entry point**
+- [x] **T33 · Find `affobj.io`'s entry point**
       `affobj.io` is VM bytecode (FORMATS.md 8.2) but no alignment can be chosen from the
       bytes: every start offset scores the same under `main.io`'s opcode profile, because
       219 of 231 byte values are valid opcodes. Twenty samples of the interpreter's program
@@ -988,6 +988,13 @@ Compose rewrite has to do.
       boundaries match program counters observed live, the same check that validated
       `main.io` (7.1).
 
+      *Answered by T37f, and by neither route proposed here. Polling `DS:SI` while filtering
+      to samples inside `vm_run` caught `affobj.io` executing, giving the entry set
+      **[51, 65, 165, 548]** — which covers 17/17 of its observed program counters and makes
+      **62.6% of the file** reachable script, from 0% beyond its header (FORMATS 7.7).
+      The premise here was also too pessimistic: "twenty samples all landed in main.io" was a
+      sampling limit, not a property of the asset. At ~3,550 samples/s with the `CS`/`IP`
+      filter, it turns up readily.*
 - [ ] **T34 · The two unidentified regions in a monster asset**
       `zombi.io` is 49% unaccounted for: 1,934 bytes before the sprite chain and 3,586 after
       (FORMATS.md 9.4). The tail's byte values are symmetric about zero -- `+1..+16` occurs
