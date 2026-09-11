@@ -1154,6 +1154,155 @@ container path (section 3), and executed in place.
 decoded `main.io`, with the asset id matching the catalogue id independently established
 in 3.5.
 
+### 6.1b The expression opcode table, all 112 (T46)
+
+Statements are only half the VM. The **expression** table at image `0x01f2` is byte-scaled --
+`sub ax,ax / lodsb / mov di,ax / jmp cs:[di+1f2h]` -- so its opcodes are even, and there are
+**112** of them across 111 distinct handlers. Until now none of their operands were rendered,
+so a script read as a list of statement names with hex after it.
+
+**Fifteen of them are the operator set, consecutive from `0x42` to `0x5e`.** Each calls the
+evaluator twice and combines the results, so none carries an inline operand:
+
+| | | | | |
+|---|---|---|---|---|
+| `0x42` **&** | `0x44` **\|** | `0x46` **^** | `0x48` **^~** (xor then not) | `0x4a` **==** |
+| `0x4c` **!=** | `0x4e` **<=** | `0x50` **>=** | `0x52` **<** | `0x54` **>** |
+| `0x56` **+** | `0x58` **-** | `0x5a` **/** | `0x5c` **%** | `0x5e` **\*** |
+
+The six comparisons are distinguished by their conditional jump (`jz`, `jnz`, `jle`, `jge`,
+`jl`, `jg` in that order), and the two division opcodes differ only in whether they keep the
+quotient or the remainder. All fifteen are named in `ishar.chani`.
+
+**The rest load values.** By inline-operand shape: 38 take nothing, 19 a word, 14 a byte, 16
+nest another expression, and the remainder take pairs (`wb`, `ww`, `bb`, `wwb`). The named
+loaders are `vm_op_load_imm8` (`0x00`), `vm_op_load_imm16` (`0x02`),
+`vm_op_load_byte_var_w` (`0x06`), `vm_op_load_word_var_w` (`0x08`), `vm_op_load_far`
+(`0x0a`), `vm_op_load_byte_idx_w` (`0x0e`), `vm_op_load_byte_var_b` (`0x12`) and
+`vm_op_load_word_var_b` (`0x14`).
+
+`tools/vmi.py --listing` now renders expressions infix, so a statement reads as
+`vm_stmt_eval e38[wordvar[48]]` rather than as raw bytes.
+
+| opcode | handler | name | inline operands | nests | operator |
+|---|---|---|---|---|---|
+| `0x00` | `seg_0000:69c7` | vm_op_load_imm8 | b | — |  |
+| `0x02` | `seg_0000:69cc` | vm_op_load_imm16 | w | — |  |
+| `0x04` | `seg_0000:69d0` | — | b | — |  |
+| `0x06` | `seg_0000:69e3` | vm_op_load_byte_var_w | w | — |  |
+| `0x08` | `seg_0000:69ed` | vm_op_load_word_var_w | w | — |  |
+| `0x0a` | `seg_0000:69f4` | vm_op_load_far | wb | — |  |
+| `0x0c` | `seg_0000:6a2d` | — | wb | — |  |
+| `0x0e` | `seg_0000:6a16` | vm_op_load_byte_idx_w | w | — |  |
+| `0x10` | `seg_0000:6a23` | — | w | — |  |
+| `0x12` | `seg_0000:6a52` | vm_op_load_byte_var_b | b | — |  |
+| `0x14` | `seg_0000:6a5e` | vm_op_load_word_var_b | b | — |  |
+| `0x16` | `seg_0000:6a67` | — | bb | — |  |
+| `0x18` | `seg_0000:6aa6` | — | bb | — |  |
+| `0x1a` | `seg_0000:6a8b` | vm_op_load_byte_idx_b | b | — |  |
+| `0x1c` | `seg_0000:6a9a` | vm_op_load_word_idx_b | b | — |  |
+| `0x1e` | `seg_0000:6acd` | vm_op_load_byte_global | w | — |  |
+| `0x20` | `seg_0000:6adc` | — | w | — |  |
+| `0x22` | `seg_0000:6ae8` | — | wb | — |  |
+| `0x24` | `seg_0000:6b32` | — | wb | — |  |
+| `0x26` | `seg_0000:6b0b` | — | w | — |  |
+| `0x28` | `seg_0000:6b20` | — | w | — |  |
+| `0x2a` | `seg_0000:6b5c` | — | ww | — |  |
+| `0x2c` | `seg_0000:6b74` | — | ww | — |  |
+| `0x2e` | `seg_0000:6b89` | — | wwb | — |  |
+| `0x30` | `seg_0000:6bf6` | — | wwb | — |  |
+| `0x32` | `seg_0000:6bb7` | — | ww | — |  |
+| `0x34` | `seg_0000:6bd8` | — | ww | — |  |
+| `0x36` | `seg_0000:7147` | — | — | — |  |
+| `0x38` | `seg_0000:7150` | — | — | yes |  |
+| `0x3a` | `seg_0000:7156` | — | — | — |  |
+| `0x40` | `seg_0000:7140` | — | — | — |  |
+| `0x42` | `seg_0000:6cc5` | expr_and | — | yes | **&** |
+| `0x44` | `seg_0000:6ccb` | expr_or | — | yes | **|** |
+| `0x46` | `seg_0000:6cd1` | expr_xor | — | yes | **^** |
+| `0x48` | `seg_0000:6cd7` | expr_xnor | — | yes | **^~** |
+| `0x4a` | `seg_0000:6cdf` | expr_eq | — | yes | **==** |
+| `0x4c` | `seg_0000:6ced` | expr_ne | — | yes | **!=** |
+| `0x4e` | `seg_0000:6cfb` | expr_le | — | yes | **<=** |
+| `0x50` | `seg_0000:6d09` | expr_ge | — | yes | **>=** |
+| `0x52` | `seg_0000:6d17` | expr_lt | — | yes | **<** |
+| `0x54` | `seg_0000:6d25` | expr_gt | — | yes | **>** |
+| `0x56` | `seg_0000:6d33` | expr_add | — | yes | **+** |
+| `0x58` | `seg_0000:6d39` | expr_sub | — | yes | **-** |
+| `0x5a` | `seg_0000:6d41` | expr_div | — | yes | **/** |
+| `0x5c` | `seg_0000:6d53` | expr_mod | — | yes | **%** |
+| `0x5e` | `seg_0000:6d67` | expr_mul | — | yes | ***** |
+| `0x60` | `seg_0000:6d71` | — | — | — |  |
+| `0x62` | `seg_0000:6d74` | — | — | — |  |
+| `0x64` | `seg_0000:6d7b` | — | — | — |  |
+| `0x66` | `seg_0000:6d94` | — | — | — |  |
+| `0x68` | `seg_0000:6da2` | — | — | — |  |
+| `0x6a` | `seg_0000:6db4` | — | — | — |  |
+| `0x6c` | `seg_0000:6dc7` | — | — | — |  |
+| `0x6e` | `seg_0000:6dd6` | — | — | — |  |
+| `0x70` | `seg_0000:6de2` | — | — | — |  |
+| `0x72` | `seg_0000:5854` | — | — | — |  |
+| `0x74` | `seg_0000:6dc8` | — | — | — |  |
+| `0x76` | `seg_0000:6df4` | — | — | — |  |
+| `0x78` | `seg_0000:6df8` | — | — | — |  |
+| `0x7a` | `seg_0000:6dd0` | — | — | — |  |
+| `0x7c` | `seg_0000:6dfe` | — | — | — |  |
+| `0x7e` | `seg_0000:6e13` | — | bb | — |  |
+| `0x80` | `seg_0000:6e4f` | — | b | — |  |
+| `0x82` | `seg_0000:6e83` | — | b | — |  |
+| `0x84` | `seg_0000:6f2b` | — | — | — |  |
+| `0x86` | `seg_0000:6f38` | — | — | — |  |
+| `0x88` | `seg_0000:7108` | — | b | — |  |
+| `0x8a` | `seg_0000:70ae` | — | — | — |  |
+| `0x8c` | `seg_0000:70bd` | — | — | — |  |
+| `0x8e` | `seg_0000:70cc` | — | — | — |  |
+| `0x90` | `seg_0000:70db` | — | — | — |  |
+| `0x92` | `seg_0000:70ea` | — | — | — |  |
+| `0x94` | `seg_0000:70f9` | — | — | — |  |
+| `0x96` | `seg_0000:7093` | — | — | — |  |
+| `0x98` | `seg_0000:7097` | — | — | — |  |
+| `0x9a` | `seg_0000:6e9e` | — | — | — |  |
+| `0x9c` | `seg_0000:6f55` | — | — | — |  |
+| `0x9e` | `seg_0000:6f45` | — | — | — |  |
+| `0xa0` | `seg_0000:6f6d` | — | — | — |  |
+| `0xa2` | `seg_0000:6fde` | — | — | — |  |
+| `0xa4` | `seg_0000:6fe6` | — | — | — |  |
+| `0xa6` | `seg_0000:6dde` | — | — | — |  |
+| `0xa8` | `seg_0000:6fec` | — | — | — |  |
+| `0xb0` | `seg_0000:715a` | — | w | — |  |
+| `0xb2` | `seg_0000:7161` | — | w | — |  |
+| `0xb4` | `seg_0000:7168` | — | wb | — |  |
+| `0xb6` | `seg_0000:71a3` | — | wb | — |  |
+| `0xb8` | `seg_0000:7183` | — | w | — |  |
+| `0xba` | `seg_0000:7193` | — | w | — |  |
+| `0xbc` | `seg_0000:71c1` | — | b | — |  |
+| `0xbe` | `seg_0000:71ca` | — | b | — |  |
+| `0xc0` | `seg_0000:71d3` | — | bb | — |  |
+| `0xc2` | `seg_0000:7214` | — | bb | — |  |
+| `0xc4` | `seg_0000:71f0` | — | b | — |  |
+| `0xc6` | `seg_0000:7202` | — | b | — |  |
+| `0xc8` | `seg_0000:7234` | — | w | — |  |
+| `0xca` | `seg_0000:7240` | — | w | — |  |
+| `0xcc` | `seg_0000:724c` | — | wb | — |  |
+| `0xce` | `seg_0000:729c` | — | wb | — |  |
+| `0xd0` | `seg_0000:726c` | — | w | — |  |
+| `0xd2` | `seg_0000:7284` | — | w | — |  |
+| `0xd4` | `seg_0000:72c5` | — | ww | — |  |
+| `0xd6` | `seg_0000:72da` | — | ww | — |  |
+| `0xd8` | `seg_0000:72ef` | — | wwb | — |  |
+| `0xda` | `seg_0000:7360` | — | wwb | — |  |
+| `0xdc` | `seg_0000:7318` | — | ww | — |  |
+| `0xde` | `seg_0000:733c` | — | ww | — |  |
+| `0xe0` | `seg_0000:7393` | — | — | — |  |
+| `0xe2` | `seg_0000:739a` | — | b | — |  |
+| `0xe4` | `seg_0000:7156` | — | — | — |  |
+| `0xec` | `seg_0000:73b0` | — | w | — |  |
+| `0xee` | `seg_0000:73b7` | — | w | — |  |
+
+**Verified by:** the table read from the image; each handler walked from `ishar-listing.txt`
+to its `ret`; the operators classified by the arithmetic instruction they apply and the
+comparisons by their conditional jump.
+
 ### 7.2b The statement opcode table, all 231 (T39b)
 
 Opcode facts had been spread across `ishar.chani` (named handlers), section 6 (the four

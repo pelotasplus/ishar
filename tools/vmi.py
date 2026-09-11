@@ -120,6 +120,46 @@ INFO = {o: walk(a) for o, a in STMT.items()}
 EINFO = {o: walk(a) for o, a in EXPR.items()}
 
 
+# Expression opcodes 0x42..0x5e are the operator set: both operands are nested
+# expressions, so they carry no inline bytes of their own (T46, FORMATS 6.1).
+EXPR_OP = {0x42:"&", 0x44:"|", 0x46:"^", 0x48:"^~", 0x4a:"==", 0x4c:"!=", 0x4e:"<=",
+           0x50:">=", 0x52:"<", 0x54:">", 0x56:"+", 0x58:"-", 0x5a:"/", 0x5c:"%", 0x5e:"*"}
+EXPR_LOAD = {0x00:"imm8", 0x02:"imm16", 0x06:"bytevar", 0x08:"wordvar",
+             0x0a:"far", 0x0e:"byteidx", 0x12:"bytevar", 0x14:"wordvar"}
+
+
+def render_expr(d, pc, depth=0):
+    """(text, next offset) for one expression -- infix where the opcode is an operator."""
+    if depth > 6 or pc >= len(d):
+        return "?", pc
+    opc = d[pc]
+    if opc not in EINFO:
+        return f"?{opc:02x}", pc + 1
+    ops, nests, _ = EINFO[opc]
+    p = pc + 1
+    if opc in EXPR_OP:                       # binary: two nested operands
+        a, p = render_expr(d, p, depth + 1)
+        b, p = render_expr(d, p, depth + 1)
+        return f"({a} {EXPR_OP[opc]} {b})", p
+    inner = None
+    if nests:
+        inner, p = render_expr(d, p, depth + 1)
+    vals = []
+    for wdt in ops:
+        if wdt == "b":
+            vals.append(str(d[p])); p += 1
+        else:
+            vals.append(str(d[p] | (d[p + 1] << 8))); p += 2
+    kind = EXPR_LOAD.get(opc)
+    if kind == "imm8" or kind == "imm16":
+        return vals[0] if vals else "?", p
+    label = kind or f"e{opc:02x}"
+    args = ",".join(vals) if vals else ""
+    if inner is not None:
+        args = (inner + ("," + args if args else ""))
+    return f"{label}[{args}]", p
+
+
 def step_expr(d, pc, depth=0):
     """Length of one expression starting at pc."""
     if depth > 8 or pc >= len(d):
@@ -327,6 +367,13 @@ def listing(d, entries):
         nxt = step(d, pc)
         nm = NAME.get(STMT.get(opc, -1), f"op_{opc:02x}")
         raw = " ".join(f"{b:02x}" for b in d[pc:nxt if nxt else pc + 1][:8])
+        info = INFO.get(opc)
+        if info and info[1]:                  # statement embeds an expression
+            try:
+                txt, _ = render_expr(d, pc + 1)
+                nm = f"{nm} {txt}"[:60]
+            except Exception:
+                pass
         succ = successors(d, pc)
         flow = ""
         if succ and INFO.get(opc) and INFO[opc][2]:

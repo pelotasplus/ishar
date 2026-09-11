@@ -1699,4 +1699,94 @@ attr[seg_0000:325f]: type = code; name = vm_op_entity_clear_active; comment = [[
     entity id, the same id space vm_op_declare_entity uses.
     Used 8 times in affobj.io, the object-display script (FORMATS 8.0).
 ]]]
+attr[seg_0000:6cc5]: type = code; name = expr_and; comment = [[[
+    Expression opcode 0x42 of the byte-scaled table at 0x01f2: `and` -- bitwise/logical AND of two sub-expressions.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6ccb]: type = code; name = expr_or; comment = [[[
+    Expression opcode 0x44 of the byte-scaled table at 0x01f2: `or`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6cd1]: type = code; name = expr_xor; comment = [[[
+    Expression opcode 0x46 of the byte-scaled table at 0x01f2: `xor`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6cd7]: type = code; name = expr_xnor; comment = [[[
+    Expression opcode 0x48 of the byte-scaled table at 0x01f2: `xor` then `not` -- equivalence.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6cdf]: type = code; name = expr_eq; comment = [[[
+    Expression opcode 0x4a of the byte-scaled table at 0x01f2: `cmp` + `jz` -- equal.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6ced]: type = code; name = expr_ne; comment = [[[
+    Expression opcode 0x4c of the byte-scaled table at 0x01f2: `cmp` + `jnz` -- not equal.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6cfb]: type = code; name = expr_le; comment = [[[
+    Expression opcode 0x4e of the byte-scaled table at 0x01f2: `cmp` + `jle`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d09]: type = code; name = expr_ge; comment = [[[
+    Expression opcode 0x50 of the byte-scaled table at 0x01f2: `cmp` + `jge`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d17]: type = code; name = expr_lt; comment = [[[
+    Expression opcode 0x52 of the byte-scaled table at 0x01f2: `cmp` + `jl`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d25]: type = code; name = expr_gt; comment = [[[
+    Expression opcode 0x54 of the byte-scaled table at 0x01f2: `cmp` + `jg`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d33]: type = code; name = expr_add; comment = [[[
+    Expression opcode 0x56 of the byte-scaled table at 0x01f2: `add`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d39]: type = code; name = expr_sub; comment = [[[
+    Expression opcode 0x58 of the byte-scaled table at 0x01f2: `sub`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d41]: type = code; name = expr_div; comment = [[[
+    Expression opcode 0x5a of the byte-scaled table at 0x01f2: `idiv` -- quotient.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d53]: type = code; name = expr_mod; comment = [[[
+    Expression opcode 0x5c of the byte-scaled table at 0x01f2: `idiv` -- remainder.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
+attr[seg_0000:6d67]: type = code; name = expr_mul; comment = [[[
+    Expression opcode 0x5e of the byte-scaled table at 0x01f2: `imul`.
+    Both operands are nested expressions -- the handler calls the evaluator twice --
+    so it takes no inline operand of its own. One of the fifteen operators occupying
+    0x42..0x5e consecutively (FORMATS 6.1).
+]]]
 end

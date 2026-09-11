@@ -2216,3 +2216,27 @@ Compose rewrite has to do.
       out by inspection.*
       **Done when:** FORMATS names both conditions, or states which engine variables they
       test if the meaning is still unclear.
+
+- [x] **T46 · Decode the expression table**
+      `tools/vmi.py --listing` prints statement names but leaves every operand as raw bytes,
+      so a script reads as "jump_if_zero, eval, jump_if_zero" with no sight of what is being
+      tested. FORMATS 7.2b tabulated all 231 **statement** opcodes; the **expression** table
+      at `0x01f2` — 112 even opcodes, byte-scaled — has never had the same treatment, and it
+      is what T44 and T45 both need.
+      *Method: the same one that worked for statements, and it is offline. Walk each handler
+      from `ishar-listing.txt`, take operand widths from its own `lodsb`/`lodsw`, and note
+      what it writes. Cross-check against the two already known: `0x00` at `seg_0000:69c7` is
+      `lodsb / cbw / mov dx,ax`, a sign-extended byte immediate, and the dispatcher at
+      `69ab` is `sub ax,ax / lodsb / mov di,ax / jmp cs:[di+1f2h]`, byte-scaled so opcodes
+      are even.*
+      **Done when:** FORMATS carries the full expression-opcode table, and `vmi.py --listing`
+      renders at least immediates and variable references as text rather than hex.
+      *Met (FORMATS 6.1b). All **112** expression opcodes tabulated, and the find is that
+      **fifteen of them are the operator set, consecutive from 0x42 to 0x5e**: `&`, `|`, `^`,
+      `^~`, `==`, `!=`, `<=`, `>=`, `<`, `>`, `+`, `-`, `/`, `%`, `*`. The six comparisons are
+      told apart by their conditional jump (`jz`, `jnz`, `jle`, `jge`, `jl`, `jg`, in order)
+      and the two divisions by quotient vs remainder. All fifteen named in `ishar.chani`.
+      The rest load values — 38 take no inline operand, 19 a word, 14 a byte, 16 nest another
+      expression, the remainder take pairs.
+      `vmi.py --listing` now renders expressions infix: a statement reads
+      `vm_stmt_eval e38[wordvar[48]]` instead of hex.*
