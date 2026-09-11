@@ -21,10 +21,15 @@ GRID = open(os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com",
                         "cont1.fic"), "rb").read()
 ROW = 0x644c
 DIRS = {"Up": (1, 0), "Down": (-1, 0), "Right": (0, 1), "Left": (0, -1)}
-BLOCK = {0xCD, 0xCC, 0xCE, 0xE6}
+# Everything at or above 0x40 is area terrain or a building and has never been walked
+# on; 0x0a is the one low value observed to refuse a move (FINDINGS 6.7b). Blocked cells
+# learned at runtime are added on top of this.
+def blocked(v):
+    return v >= 0x40 or v == 0x0a
 
 def cell(r, c):
     return GRID[r * 90 + c] if 0 <= r < 54 and 0 <= c < 90 else 0xCD
+
 
 def route(a, b, bad):
     prev = {a: None}
@@ -38,7 +43,7 @@ def route(a, b, bad):
             return out[::-1]
         for k, (dr, dc) in DIRS.items():
             n = (p[0] + dr, p[1] + dc)
-            if n in prev or n in bad or cell(*n) in BLOCK:
+            if n in prev or n in bad or blocked(cell(*n)):
                 continue
             prev[n] = (p, k); q.append(n)
     return None

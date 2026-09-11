@@ -684,14 +684,18 @@ whole of the game's non-combat interaction:
 | **GIVE ITEM**, **GIVE MONEY** | transfers, so NPCs take payment |
 | **KILL**, **DISMISS**, **RECRUIT** | party management -- the party is assembled from NPCs met in the world, and disbanded the same way |
 | **PICK LOCK** | a skill check on doors or containers |
-| **ORIENTATION** | the party has a facing that the arrow keys do not change (6.7b), and this is what sets it |
+| **ORIENTATION** | **a navigation readout, not a facing control.** It reports the region lying in the direction the party faces -- at `(17,53)` in ANGARAHN it answers `E : LOTHARIA` (`captures/t11g3g-orient.png`). One line, one direction, so there *is* a facing; this verb reads it out rather than setting it, and how facing is set is still unknown |
 | **FIRST AID** | healing outside magic |
 | **MAP** | the player-facing map, which is `map.io` (FORMATS 3.12) |
 | **EXIT** | closes the menu |
 
-`RECRUIT` and `DISMISS` are the mechanical answer to how a party of five is built, and
-`ORIENTATION` is the missing half of the movement model: movement is absolute N/S/E/W, and
-facing is set explicitly by a verb rather than by turning.
+`RECRUIT` and `DISMISS` are the mechanical answer to how a party of five is built.
+
+**The verbs are modal, and that matters for an input model.** Selecting `PICK LOCK` arms
+it -- the pointer becomes a lockpick -- and until it is used or cancelled **the arrow keys
+do not move the party**. The same two-step shape as ATTACK (4.17): choose the verb, then
+choose the target. A rewrite needs an explicit "pending verb" state, not a fire-and-forget
+menu.
 
 **`encont.io` is not the encounter trigger for anything the player does.** Polling
 `vm_run` while driving the game attributes execution to assets; across every window tried,
@@ -802,6 +806,37 @@ attributed samples, no `encont.io`).
 **Evidence:** the panel caption across two positions with `cont1.fic` verified resident and
 unchanged; the name run extracted from both assets' decoded bytes; the DGROUP diff between
 two cells in each region (`tools/t11g3e-region.py`); `tools/walkto.py`'s refusal log.
+
+### 4.19c Getting into a building: four ways that do not work
+
+The village in `cont1` at rows 14-19, columns 52-59 is a cluster of one- and two-cell
+values -- `0xEB`, `0xED`, `0xEF`, `0xF0`, `0xF2`, `0xF5`, `0xF6` -- each a building, all
+impassable. Standing at `(17,53)` puts a wooden double door on screen
+(`captures/t11g3g-door.png`). None of these opens it:
+
+| attempt | result |
+|---|---|
+| walk into the building cell | refused, the coordinate does not change |
+| click the door in the viewport | nothing; 4,323 attributed samples, no new script |
+| **ACTION -> PICK LOCK**, then click the door | the verb arms and fires, the door does not open; 2,212 samples, no new script |
+| the panel's four compass buttons | no movement at all |
+
+**And the party then cannot move in any direction.** After the PICK LOCK attempt, all four
+arrow keys and all four panel buttons are refused at `(17,53)` -- including the direction it
+walked in from. The ACTION menu still opens, so the game is responsive; the party is not.
+This has now happened twice at a village cell beside a building, and once it preceded the
+UI degrading (a portrait losing its frame). Whether it is a script gate, an un-cleared modal
+state, or something this harness does is **unresolved** -- and it is the reason T11g3g is
+parked rather than continued.
+
+What this does settle: entry is not a movement, not a viewport click, and not PICK LOCK
+alone. The remaining candidates are a verb applied while facing the right way (facing is
+readable via ORIENTATION but not yet settable), a key this project has not tried, or a
+precondition the party has not met -- the world is gated (6.7b) and the village may be
+behind that gate.
+
+**Evidence:** the four attempts above, each polled with `tools/t44-when.py`; the captures
+`t11g3g-door.png`, `t11g3g-picklock.png`, `t11g3g-picked.png`, `t11g3g-orient.png`.
 
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 

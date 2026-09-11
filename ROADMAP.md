@@ -2380,7 +2380,7 @@ Compose rewrite has to do.
       **Done when:** FINDINGS says what triggers a region change and which grid replaces
       which, with the second grid located in memory.
 
-- [ ] **T11g3f · What selects the region?**
+- [~] **T11g3f · What selects the region?**
       Twenty-one named regions live inside six grids and the panel caption tracks the party
       (FINDINGS 4.19b), but nothing yet says how a cell maps to a region. It is not the cell
       value: the party stands on `0x00` in both FRAGONIR and ANGARAHN. The name string lands
@@ -2391,8 +2391,21 @@ Compose rewrite has to do.
       writes it -- a region map alongside the grid, or a bounding box per region.*
       **Done when:** FINDINGS says how a `(grid, row, col)` maps to one of the 21 names, and
       a prediction made from it matches the caption at a cell not used to derive it.
+      *Half met (FINDINGS 4.19b, FORMATS 7.2g). **The region id is VM global byte `0x3EAC`**,
+      read at `es:[ss:[0bf6] + 0x3eac]` -- 0 FRAGONIR, 1 ANGARAHN, 2 OSGHIROD, indexing the
+      21 names. Found by decoding the caption's **switch**: statement `0x2f` turned out to be
+      a jump table (expression, case count, bias word, one signed displacement per case), and
+      its selector expression `1e ac 3e` is `vm_op_load_byte_global 0x3eac`, so the operand
+      names the variable outright. `tools/region.py` reads it and is immune to the scratch
+      buffer that fooled the caption-scraping version.
+      Not met: what **writes** `0x3eac` from the party's coordinates. It is not the cell value
+      -- the FRAGONIR/ANGARAHN boundary is between columns 45 and 46 at two different rows
+      with `0x00` on both sides. Mapping it by walking is impractical because the world is
+      gated: three attempts to leave the opening area each reset the party to its start cell.
+      Cheapest next lead: **ACTION -> ORIENTATION reports the region in the facing direction**
+      (`E : LOTHARIA` from ANGARAHN), so region adjacency can be read without walking there.*
 
-- [ ] **T11g3g · Get inside a building**
+- [!] **T11g3g · Get inside a building**
       Rare high cell values are individual buildings -- `0xF0` and `0xEB` at the village in
       `cont1` each put a wooden door on screen and refuse entry (FINDINGS 4.19b). Clicking
       the door does nothing and starts no script (4,323 samples). Entry is the last untried
@@ -2402,3 +2415,15 @@ Compose rewrite has to do.
       party may need to be facing the cell -- **ORIENTATION** is the verb that sets facing,
       and the arrow keys do not (4.17b). Poll `vm_run` throughout.*
       **Done when:** FINDINGS records how a building is entered, with the interior on screen.
+      *[!] Parked after four failed approaches (FINDINGS 4.19c): walking into the cell,
+      clicking the door, ACTION -> PICK LOCK then clicking the door, and the panel's compass
+      buttons. None opens it and none starts a script. Worse, **the party then cannot move in
+      any direction at `(17,53)`**, including the way it came, while the ACTION menu still
+      opens -- twice now, and once it preceded the UI degrading. Unresolved whether that is a
+      script gate, an un-cleared modal state, or this harness.
+      Two things learned on the way. **ACTION verbs are modal**: PICK LOCK arms the pointer
+      and blocks the arrow keys until used or cancelled, the same two-step as ATTACK -- a
+      rewrite needs a pending-verb state. And **ORIENTATION is a readout, not a control**: it
+      names the region in the facing direction, which corrects what 4.17b first said about it.
+      Next: restart clean, reach the village without any menu interaction, and try walking
+      into the door from each of the four sides before touching a verb.*
