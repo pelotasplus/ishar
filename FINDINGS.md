@@ -724,6 +724,137 @@ address is known.
 **Evidence:** the constant search across the executable and all 98 assets; three probe runs
 with a live control; T11p's earlier hit counts.
 
+### 4.19 Every asset, what it is, and whether a rewrite can use it
+
+The distinction that matters for a port is **not** how well a file is understood -- it is
+whether it holds *data you load* or *logic you reimplement*. `affobj.io` is well understood
+and **unusable**: it contains no data at all, only bytecode that toggles entity flags.
+
+| category | files | for a rewrite |
+|---|---|---|
+| **art** | 55 | **load directly** -- decoded byte-exactly, two verified against live VRAM |
+| **art + script** | 8 | art loads; the script half is logic |
+| **text** | 8 | **load directly** -- `message*` and `textin*`, four languages each |
+| **name tables** | 4 | **load directly** -- `sos*`, filenames the game resolves |
+| **script only** | 8 | **reimplement** -- no data in them |
+| **unclassified** | 15 | unknown |
+
+So **67 of 98 assets are usable today** (art, text, name tables), 16 carry logic, and 15 are
+still unidentified.
+
+The `.fic` files sit outside this: `cont1..6.fic` are **exactly 90x54** world grids (4,860
+bytes each) and load directly; `en1.fic` and `tab1.fic` are unexplained.
+
+| file | bytes | kind | what it is | for a remake |
+|---|---|---|---|---|
+| `affobj.io` | 1,432 | script | object-display logic — toggles entity visible flags (8.0) | reimplement — logic, no data |
+| `arbre.io` | 25,976 | art + script |  | **art usable** (15 sprites); logic to reimplement |
+| `auteur.io` | 448 | unknown | credits card | not classified |
+| `azal.io` | 18,368 | art |  | **use directly** — 5 sprites |
+| `barbare.io` | 17,792 | art |  | **use directly** — 27 sprites |
+| `blancpc.io` | 2,094 | unknown | blank/clear frame, the only stored-mode asset (3.11) | not classified |
+| `bormin.io` | 7,296 | art |  | **use directly** — 7 sprites |
+| `buste.io` | 46,064 | art | character portraits (3.13b, verified vs VRAM) | **use directly** — 33 sprites |
+| `colcave.io` | 28,200 | art |  | **use directly** — 14 sprites |
+| `darkm.io` | 10,544 | art |  | **use directly** — 18 sprites |
+| `darkwiz.io` | 9,240 | art |  | **use directly** — 9 sprites |
+| `dead.io` | 448 | unknown | death sequence script (448 b, too small for the demon frame) | not classified |
+| `dealer.io` | 12,352 | art |  | **use directly** — 19 sprites |
+| `dplt.io` | 3,376 | script |  | reimplement — logic, no data |
+| `dragon.io` | 16,296 | art |  | **use directly** — 13 sprites |
+| `dwarrior.io` | 13,448 | art |  | **use directly** — 16 sprites |
+| `en1.io` | 5,496 | art |  | **use directly** — 7 sprites |
+| `encont.io` | 2,008 | script |  | reimplement — logic, no data |
+| `fbuis.io` | 12,864 | art |  | **use directly** — 8 sprites |
+| `fcave.io` | 5,216 | unknown |  | not classified |
+| `fcave2.io` | 15,344 | unknown |  | not classified |
+| `fond.io` | 12,928 | art + script |  | **art usable** (5 sprites); logic to reimplement |
+| `fontaine.io` | 6,128 | art |  | **use directly** — 10 sprites |
+| `foret.io` | 57,728 | art |  | **use directly** — 33 sprites |
+| `fragorn.io` | 7,576 | art |  | **use directly** — 9 sprites |
+| `frise.io` | 53,808 | art + script | UI chrome — right panel, action bar, life bars (4.15) | **art usable** (14 sprites); logic to reimplement |
+| `ftemple.io` | 17,056 | art |  | **use directly** — 3 sprites |
+| `fville.io` | 4,800 | art |  | **use directly** — 2 sprites |
+| `gaz.io` | 3,192 | unknown |  | not classified |
+| `geant.io` | 16,856 | art |  | **use directly** — 22 sprites |
+| `gerdep.io` | 14,472 | script |  | reimplement — logic, no data |
+| `geren.io` | 13,088 | script | palette bank — 16 sub-palettes of 16 (3.9) | reimplement — logic, no data |
+| `goul.io` | 9,688 | art |  | **use directly** — 8 sprites |
+| `iboishar.io` | 1,656 | unknown |  | not classified |
+| `incave.io` | 15,752 | art |  | **use directly** — 12 sprites |
+| `intmais.io` | 14,120 | art |  | **use directly** — 2 sprites |
+| `inville.io` | 6,576 | art |  | **use directly** — 6 sprites |
+| `itaverne.io` | 44,160 | art |  | **use directly** — 9 sprites |
+| `kiriela.io` | 7,296 | art + script |  | **art usable** (9 sprites); logic to reimplement |
+| `knight.io` | 17,456 | art |  | **use directly** — 16 sprites |
+| `krog.io` | 32,584 | art |  | **use directly** — 18 sprites |
+| `lacustre.io` | 24,088 | art + script |  | **art usable** (22 sprites); logic to reimplement |
+| `logo.io` | 40,632 | art | Silmarils publisher logo (verified vs VRAM) | **use directly** — 4 sprites |
+| `loup.io` | 17,040 | art |  | **use directly** — 16 sprites |
+| `main.io` | 26,384 | art + script | the setup program — loads every asset (7) | **art usable** (1 sprites); logic to reimplement |
+| `map.io` | 21,368 | unknown |  | not classified |
+| `marchand.io` | 40,888 | art |  | **use directly** — 2 sprites |
+| `mcave.io` | 21,008 | art |  | **use directly** — 4 sprites |
+| `medus.io` | 15,536 | art |  | **use directly** — 13 sprites |
+| `message.io` | 8,712 | text |  | **use directly** — strings (10) |
+| `messaged.io` | 8,600 | text |  | **use directly** — strings (10) |
+| `messagee.io` | 8,416 | text |  | **use directly** — strings (10) |
+| `messagei.io` | 8,600 | text |  | **use directly** — strings (10) |
+| `minotor.io` | 20,864 | art |  | **use directly** — 32 sprites |
+| `momo.io` | 23,128 | art |  | **use directly** — 11 sprites |
+| `monstre.io` | 2,016 | unknown |  | not classified |
+| `morgu.io` | 7,520 | art |  | **use directly** — 8 sprites |
+| `naim.io` | 16,344 | art |  | **use directly** — 20 sprites |
+| `objet.io` | 35,536 | art |  | **use directly** — 15 sprites |
+| `objint.io` | 4,720 | art |  | **use directly** — 6 sprites |
+| `orc.io` | 15,328 | art |  | **use directly** — 18 sprites |
+| `pabo.io` | 9,752 | art |  | **use directly** — 7 sprites |
+| `param.io` | 15,680 | script |  | reimplement — logic, no data |
+| `pcave.io` | 5,384 | art |  | **use directly** — 4 sprites |
+| `plaine.io` | 32,488 | art + script |  | **art usable** (23 sprites); logic to reimplement |
+| `predator.io` | 14,352 | art |  | **use directly** — 9 sprites |
+| `presen.io` | 12,536 | art | Ishar title card | **use directly** — 4 sprites |
+| `preson.io` | 51,424 | unknown |  | not classified |
+| `presti.io` | 22,184 | art | title lettering, 4bpp dithered (3.14) | **use directly** — 9 sprites |
+| `rampart.io` | 28,008 | art |  | **use directly** — 24 sprites |
+| `rplaine.io` | 30,048 | art + script |  | **art usable** (17 sprites); logic to reimplement |
+| `samb.io` | 32,880 | script |  | reimplement — logic, no data |
+| `saub.io` | 46,024 | unknown |  | not classified |
+| `scave.io` | 26,664 | unknown |  | not classified |
+| `scomb.io` | 10,472 | unknown |  | not classified |
+| `skelet.io` | 8,424 | art |  | **use directly** — 11 sprites |
+| `sorcier.io` | 9,024 | art |  | **use directly** — 13 sprites |
+| `sos.io` | 4,064 | name table |  | **use directly** — filenames (10.1) |
+| `sosd.io` | 3,976 | name table |  | **use directly** — filenames (10.1) |
+| `sose.io` | 3,888 | name table |  | **use directly** — filenames (10.1) |
+| `sosi.io` | 3,976 | name table |  | **use directly** — filenames (10.1) |
+| `souris.io` | 3,856 | script | mouse cursor sprite | reimplement — logic, no data |
+| `spectre.io` | 9,968 | art |  | **use directly** — 10 sprites |
+| `spider.io` | 4,712 | art |  | **use directly** — 4 sprites |
+| `stage.io` | 7,432 | art |  | **use directly** — 2 sprites |
+| `stel.io` | 7,128 | art |  | **use directly** — 11 sprites |
+| `telep.io` | 2,016 | unknown |  | not classified |
+| `temple.io` | 49,872 | art |  | **use directly** — 14 sprites |
+| `textin.io` | 11,896 | text |  | **use directly** — strings (10) |
+| `textind.io` | 11,568 | text |  | **use directly** — strings (10) |
+| `textine.io` | 11,480 | text |  | **use directly** — strings (10) |
+| `textini.io` | 11,472 | text |  | **use directly** — strings (10) |
+| `theend.io` | 11,816 | unknown |  | not classified |
+| `village.io` | 24,584 | art |  | **use directly** — 21 sprites |
+| `ville.io` | 35,176 | art |  | **use directly** — 33 sprites |
+| `wardog.io` | 10,384 | art |  | **use directly** — 12 sprites |
+| `wiz1.io` | 9,816 | art |  | **use directly** — 13 sprites |
+| `zombi.io` | 11,272 | art |  | **use directly** — 21 sprites |
+
+**Two honest caveats.** "Art" means a sprite chain was found and rendered, and only
+`logo.io` (8bpp) and `buste.io` (4bpp) have been compared pixel-for-pixel against the
+running game -- the other 53 are decoded by the same verified code path but not individually
+checked. And "unclassified" is not "empty": `monstre.io`, `telep.io` and `dead.io` are known
+to be script (3.16) but have no entry set yet, so nothing in them can be read.
+
+**Evidence:** sprite counts from the re-extracted `captures/assets/`; entry sets from
+`.ish/t37f-entries.json`; text and name-table identification from section 10.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault
