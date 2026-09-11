@@ -497,8 +497,32 @@ seven more assets, adding **58,453 bytes** of reachable script:
 | `encont.io` | 1,352 | 2,008 |
 | `affobj.io` | 897 | 1,432 |
 
-Total: **744,818 of 1,583,646 bytes = 47.0%**, from 42.6% before any script was readable.
-`param.io`, `encont.io` and `affobj.io` were each at 0% beyond their header.
+Then a second poll during **varied** gameplay -- menus, the map, portrait clicks, walking,
+an attack -- reached assets a quiet walk never touches, taking the set to **15 assets with
+entry points** and **124,350 bytes** of readable script outside `main.io`:
+
+| asset | reachable | of | observed PCs covered |
+|---|---|---|---|
+| `frise.io` | 37,776 | 53,808 | 61/61 |
+| `plaine.io` | 20,096 | 32,488 | 26/35 |
+| `rplaine.io` | 18,998 | 30,048 | 24/27 |
+| `arbre.io` | 17,515 | 25,976 | 26/26 |
+| `lacustre.io` | 11,271 | 24,088 | 18/18 |
+| `geren.io` | 5,066 | 13,088 | 34/34 |
+| `gerdep.io` | 5,011 | 14,472 | 51/51 |
+| `samb.io` | 2,393 | 32,880 | 15/15 |
+| `dplt.io` | 2,385 | 3,376 | 28/28 |
+| `encont.io` | 1,376 | 2,008 | 13/13 |
+| `souris.io` | 1,296 | 3,856 | 24/24 |
+| `affobj.io` | 913 | 1,432 | 9/9 |
+
+Total: **810,715 of 1,583,646 bytes = 51.2%**, from 42.6% before any script was readable --
+past half the corpus. `param.io`, `encont.io` and `affobj.io` were each at 0% beyond their
+header when this started.
+
+The remaining shortfalls are visible and fixable rather than mysterious: `plaine.io` covers
+26 of 35 observed program counters and `rplaine.io` 24 of 27, so both need more entries,
+which means more varied play rather than a new technique.
 
 The percentage moved by less than a point, and that is the honest picture: what changed
 this round is not how much is named but how much is *proven*.

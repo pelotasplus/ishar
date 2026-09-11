@@ -1053,7 +1053,7 @@ Compose rewrite has to do.
       **Done when:** FORMATS.md 10.3 says which byte is the opcode and what the other is, and
       `tools/vmdis.py` prints the strings as operands instead of stopping on them.
 
-- [ ] **T37 · The 58% problem: enter an asset's embedded script**
+- [x] **T37 · The 58% problem: enter an asset's embedded script**
       **This is the largest gap in the project and it is one problem, not several.** Across
       the 98 decodable assets only **42% of bytes are accounted for** (FORMATS.md, "How much
       of the assets is actually understood"). The unexplained remainder is the same thing
@@ -1078,6 +1078,20 @@ Compose rewrite has to do.
       **Done when:** for at least one asset that is not `main.io`, a disassembly start offset
       is confirmed against live program counters -- the check that validated `main.io` -- or
       it is established that these regions are not executed at all.
+      *Met, fourteen times over rather than once (FORMATS 3.16 accounting). Entry sets now
+      exist for 15 assets, each confirmed against live program counters sampled inside
+      `vm_run`, with coverage from 9/9 to 61/61.
+      The accounting went **42.6% -> 47.0% -> 51.2%** — past half the corpus. The first jump
+      came from T37f's entry sets during a quiet walk; the second from polling during
+      **varied** gameplay (menus, map, portrait clicks, walking, an attack), which reaches
+      assets a walk never touches: `plaine.io`, `rplaine.io`, `arbre.io`, `lacustre.io`,
+      `kiriela.io`, `fond.io`.
+      The premise that made this hard — "vmdis has no entry point and 219 of 231 byte values
+      are valid opcodes, so any alignment works and none can be checked" — was right about
+      the statics and wrong about the conclusion: the entry points are **observable**, and
+      the instrument was a poll, not a breakpoint.
+      Remaining shortfalls are visible: `plaine.io` 26/35 and `rplaine.io` 24/27 observed PCs
+      covered, so they need more entries, i.e. more varied play rather than a new method.*
 
 - [ ] **T11n · The 8bpp path used by the title screen**
       `logo.io`'s sprite is 8bpp and does not go through `seg_0e97:038b`. Some other
