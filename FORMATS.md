@@ -2596,10 +2596,42 @@ So `affobj.io` **tests conditions and turns object entities on and off**: `0x40`
 entity's active bit, set when the script declares it and cleared by `0x4e` here. That is a
 behavioural statement rather than a reading of the filename, and it fits *affichage objet*.
 
+### 8.0b What the four blocks actually differ by (T45)
+
+With expressions rendered (6.1b) the four blocks can be read side by side. They are **not**
+four cases of a condition the script tests -- they are four variants that differ by **which
+optional statements they execute**, along two independent axes:
+
+| axis | variant A | variant B |
+|---|---|---|
+| 1 | `0x04` -- handler is `seg_0000:0022`, a bare **`ret`**: a no-op | `0x82` -- evaluates **two** expressions and discards them (side effects only) |
+| 2 | `0x52` -- sets the frame word `es:[bp-1ah]` to `0xffff` | `0x54` -- copies `es:[bp-3]` to `ss:[0c70]`, then two evaluated expressions into `ss:[0c6a]` and `ss:[0c6c]` |
+
+Blocks 1 and 3 take variant A on axis 1, blocks 2 and 4 take B; blocks 1 and 4 take A on
+axis 2, blocks 2 and 3 take B -- which is the `ABAB`/`AABB` split the byte diff showed.
+
+**What all four share** is the substance:
+
+- they read entity fields through statement `0x38`, whose handler evaluates three
+  expressions and then indexes `ss:[0bf6]` -- the **entity block base** (7.5). The rendered
+  operands are `e38[wordvar[44]]` and `wordvar[46]`, so variables **44** and **46** hold the
+  entity references this file works on;
+- they branch on those values;
+- they call **`vm_op_entity_clear_active`** (`0x4e`), clearing the `0x40` visible bit that
+  `vm_op_declare_entity` sets.
+
+So `affobj.io` reads two entity references out of engine variables 44 and 46, tests them,
+and switches object entities off -- with four variants differing only in whether an extra
+pair of expressions is evaluated and whether a frame flag or three engine words get set.
+
+**Not established:** the game-level meaning of the two axes. `ss:[0c6a]`/`[0c6c]` are the
+same words statement `0x40` zeroes before a lookup, which hints at a search parameter, but
+that is a lead rather than a finding.
+
 **Verified by:** the byte search for the block signature; the position-by-position diff of
-the four blocks; the opcode profile over statements reached from the entry set; and the
-`0x40` bit being set by opcode `0x46` and cleared by `0x4e` against the same
-`ss:[0bf6]`-based entity block.
+the four blocks; the opcode profile over statements reached from the entry set; the `0x40`
+bit being set by opcode `0x46` and cleared by `0x4e` against the same `ss:[0bf6]`-based
+entity block; and the four handlers above read from `ishar-listing.txt`.
 
 ### 8.1 The file on disk (730 bytes)
 

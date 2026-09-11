@@ -2205,7 +2205,7 @@ Compose rewrite has to do.
       **Done when:** FORMATS says what `encont.io` governs, with the evidence being executed
       statements or an attributed action — not the filename.
 
-- [ ] **T45 · What are `affobj.io`'s two conditions?**
+- [x] **T45 · What are `affobj.io`'s two conditions?**
       `affobj.io` is four near-identical ~126-byte handlers over a 2x2 matrix of two binary
       parameters (FORMATS 8.0). The 37 bytes that differ between blocks are operands to
       `0x14`/`0x1f`, so decoding expression operands would say what is being tested.
@@ -2216,6 +2216,17 @@ Compose rewrite has to do.
       out by inspection.*
       **Done when:** FORMATS names both conditions, or states which engine variables they
       test if the meaning is still unclear.
+      *Met on the second branch (FORMATS 8.0b). They are **not** conditions the script tests
+      — they are four variants differing by which optional statements run, on two axes:
+      `0x04` (a bare `ret`, no-op) vs `0x82` (evaluate two expressions for side effects); and
+      `0x52` (set frame word `es:[bp-1ah]` to `0xffff`) vs `0x54` (copy `es:[bp-3]` to
+      `ss:[0c70]`, then two expressions into `ss:[0c6a]`/`[0c6c]`). That reproduces the
+      ABAB/AABB split the byte diff found.
+      What all four share is the substance: read entity references from **engine variables 44
+      and 46** via statement `0x38` (whose handler indexes `ss:[0bf6]`, the entity block),
+      branch on them, and call `vm_op_entity_clear_active` to clear the `0x40` visible bit.
+      Game-level meaning of the two axes is still open; `ss:[0c6a]`/`[0c6c]` are the words
+      statement `0x40` zeroes before a lookup, which is a lead.*
 
 - [x] **T46 · Decode the expression table**
       `tools/vmi.py --listing` prints statement names but leaves every operand as raw bytes,
