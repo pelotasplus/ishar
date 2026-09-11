@@ -1682,9 +1682,36 @@ and whatever initialises their position. That is a sharper answer than 3.17's ea
 "layout is data" -- the *record* is data, but the *drawn position* is a field of a
 runtime instance.
 
-**Not established:** the instance's own layout. One pool scan put matching `(x,y)` pairs 38
-bytes apart, suggesting 38-byte instances, but a second run found no matches at all -- the
-pool shifts between redraws -- so the stride is not claimed.
+**The instance structure (T40f).** Following one entity rather than scanning the pool
+settles the layout. `main.io`'s first declaration carries operand **14**, so its entity sits
+at `ss:[0bf6] + 14` = `126b:02ae`, and the pointer at +2 is an offset **into the pool
+segment** (`lds di, ss:[0be8]` then `mov es:[bx+2], di`), not into the entity segment --
+reading it in the wrong segment yields x86 code and nonsense coordinates.
+
+| instance field | meaning |
+|---|---|
+| +0 | flags (the `or es:[bx],40h` bit) |
+| +1 | the declaration's byte operand |
+| **+4** | **next instance** -- `0x0074` -> `0x009a`, which is **+38** |
+| +6 | a second pointer |
+| +0x0c / +0x0e | **X / Y**, what the blitter uses |
+| +16 | `0x7fff`, the bounding-box sentinel |
+| +22..25 | the record's second coordinate pair |
+
+**Instances are 38 bytes**, established from the `+4` chain rather than from a scan. And
++22..25 carries each record's second pair verbatim -- `(255,125)` for `main.io`'s first
+entity, `(319,199)` for its second -- which independently confirms the instance is built
+from the script record.
+
+**What the positions are.** Walking the chain at stride 38 gives `+0x0c`/`+0x0e` values of
+(9,6), (40,94), (71,10), (74,84), (100,87), (124,85), (128,85), (146,81), (166,85),
+(171,87), (199,85), (203,85), (248,74), (258,85), (265,76), (272,86) -- x from 9 to 272 and
+y from 6 to 94, which is the **viewport**, not the panel.
+
+**Still open:** none of those matched a position polled from `ss:[0c2c]` during a panel
+redraw. So the instances carry *viewport object* positions, and the panel chrome is
+positioned by something else again. The chain and the structure hold; which mechanism
+places the panel does not follow from them.
 
 **Verified by:** the instruction sequence above read from `ishar-listing.txt`; the three
 constants read live from a running game; the x=0,y=147 sample matching 3.13b's

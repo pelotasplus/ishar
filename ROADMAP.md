@@ -2152,7 +2152,7 @@ Compose rewrite has to do.
       pairs 38 bytes apart; a second found none, as the pool shifts between redraws. See
       T40f.*
 
-- [ ] **T40f · The instance structure's layout**
+- [~] **T40f · The instance structure's layout**
       T40e established that a sprite's X,Y are fields `+0x0c`/`+0x0e` of a runtime instance,
       reached from an entity's pointer at +2, allocated from the pool at `ss:[0be8]`
       (FORMATS 3.17). What the instance looks like — its size, and what else it carries — is
@@ -2164,3 +2164,15 @@ Compose rewrite has to do.
       position the `ss:[0c2c]` poll sees at the same moment.*
       **Done when:** FORMATS gives the instance's size and names at least its position
       fields, with one instance's X,Y matching a simultaneously polled draw position.
+      *Size and fields: done. **38 bytes**, established from the `+4` next-pointer chain
+      (`0x0074` -> `0x009a`), not from a scan. Fields: +0 flags, +1 the declaration's byte
+      operand, +4 next, +6 a pointer, **+0x0c/+0x0e = X/Y**, +16 the `0x7fff` bbox sentinel,
+      +22..25 the record's second coordinate pair — and that last one matches the file
+      exactly, (255,125) and (319,199), which confirms the instance is built from the script
+      record (FORMATS 3.17).
+      A trap worth recording: the pointer at entity+2 is an offset into the **pool segment**,
+      not the entity segment. Read in the wrong one it yields x86 code and nonsense
+      coordinates.
+      Not met: matching a polled draw position. Instance X/Y run x 9..272, y 6..94 — the
+      **viewport** — and none coincides with a panel-redraw position. So instances carry
+      viewport object positions and the panel chrome is placed by another mechanism again.*
