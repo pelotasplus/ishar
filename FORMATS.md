@@ -1579,9 +1579,34 @@ portrait origin established byte-for-byte against VRAM in 3.13b. The position is
 Other UI positions seen in the same poll, which are the rest of the panel: (0,139),
 (24,157), (0,175), (14,199), (31,152), (19,157), (24,152).
 
-**What this does not yet say** is who *writes* those two variables -- the script, or engine
-code laying out the panel. That is the next question, and it is where a rewrite's layout
-data would actually come from.
+**Who writes them, and what that means for layout (T40c).** Two things, and the second is
+the answer a rewrite needs.
+
+*They are a bounding box, not a plain x/y.* `draw_bbox_reset` (`seg_0000:4179`) sets
+`ss:[0c2c]`/`[0c2e]` to `0x7fff` and `ss:[0c30]`/`[0c32]` to `0x8000` -- +MAX and -MAX,
+the standard min/max initialisation -- and `41db`/`41f8` are `cmp`/`mov` min updates. So
+`0c2c`/`0c2e` are the **top-left of the current draw rectangle** and `0c30`/`0c32` the
+bottom-right. That is why `sprite_dest_compute` adds them as the origin, and why polling
+them during a redraw yields each element's own position.
+
+*Layout is data, carried per entity.* `draw_pos_from_entity` (`seg_0000:469a`, and again at
+`4768`) reads the coordinates out of a record and writes them to the draw origin, clamped
+to the clip bounds in `ss:[0c62]`/`[0c64]`:
+
+```
+mov cx, [di+0ch]  /  mov ss:[0c2ch], cx      ; X
+mov cx, [di+0eh]  /  mov ss:[0c2eh], cx      ; Y
+```
+
+So a drawable's position lives **in its own record at +0x0c and +0x0e**, not as a constant
+in the code. And the records are built by the script: `vm_op_declare_entity` (opcode `0x46`,
+`seg_0000:2ded`) copies a **32-byte inline record** out of the script stream into a
+structure at `es:[bx+6]` (7.4) -- the same kind of structure these offsets index.
+
+**So a rewrite should read panel layout from the entity records rather than hardcode it.**
+What is not yet pinned down is the exact byte within the 32-byte inline record that becomes
+`+0x0c`: the copy lands at `+6`, so it should be record byte 6, but that assumes `DI` and
+`BX` point at the same structure, which has not been checked.
 
 **Verified by:** the instruction sequence above read from `ishar-listing.txt`; the three
 constants read live from a running game; the x=0,y=147 sample matching 3.13b's

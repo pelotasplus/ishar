@@ -1668,4 +1668,21 @@ attr[seg_0e97:0371]: type = code; name = sprite_dest_compute; comment = [[[
     ss:[0c30] is a clip or origin offset subtracted at seg_0e97:038b and 03a3; it read 15
     at the same moment.
 ]]]
+attr[seg_0000:4179]: type = code; name = draw_bbox_reset; comment = [[[
+    Resets the draw bounding box: ss:[0c2c]/[0c2e] (min X, min Y) to 0x7fff and
+    ss:[0c30]/[0c32] (max X, max Y) to 0x8000 -- +MAX and -MAX, the classic min/max
+    initialisation. The `cmp/mov` pairs at 41db and 41f8 are the min updates.
+    So ss:[0c2c]/[0c2e] are the top-left of the current draw rectangle, which is why
+    sprite_dest_compute (seg_0e97:0371) adds them as the destination origin, and why
+    polling them during a panel redraw yields each element's own origin (T40).
+]]]
+attr[seg_0000:469a]: type = code; name = draw_pos_from_entity; comment = [[[
+    **Where layout comes from.** X and Y are read out of a per-entity record and written to
+    the draw origin, then clamped to the clip bounds in ss:[0c62]/[0c64]:
+        mov cx,[di+0ch] / mov ss:[0c2c],cx    // X
+        mov cx,[di+0eh] / mov ss:[0c2e],cx    // Y
+    The same pair appears at seg_0000:4768-4772 without the clamp. So a drawable's position
+    is **data carried in its own record at +0x0c and +0x0e**, not a constant in the code
+    (T40c).
+]]]
 end

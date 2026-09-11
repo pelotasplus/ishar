@@ -2041,7 +2041,7 @@ Compose rewrite has to do.
       the in-game path reaches it **without** `sprite_mode_dispatch` (0 hits), so there are
       two entries into the sprite code.*
 
-- [ ] **T40c · Who writes the sprite X/Y variables?**
+- [x] **T40c · Who writes the sprite X/Y variables?**
       T40 established that a sprite's destination is `base + Y*stride + X` with X in
       `ss:[0c2c]` and Y in `ss:[0c2e]` (FORMATS 3.17), and that the portrait's (0,147) can be
       read from them. What sets them is unknown: engine layout code, or the script via an
@@ -2052,3 +2052,29 @@ Compose rewrite has to do.
       writes them, the panel layout is hardcoded and a rewrite should copy the constants.*
       **Done when:** FORMATS names the writer(s), and says whether panel layout is data or
       code.
+      *Met: **layout is data** (FORMATS 3.17). `draw_pos_from_entity` (`seg_0000:469a`, and
+      again at `4768`) reads X and Y from a per-entity record at **`[di+0x0c]`** and
+      **`[di+0x0e]`** and writes them to the draw origin, clamped to `ss:[0c62]`/`[0c64]`.
+      The records come from the script: `vm_op_declare_entity` (opcode 0x46) copies a 32-byte
+      inline record into a structure at `es:[bx+6]`.
+      It also corrected T40's reading of the two variables. `draw_bbox_reset`
+      (`seg_0000:4179`) initialises `0c2c`/`0c2e` to `0x7fff` and `0c30`/`0c32` to `0x8000` —
+      +MAX/-MAX — with `cmp`/`mov` min updates at `41db`/`41f8`. They are the **top-left of a
+      draw bounding box**, not a plain x/y, which is why polling them yields each element's
+      origin as it is drawn.
+      Left open: which byte of the 32-byte inline record becomes `+0x0c`. The copy lands at
+      `+6`, so it should be record byte 6, but that assumes DI and BX index the same
+      structure — unchecked. See T40d.*
+
+- [ ] **T40d · Which byte of an entity record is its X?**
+      T40c showed a drawable's position is read from `[di+0x0c]`/`[di+0x0e]`, and that the
+      records are built by `vm_op_declare_entity` (0x46) copying a 32-byte inline record to
+      `es:[bx+6]` (FORMATS 3.17, 7.4). If DI and BX index the same structure, X is record
+      byte 6 and Y byte 8 — but that is an assumption, and it is the one a rewrite would
+      depend on to read layout straight out of `main.io`.
+      *Method: `main.io`'s first two statements are both 0x46, at offsets 24 and 60, so their
+      32-byte records are in hand. Predict each entity's X,Y under the byte-6/byte-8 reading
+      and check the predictions against positions polled from `ss:[0c2c]`/`[0c2e]` while that
+      entity draws — the technique that closed T40. A hit on two entities settles it.*
+      **Done when:** FORMATS states the record's X and Y offsets, with a prediction from the
+      file matching a polled position.
