@@ -2432,8 +2432,25 @@ instantiated four times over a pair of two-valued parameters -- consistent with 
 places, though **which two conditions is not established**: that needs the expression
 operands decoded, since the differing bytes are operands to `0x14`/`0x1f`.
 
+**What the handlers actually do.** Reading the opcodes the file leans on gives the
+behaviour, not just the shape:
+
+| opcode | handler | effect |
+|---|---|---|
+| `0x4e` | `seg_0000:325f` | takes an **entity id** inline and does `and es:[bx+di],0bfh` -- `0xbf` is `~0x40`, and `0x40` is exactly the bit `vm_op_declare_entity` **sets** at `or es:[bx],40h`. So it **clears an entity's active/visible flag** |
+| `0x52` | `seg_0000:48bd` | sets a frame word `es:[bp-1ah]` to `0xffff` |
+| `0x62` | `seg_0000:58a1` | clears bit 0 of the frame byte `es:[bp-24h]` |
+| `0x3a` | `seg_0000:2e94` | clears `ss:[0c37]` |
+| `0x40` | `seg_0000:2ce2` | zeroes `ss:[0c6a]`/`[0c6c]`/`[0c6e]`, then a lookup returning `-1` on failure |
+
+So `affobj.io` **tests conditions and turns object entities on and off**: `0x40` is an
+entity's active bit, set when the script declares it and cleared by `0x4e` here. That is a
+behavioural statement rather than a reading of the filename, and it fits *affichage objet*.
+
 **Verified by:** the byte search for the block signature; the position-by-position diff of
-the four blocks; the opcode profile over statements reached from the entry set.
+the four blocks; the opcode profile over statements reached from the entry set; and the
+`0x40` bit being set by opcode `0x46` and cleared by `0x4e` against the same
+`ss:[0bf6]`-based entity block.
 
 ### 8.1 The file on disk (730 bytes)
 

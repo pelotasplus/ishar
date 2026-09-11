@@ -1689,4 +1689,14 @@ attr[seg_0000:469a]: type = code; name = draw_pos_from_entity; comment = [[[
     is **data carried in its own record at +0x0c and +0x0e**, not a constant in the code
     (T40c).
 ]]]
+attr[seg_0000:325f]: type = code; name = vm_op_entity_clear_active; comment = [[[
+    Opcode 0x4e. Takes an entity id inline and clears bit 0x40 of that entity's flag byte:
+        lodsw / mov bx,ax / mov di,ss:[0bf6] / and byte ptr es:[bx+di],0bfh
+    0xbf is ~0x40, and 0x40 is exactly the bit vm_op_declare_entity (0x46) SETS when it
+    creates the entity (`or es:[bx],40h`). So 0x40 is the entity's active/visible flag,
+    set at declaration and cleared here.
+    `ss:[0bf6]` is the entity block base (read live as 126b:02a0), so the inline word is an
+    entity id, the same id space vm_op_declare_entity uses.
+    Used 8 times in affobj.io, the object-display script (FORMATS 8.0).
+]]]
 end
