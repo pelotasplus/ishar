@@ -1835,13 +1835,38 @@ finds zero sprites before believing a page. `tools/fullscreen.py` renders them.
 `0xA0000` with the demon frame on screen — **64,000 / 64,000 identical**. The offset was
 found by sweeping alignments, which is also what exposed the 12-byte tail.
 
-### 3.19 `theend.io` and `iboishar.io` are the two unread layouts
+### 3.19 `theend.io` is a bare 4bpp raster, 288 pixels wide
 
-Both grew by 2 x 64 KB when the size field was read properly (3.0), and neither is a sprite
-chain (`tools/ioscan.py` finds zero) nor a set of VGA pages (3.18 renders static at every
-page anchor, at 8bpp and at 4bpp). `theend.io` contains **no palette marker at all**;
-`iboishar.io` has three, at 62,445 / 77,192 / 78,295. Between them they are 275 KB of
-decoded content nobody can read — the largest unexplained region left in the corpus.
+Not a sprite chain and not a VGA page: **`theend.io` is raw 4bpp pixels at a 144-byte
+stride**, starting right after the 16-byte asset header, with no per-image headers at all.
+
+| | |
+|---|---|
+| pixel depth | **4bpp.** 78.7% of its bytes have equal nibbles, against 6.25% for random data, 53.6% for `logo.io`, 59.0% for `buste.io` -- and 25.5% for the 8bpp `dead.io` |
+| stride | **144 bytes = 288 pixels.** Row-to-row agreement peaks hard at 144 (0.768) against 0.61 at 143 and 145. The same sweep returns 144 for `logo.io`, whose width is already known -- the control |
+| extent | ~992 rows from offset 16, with **one** internal discontinuity at row 599 and noise in rows 0-10 |
+| palette | **none.** It is the only asset in the corpus with no `fe ff 00 00` record (3.9), so its colours come from elsewhere, as the presentation screens' do |
+
+Rendered with an invented ramp the content is plainly a colonnade -- pillars, a floor,
+figures between them (`captures/pages/theend-rows{000-200,300-500}.png`, gitignored like
+every other decoded-asset render). That is what an ending sequence in this game would look
+like, and it is why nothing found it earlier: `tools/ioscan.py` only looks for sprite chains,
+and there is no chain to find.
+
+**Status:** geometry and depth established; palette and block structure are not. Whether
+rows 11-599 and 600-991 are one tall scrolling backdrop or several stacked frames is open.
+**Verified by:** the equal-nibble ratio against three assets of known depth; the stride
+sweep with `logo.io` as a known-good control.
+
+### 3.19b `iboishar.io` is still unread
+
+132,728 bytes, the largest asset in the game. Not a sprite chain (`tools/ioscan.py` finds
+zero), not a VGA page (3.18 renders static at every anchor), and **not a raster at any
+stride** -- the sweep that isolates 144 for `theend.io` and `logo.io` finds no peak for it at
+all (best 0.43 at 256, with every neighbouring stride within 0.02). It carries three palette
+records, at 62,445 / 77,192 / 78,295, so parts of it are picture-adjacent, and its
+equal-nibble ratio of 51.8% is consistent with 4bpp somewhere inside.
+
 Tracked as **T47**.
 
 ### 3.17 Where on-screen positions come from (T40)

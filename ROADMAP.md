@@ -2298,20 +2298,27 @@ Compose rewrite has to do.
       **64,000/64,000**. Corpus-wide: the `u24` size predicts the LZ stream's end for 97 of
       97 LZ assets. +470 KB of decoded content, +124 sprites.
 
-- [ ] **T47 · Read `theend.io` and `iboishar.io`**
-      275 KB of decoded content that nothing explains -- the largest unread region left.
-      Neither is a sprite chain (`tools/ioscan.py` finds zero in each) nor a set of 320x200
-      pages (`tools/fullscreen.py` renders static at every anchor, at 8bpp and 4bpp).
-      `theend.io` carries **no palette record at all**, which no other asset manages;
-      `iboishar.io` has three, at 62,445 / 77,192 / 78,295. Both grew 2 x 64 KB under T48,
-      so nothing about them was ever seen whole before.
-      *Method: these are the two files whose readers have never been traced. Breakpoint the
-      loader on each and follow where the decoded buffer goes -- which routine reads it and
-      with what stride -- rather than guessing a layout. `theend` is presumably the ending
-      sequence and `iboishar` the in-game Ishar screen, so both are reachable, though
-      `theend` needs the game finished.*
+- [~] **T47 · Read `theend.io` and `iboishar.io`**
+      275 KB of decoded content that nothing explained -- the largest unread region left.
+      Both grew 2 x 64 KB under T48, so nothing about them had been seen whole before.
       **Done when:** FORMATS says what the bytes are for at least one of the two, with the
       evidence being a rendered image matched against the screen or a traced consumer.
+      *Half met (FORMATS 3.19). **`theend.io` is a bare 4bpp raster at a 144-byte stride**
+      -- 288 pixels wide, ~992 rows, no per-image headers, starting right after the 16-byte
+      asset header. Depth from the equal-nibble ratio (78.7%, against 53.6% for `logo.io`,
+      59.0% for `buste.io`, 25.5% for the 8bpp `dead.io`, 6.25% random); stride from a
+      row-agreement sweep that peaks at 144 (0.768 vs 0.61 either side) and returns 144 for
+      `logo.io` as the control. Rendered, it is a colonnade with figures -- an ending scene.
+      It is also the only asset in the corpus with **no palette record at all**.
+      Two things are not met. The palette is unknown -- `geren.io`'s sixteen bank groups were
+      tried and none is right -- so no render can be matched against the screen yet. And
+      `iboishar.io` resisted everything: no sprite chain, no VGA page, and **no stride at
+      all** (best 0.43 at 256 with every neighbour within 0.02), despite three palette
+      records at 62,445 / 77,192 / 78,295. FORMATS 3.19b records it as still unread.
+      To finish: trace the consumer rather than guess. Both files are reachable in game --
+      `theend` needs the ending, `iboishar` is presumably the in-game Ishar screen -- so
+      breakpoint each load and follow which routine reads the decoded buffer, and with what
+      stride. That also hands over the palette.*
 
 - [ ] **T50 · Regenerate the corpus classification after the size fix**
       FORMATS 3.6's table (63 sprites / 4 palettes / 18 text / 13 data) and
