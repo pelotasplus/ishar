@@ -2204,3 +2204,15 @@ Compose rewrite has to do.
       `map_decompress_inner` were attributed.*
       **Done when:** FORMATS says what `encont.io` governs, with the evidence being executed
       statements or an attributed action — not the filename.
+
+- [ ] **T45 · What are `affobj.io`'s two conditions?**
+      `affobj.io` is four near-identical ~126-byte handlers over a 2x2 matrix of two binary
+      parameters (FORMATS 8.0). The 37 bytes that differ between blocks are operands to
+      `0x14`/`0x1f`, so decoding expression operands would say what is being tested.
+      *Method: the expression table at `0x01f2` is byte-scaled and its handlers are already
+      enumerated (7.2b covers statements; expressions need the same treatment). Decode enough
+      of it to render `0x14`'s condition and `0x1f`'s expression as text, then read the four
+      blocks side by side — they differ only in those operands, so the parameters should fall
+      out by inspection.*
+      **Done when:** FORMATS names both conditions, or states which engine variables they
+      test if the meaning is still unclear.

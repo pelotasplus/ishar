@@ -2405,6 +2405,36 @@ during one action does not make the opcode that action's own.
 730 bytes on disk, 1432 after decoding. Asset **id 7**. The name reads as *affichage
 objet* -- object display.
 
+### 8.0 What is in it: four handlers over a 2x2 condition (T44 pre-work)
+
+Section 8 established what `affobj.io` **is** -- VM bytecode, not sprites, palette, table or
+text. With its entry set `[51, 65, 165, 548]` (7.7) it now disassembles, and its **shape** is
+visible: **397 statements, 913 of 1,432 bytes reachable**, no asset loads, and a profile
+dominated by `vm_op_jump_if_zero` (57) and expression evaluation -- decision logic, not
+loading.
+
+**It is four near-identical handlers.** The 8-byte sequence at offset 165,
+`1f 38 14 2c 26 86 14 4a`, occurs **exactly four times** -- at 165, 291, 417 and 548 --
+spaced 126, 126 and 131 bytes. Two of those offsets are themselves entry points, so the
+engine enters different handlers for different cases.
+
+**They vary on two independent binary parameters.** Comparing the four 120-byte blocks, 37
+positions differ, and they fall into two clean patterns:
+
+| pattern | positions | distinguishes |
+|---|---|---|
+| `A B A B` | +21, +22, +25, +60, +61, +64 | blocks 1,3 vs 2,4 |
+| `A A B B` | +13, +39, +52, +82, +94..+102 | blocks 1,2 vs 3,4 |
+
+Two binary conditions, 2x2 = the four blocks. So `affobj.io` is a small decision routine
+instantiated four times over a pair of two-valued parameters -- consistent with the name
+*affichage objet* and with an object being displayed in one of two states in one of two
+places, though **which two conditions is not established**: that needs the expression
+operands decoded, since the differing bytes are operands to `0x14`/`0x1f`.
+
+**Verified by:** the byte search for the block signature; the position-by-position diff of
+the four blocks; the opcode profile over statements reached from the entry set.
+
 ### 8.1 The file on disk (730 bytes)
 
 | offset | bytes | field | value | meaning |
