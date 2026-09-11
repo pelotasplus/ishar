@@ -1846,7 +1846,7 @@ Compose rewrite has to do.
       **This unblocks T29c, T29d, T29c2 and with them T21 (combat), T22 (magic) and T23
       (quests)** — the entire game-logic half of the project.*
 
-- [ ] **T40 · Where do on-screen positions come from?**
+- [~] **T40 · Where do on-screen positions come from?**
       FINDINGS 4.15 maps every UI region to its asset — `frise.io` for the chrome at three
       palette bases, `buste.io` for portraits — but every screen origin in that map was
       *measured* from a framebuffer, not derived. A rewrite needs the layout, not just the
@@ -1858,6 +1858,19 @@ Compose rewrite has to do.
       writing into the engine variable block) is a candidate source.*
       **Done when:** the portrait's screen origin (0, 147) is predicted from data in the
       file or from a named engine variable, rather than measured.
+      *Not met, and it has a prerequisite nobody had noticed (FINDINGS 4.18). Three
+      negatives: positions are **not precomputed offsets** — `147*320 = 47040` appears
+      nowhere in the executable and only twice in 98 assets, both inside image data — so a
+      destination is computed at draw time from x and y.
+      The method above names `seg_0e97:0b4c`, but that whole sprite family takes **0 hits**
+      in game against a control of 44, consistent with T11p finding `seg_0e97:038b` firing
+      445 times in the intro and zero while walking. FORMATS 3.13c's *format* is right
+      (`buste.io` decodes byte-for-byte as mode 0x10) but its *code* is the launcher and
+      intro renderer. **The in-game blitter is unidentified**, and that is the real blocker
+      — see T40b.
+      Also learned: breakpoint probing of draw routines defeats itself — 5,000–6,000 stops in
+      20s slow the machine so the click never processes. Identify the routine with the
+      call-count diff first, which does not stop the machine.*
 
 - [ ] **T29g · Attribute VM opcodes, not x86 routines**
       *Renumbered from T29e, which collided with the pointer task now closed above.*
