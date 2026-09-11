@@ -1545,6 +1545,48 @@ of coordinates.
 **Status:** structural only. Nothing here yet says *where* a monster stands. The two leads
 that remain are `en1.fic`'s word array and the `cont*.fic` grids' cell values (T11g3).
 
+### 3.17 Where on-screen positions come from (T40)
+
+Every coordinate in FINDINGS 4.15 was measured off a framebuffer. This is the derivation.
+
+`sprite_dest_compute` (`seg_0e97:0371`) turns a sprite's coordinates into a destination
+pointer:
+
+```
+les di, ss:[1dbf]     ; destination base -- the offscreen buffer
+mov ax, ss:[0c2e]     ; Y
+mov bx, ss:[1dd5]     ; stride, bytes per row
+mul bx                ; Y * stride
+add di, ax
+add di, ss:[0c2c]     ; + X
+```
+
+**dest = base + Y x stride + X**, with the coordinates held in two engine variables:
+
+| variable | meaning | read live |
+|---|---|---|
+| `ss:[0c2c]` | **X** | varies per sprite |
+| `ss:[0c2e]` | **Y** | varies per sprite |
+| `ss:[1dd5]` | stride | `0x0140` = **320** |
+| `ss:[1dbf]` | destination base | `0000:e000` -- the back buffer `blit_to_screen` copies to VRAM (3.13d) |
+| `ss:[0c30]` | a clip/origin offset subtracted at `038b` and `03a3` | 15 |
+
+**Checked against the one position that was already proven.** Polling `ss:[0c2c]`/`ss:[0c2e]`
+while the party panel redraws produces **x=0, y=147** among its samples -- exactly the
+portrait origin established byte-for-byte against VRAM in 3.13b. The position is therefore
+*derived* now, not measured.
+
+Other UI positions seen in the same poll, which are the rest of the panel: (0,139),
+(24,157), (0,175), (14,199), (31,152), (19,157), (24,152).
+
+**What this does not yet say** is who *writes* those two variables -- the script, or engine
+code laying out the panel. That is the next question, and it is where a rewrite's layout
+data would actually come from.
+
+**Verified by:** the instruction sequence above read from `ishar-listing.txt`; the three
+constants read live from a running game; the x=0,y=147 sample matching 3.13b's
+framebuffer-verified origin.
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image

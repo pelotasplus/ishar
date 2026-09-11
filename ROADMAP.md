@@ -1846,7 +1846,7 @@ Compose rewrite has to do.
       **This unblocks T29c, T29d, T29c2 and with them T21 (combat), T22 (magic) and T23
       (quests)** — the entire game-logic half of the project.*
 
-- [~] **T40 · Where do on-screen positions come from?**
+- [x] **T40 · Where do on-screen positions come from?**
       FINDINGS 4.15 maps every UI region to its asset — `frise.io` for the chrome at three
       palette bases, `buste.io` for portraits — but every screen origin in that map was
       *measured* from a framebuffer, not derived. A rewrite needs the layout, not just the
@@ -1871,6 +1871,19 @@ Compose rewrite has to do.
       Also learned: breakpoint probing of draw routines defeats itself — 5,000–6,000 stops in
       20s slow the machine so the click never processes. Identify the routine with the
       call-count diff first, which does not stop the machine.*
+      *Met (FORMATS 3.17). `sprite_dest_compute` (`seg_0e97:0371`) computes
+      **dest = base + Y*stride + X** from `ss:[1dbf]` (base, read live as `0000:e000`),
+      `ss:[1dd5]` (stride, `0x0140` = 320), `ss:[0c2e]` (Y) and `ss:[0c2c]` (X).
+      Polling those two while the panel redraws yields **x=0, y=147** — exactly the portrait
+      origin proven byte-for-byte against VRAM in 3.13b — so the position is now derived
+      rather than measured. Other panel positions fall out of the same poll: (0,139),
+      (24,157), (0,175), (14,199), (31,152).
+      Method note: polling memory works where breakpoints did not. A bare breakpoint here
+      drowns in ~340 background stops/second — measured with a breakpoint on an address that
+      never executes, which still produced 4,088 stops in 12s — and each one costs a full
+      register read, which is what stalled the machine in three earlier attempts.
+      Open follow-on: **who writes those two variables** — script or engine layout code. That
+      is where a rewrite's layout data would come from. See T40c.*
 
 - [ ] **T29g · Attribute VM opcodes, not x86 routines**
       *Renumbered from T29e, which collided with the pointer task now closed above.*
@@ -2027,3 +2040,15 @@ Compose rewrite has to do.
       and **zero while walking**. Both hold: it draws the **UI**, not the **viewport**. And
       the in-game path reaches it **without** `sprite_mode_dispatch` (0 hits), so there are
       two entries into the sprite code.*
+
+- [ ] **T40c · Who writes the sprite X/Y variables?**
+      T40 established that a sprite's destination is `base + Y*stride + X` with X in
+      `ss:[0c2c]` and Y in `ss:[0c2e]` (FORMATS 3.17), and that the portrait's (0,147) can be
+      read from them. What sets them is unknown: engine layout code, or the script via an
+      opcode.
+      *Method: grep `ishar-listing.txt` for writes to `0c2c`/`0c2e` — reads dominate, so the
+      writers should be few. If a VM handler is among them, that opcode is the script-level
+      "set draw position" primitive and the layout is data after all; if only engine code
+      writes them, the panel layout is hardcoded and a rewrite should copy the constants.*
+      **Done when:** FORMATS names the writer(s), and says whether panel layout is data or
+      code.

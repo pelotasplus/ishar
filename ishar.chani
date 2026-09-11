@@ -1649,4 +1649,23 @@ attr[seg_0e97:038b]: type = code; name = sprite_blit_ingame; comment = [[[
     in-game one bypasses the mode switch.
     Its destination comes from the far pointer at ss:[0bc8]/[0bca].
 ]]]
+attr[seg_0e97:0371]: type = code; name = sprite_dest_compute; comment = [[[
+    Turns a sprite's x,y into a destination pointer -- the answer to 'where do on-screen
+    positions come from' (T40):
+        les di, ss:[1dbf]     // destination base, the offscreen buffer
+        mov ax, ss:[0c2e]     // Y
+        mov bx, ss:[1dd5]     // stride, bytes per row
+        mul bx                // Y * stride
+        add di, ax
+        add di, ss:[0c2c]     // + X
+    So **dest = base + Y*stride + X**, and the coordinates live in two engine variables.
+    Read live in game: ss:[1dbf] = 0000:e000 (the back buffer blit_to_screen copies from),
+    ss:[1dd5] = 0x0140 = 320.
+    Polling ss:[0c2c]/ss:[0c2e] while the party panel redraws yields **x=0 y=147** among
+    the samples -- exactly the portrait origin measured byte-for-byte against VRAM in
+    T36b/FORMATS 3.13b. Other UI positions seen in the same poll: (0,139), (24,157),
+    (0,175), (14,199), (31,152).
+    ss:[0c30] is a clip or origin offset subtracted at seg_0e97:038b and 03a3; it read 15
+    at the same moment.
+]]]
 end
