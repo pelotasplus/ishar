@@ -142,7 +142,7 @@ Compose rewrite has to do.
       breakpoint armed, nudged keys, dummy audio, fixed clock), rather than assuming the
       path is impassable. `tools/gdbtrace.py` now aborts on the fault instead of running
       out its budget, so each attempt costs seconds rather than twenty minutes.*
-      *DONE. Both halves. Two cold boots traced through to the Dragonia outdoor frame,
+      *DONE. Both halves. Two cold boots traced through to the Fragonir outdoor frame,
       one English one French, 34 opens each (FINDINGS 4.10), and the per-language diff is
       exactly two files: `messagee.IO`/`message.IO` and `sose.IO`/`sos.IO` (FORMATS 10.1,
       now confirmed live rather than inferred from the directory listing).
@@ -1394,7 +1394,7 @@ Compose rewrite has to do.
 - [x] **T19e · Why the traced run faults in the intro when a manual run does not**
       *Renumbered from T19c, which was already taken by the chani re-seed task above.*
       Three GDB-traced boots died at `017D:194D` (§5.0) before reaching gameplay, yet
-      ordinary `run.sh` play reaches Dragonia. So the fault is a property of *how we
+      ordinary `run.sh` play reaches Fragonir. So the fault is a property of *how we
       drive it*, not of the intro. Bisect the difference one flag at a time: GDB
       attached vs not, breakpoint armed vs not, keys from `tools/nudge.py` vs by hand,
       dummy audio, fixed clock, `--ReloadCfgGraph`.
@@ -1928,7 +1928,7 @@ Compose rewrite has to do.
 - [~] **T29f · Get into a fight**
       Combat cannot be attributed without combat. Clicking ATTACK with nothing adjacent
       changes almost nothing on screen and moves no interesting counts (FINDINGS 4.16).
-      There is a figure visible in the Dragonia starting scene that may be an NPC or a
+      There is a figure visible in the Fragonir starting scene that may be an NPC or a
       monster.
       *Method: walk toward the figure with the mouse now working, or use the map to find a
       populated area; `tools/t29c-action.py` is ready once a fight starts. Watch the LIFE
@@ -1937,7 +1937,7 @@ Compose rewrite has to do.
       LIFE bar changing), and one call-count diff is taken across an attack.
       *Not met — no monster, no LIFE bar moved — but the attempt produced three findings and
       two opcode attributions (FINDINGS 4.17).
-      The figure in the Dragonia scene is an **NPC**: walking into it brings up dialogue
+      The figure in the Fragonir scene is an **NPC**: walking into it brings up dialogue
       naming Angarahn and a tavern. **ATTACK is two-step** — the button alone only dismisses
       a panel; ATTACK then a click on the target is what acts. And attacking a friendly NPC
       triggers a **full-screen demon frame and resets the party to its start position**,
@@ -2354,11 +2354,24 @@ Compose rewrite has to do.
       **Done when:** at least three cell values are matched to a named sprite from a scene
       asset, with the two captures that establish each.
 
-- [ ] **T11g3e · How does the party change region?**
+- [~] **T11g3e · How does the party change region?**
       The six grids are self-contained -- no edge continues into another, each closed by its
       own `0xCE` outline (FORMATS 3.12) -- so moving between them is scripted. `telep.io`
       (*téléportation*, 2,016 bytes, script, no entry set) is the obvious suspect and has
       never been seen to run.
+      *The premise was wrong and the correction is the finding (FINDINGS 4.19b). **A region
+      is a named sub-area of a grid, not a grid file.** Walking east from the start changes
+      the panel caption FRAGONIR -> ANGARAHN with the same `cont1.fic` resident and
+      byte-identical. Six grids, **twenty-one regions**, and the names are bytecode in
+      `frise.io` and `gerdep.io` -- a 17-byte if/else-if ladder whose word operand steps down
+      by `0x11` per entry. The last two are `ISHAR` and `L'OCEAN`, so the fortress and the sea
+      are both regions, which is what the impassable `0xCC`/`0xCD` blobs are.
+      Also corrected: the starting region is **FRAGONIR**, not "Dragonia" -- that name came
+      off a 640px screenshot and had been repeated in eleven places.
+      Still open: what selects the region. Not the cell value -- the party stands on `0x00`
+      in both. The name lands in a DGROUP buffer at `ss:[0x0902]`, so the writer of that
+      buffer is the next thing to find, and `tools/t11g3e-region.py` already narrows the
+      candidate bytes.*
       *Method: walk to a region exit and poll for a second `cont*.fic` appearing in memory,
       the way `cont1.fic` was located (a 64-byte probe from each file over a 640 KB dump).
       The moment it loads, poll `vm_run` for which scripts execute -- that is also the run
@@ -2366,3 +2379,26 @@ Compose rewrite has to do.
       (T44).*
       **Done when:** FINDINGS says what triggers a region change and which grid replaces
       which, with the second grid located in memory.
+
+- [ ] **T11g3f · What selects the region?**
+      Twenty-one named regions live inside six grids and the panel caption tracks the party
+      (FINDINGS 4.19b), but nothing yet says how a cell maps to a region. It is not the cell
+      value: the party stands on `0x00` in both FRAGONIR and ANGARAHN. The name string lands
+      at `ss:[0x0902]`, eight bytes, with a copy at `ss:[0x0805]`.
+      *Method: `tools/t11g3e-region.py` samples DGROUP at several cells per region and keeps
+      the bytes constant within and differing between; run it over three or four regions
+      instead of two and the region **id** should fall out as a small integer. Then find what
+      writes it -- a region map alongside the grid, or a bounding box per region.*
+      **Done when:** FINDINGS says how a `(grid, row, col)` maps to one of the 21 names, and
+      a prediction made from it matches the caption at a cell not used to derive it.
+
+- [ ] **T11g3g · Get inside a building**
+      Rare high cell values are individual buildings -- `0xF0` and `0xEB` at the village in
+      `cont1` each put a wooden door on screen and refuse entry (FINDINGS 4.19b). Clicking
+      the door does nothing and starts no script (4,323 samples). Entry is the last untried
+      `encont.io` trigger and the only route to the interior assets (`intmais.io` 31 sprites,
+      `itaverne.io`, `inville.io`).
+      *Method: the ACTION menu has **PICK LOCK**; try it facing the door. If that fails, the
+      party may need to be facing the cell -- **ORIENTATION** is the verb that sets facing,
+      and the arrow keys do not (4.17b). Poll `vm_run` throughout.*
+      **Done when:** FINDINGS records how a building is entered, with the interior on screen.

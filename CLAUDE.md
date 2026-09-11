@@ -606,6 +606,28 @@ assets with sprite chains carry palette records too.
 any of those renders. Before generalising a layout, name the property that makes the asset
 eligible and test *that* first.
 
+### Poking a value you have only watched is not a probe, it is a change
+
+The party's map cell reads correctly out of two DGROUP bytes, so the obvious shortcut to
+exploring a 90x54 world was to write them and skip the walking. The write stuck, the view
+never rebuilt, and every subsequent move was refused -- then the ACTION menu stopped
+opening and a portrait lost its frame. The machine had to be restarted.
+
+Two separate lessons, and the second is the one that cost the time:
+
+- **A location you have only ever read is a read-only fact.** Those bytes are a *copy* the
+  engine writes after a successful move and never reads back. Writing them changed a
+  readout, not a position -- and nothing said so.
+- **A destructive menu verb is not a probe either.** The same sequence had clicked KILL
+  while sweeping the ACTION menu, so by the time the game misbehaved there were two of my
+  own actions in the history and no way to tell which broke it. When exercising an unknown
+  UI, leave out the entries that plainly do something irreversible, or the state you are
+  measuring is no longer the state you meant to measure.
+
+`tools/walkto.py` is the replacement: it drives the party with the arrow keys and reads the
+position after every step, learning blocked cells as it goes. Thirty steps take half a
+minute and the game stays honest.
+
 ### Spice86's GDB stub reports IP as a LINEAR address
 
 `registers()["ip"]` is not the segment offset. At a breakpoint on `seg_0000:93a6` with

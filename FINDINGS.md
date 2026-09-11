@@ -357,7 +357,7 @@ Three phases are visible in it:
    `CONT1.FIC`. `EN1.FIC` is opened **twice**, before and after `param.IO`.
 3. **The scene** (`buste.IO` .. `lacustre.IO`) -- portraits, then the outdoor
    assets: `plaine` (plain), `fond` (backdrop), `arbre` (tree), `lacustre`
-   (lakeside). These are the first frame of Dragonia
+   (lakeside). These are the first frame of Fragonir
    (`captures/t08-english-gameplay.png`).
 
 **The per-language diff is two files.** An English run and a French run open 33
@@ -507,7 +507,7 @@ Two things confirmed on the way, both from directions that did not know the answ
   over 1,517 probe runs. The UI panel matches immediately. That is T11p's finding arriving
   from a different direction: verify against the panel, never the viewport.
 
-**Evidence:** `.ish/fb3.bin` captured live in Dragonia (`captures/t36b-panel-verified.png`); the per-nibble split above.
+**Evidence:** `.ish/fb3.bin` captured live in Fragonir (`captures/t36b-panel-verified.png`); the per-nibble split above.
 
 ### 4.14 T38: checking the `main.io` listing against the running VM
 
@@ -639,7 +639,7 @@ validation against the independently-known `0x4b`; `.ish/t29c-*.json`.
 With the mouse working, the party can be driven into the world. Three things came out of
 one attempt to start a fight, none of them previously recorded.
 
-**NPCs talk when you walk into them.** The figure standing in the Dragonia starting scene
+**NPCs talk when you walk into them.** The figure standing in the Fragonir starting scene
 is not a monster. Walking four steps forward brings up a text panel over the bottom third
 of the screen (`captures/t29f-npc-dialogue.png`):
 
@@ -715,6 +715,60 @@ tiles, so region changes are scripted), entering a building, and time passing. S
 
 **Evidence:** `tools/t44-when.py` windows, each filtered to samples where `CS == load` and
 `IP` is inside `vm_run`'s fetch loop; the ACTION menu capture.
+
+### 4.19b The world has twenty-one named regions, and they live inside the grids
+
+The panel's top-right caption names where the party is. Walking east from the starting
+cell it changes from **FRAGONIR** to **ANGARAHN** -- with the same `cont1.fic` still
+resident and byte-identical. **So a "region" is a named sub-area of a grid, not a grid
+file.** Six grid files and twenty-one regions; they are different things, and the earlier
+assumption that a region change means a new `cont*.fic` was wrong.
+
+*(That caption also corrects a misreading: the starting region is FRAGONIR, not "Dragonia".
+It was read off a screenshot at 640px and taken as settled. The bytes say otherwise, and
+`fragorn.io` is sitting in the asset list next to it. Renamed throughout.)*
+
+**The gazetteer is bytecode, not a data table.** The names sit in `frise.io` (the script
+that draws the panel, 4.15) and again in `gerdep.io`, as a run of fixed 17-byte statements,
+each `0a <word> 00 1e 04 "NAME" 00 16 ..` -- an if/else-if ladder, with the word operand
+decreasing by exactly `0x11` per entry, i.e. the distance to the end of the ladder:
+
+| | | | |
+|---|---|---|---|
+| 1 FRAGONIR | 6 FIMNUIRH | 11 BALDARON | 16 ULDONYAR |
+| 2 ANGARAHN | 7 ARAGARTH | 12 VARGAEON | 17 VALATHAR |
+| 3 OSGHIROD | 8 KANDOMIR | 13 ZENDORIA | 18 ELWINGIL |
+| 4 LOTHARIA | 9 SILMATIL | 14 URSHURAK* | 19 FHULGROD |
+| 5 RHUDGAST | 10 URSHURAK | 15 HALINDOR | 20 **ISHAR** |
+| | | | 21 **L'OCEAN** |
+
+(`gerdep.io` carries all 21 including `ISHAR` and `L'OCEAN`; `frise.io`'s list ends at
+`FHULGROD` and then `OCEANO`.) The last two matter: **the ocean is a region**, which is
+what the impassable `0xCC`/`0xCD` blobs are (6.7b), and **ISHAR is a region**, which is the
+fortress of the title -- `cont5` is almost entirely one walled structure.
+
+The in-game text agrees: the NPC's line, "TO THE SOUTH, IN ANGARAHN COUNTRY, THERE IS A
+NICE LITTLE VILLAGE, ITS TAVERN..." (4.17) names a region from this list, and the French
+original names a tavern "LE RELAIS DE FRAGONIR".
+
+**What selects the region is not yet found.** It is not the cell value -- the party stands
+on `0x00` in both FRAGONIR and ANGARAHN. The name string lands in a DGROUP buffer at
+`ss:[0x0902]`, eight bytes, with a second copy three bytes earlier at `ss:[0x0805]`.
+
+**Buildings are the blocked singletons.** Walking to `(17,53)` puts a large wooden double
+door on screen (`captures/t11g3e-at1753.png`). Its cell neighbours `0xF0` to the west and
+`0xEB` to the north both refused entry -- both are values that occur once or twice in the
+whole grid, in a cluster of such values around rows 14-18, columns 52-59. That cluster is
+the village the NPC describes, and each rare value is one building. Clicking the door does
+nothing, and no new script runs (4,323 samples), so entry needs something else -- the
+ACTION menu has **PICK LOCK**.
+
+**Not all low values are walkable.** `0x0A` refused a move, so `value < 0x40` is not a
+walkability test; the walkable/blocked split has to be per value.
+
+**Evidence:** the panel caption across two positions with `cont1.fic` verified resident and
+unchanged; the name run extracted from both assets' decoded bytes; the DGROUP diff between
+two cells in each region (`tools/t11g3e-region.py`); `tools/walkto.py`'s refusal log.
 
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
@@ -981,7 +1035,7 @@ Seen again on 2026-09-09, same text, at `CS:IP=017D:194D`, `Cycles=712803714`, d
 a T08 trace that was driving keys through the language menu and intro.
 
 **It is not "the intro crashes".** Ordinary play reaches gameplay: the user produced a
-screenshot of the party standing outside the tree in Dragonia in a normal `run.sh`
+screenshot of the party standing outside the tree in Fragonir in a normal `run.sh`
 session. So the fault is specific to some runs -- the traced/key-driven ones so far --
 and any claim of the form "the game dies during the intro" is unsupported.
 
@@ -1565,10 +1619,15 @@ therefore a lead for the viewport renderer (4.18). And the walked path crosses e
 distinct walkable values in eighteen cells, far too varied for "open ground", which is
 consistent with 6.7's reading that low values are per-cell scenery markers.
 
-**Honest limit on the adjacency.** The grid end and the row byte coinciding to the byte is
-one observation, on one level, in one session. Whether the position is *structurally* part
-of the level block or merely allocated next to it is untested -- loading a second level and
-re-checking the offset would settle it (T11g3c).
+**Confirmed across sessions.** After a full emulator restart and a fresh boot, `cont1.fic`
+loads at the same `0x129d0` and the party's row is again at `grid_end` -- so the adjacency
+is not allocation luck within one run. `tools/mappos.py` finds both from scratch rather than
+hard-coding the address. Still untested: whether it holds for a *different* grid (T11g3c).
+
+**They are a readout, not the master.** Writing a new row/col does not move the party: the
+value sticks, the view does not rebuild, and subsequent moves are decided from somewhere
+else. So these bytes are a copy the engine updates on each successful move -- which is
+exactly what makes them a reliable instrument, and useless as a teleport.
 
 **Evidence:** the DGROUP diff over five driven steps with the screen change (13-31% per
 step) confirming each step happened; the four-direction refusal sweep over 38 cells

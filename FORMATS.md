@@ -2587,7 +2587,7 @@ a sentinel colour (T36d). Re-extracted: 803 PNGs, all RGBA. The verified case,
 `buste.io`'s portrait, comes out with **1071 alpha-zero pixels** -- exactly the count the
 VRAM comparison predicted -- and its **1233 opaque pixels still match VRAM 1:1**.
 
-**Verified by:** live VRAM at `0xA0000` with the game in Dragonia, compared against the
+**Verified by:** live VRAM at `0xA0000` with the game in Fragonir, compared against the
 payload from a decoder written only from this file; the sprite's `word3 = 0x00d0` predicts
 group 13 / base 208, which is also the base an independent reverse search recovered from
 the screen bytes without being told it.
@@ -2616,7 +2616,7 @@ add si, cs:[002c]        ; source advance per row
 add di, cs:[002e]        ; destination advance per row
 ```
 
-Two independent per-row deltas. Sampled live while walking in Dragonia: `cs:[002c] = 15`,
+Two independent per-row deltas. Sampled live while walking in Fragonir: `cs:[002c] = 15`,
 `cs:[002e] = 321`. A destination step of **321 on a 320-wide buffer shifts every row one
 pixel sideways** -- a shear, which is where the perspective comes from; the source step
 chooses how fast the sprite is consumed, which is where the size change comes from.
@@ -3098,7 +3098,7 @@ Two corrections that came out of the same diff:
   pulled later, on demand. Only the `message*` and `sos*` sets are startup files.
 
 **Verified by:** `.ish/t08-english-final.json` and `.ish/t08-french.json`, both
-traced with `tools/gdbtrace.py --drive`, each ending in the Dragonia outdoor scene
+traced with `tools/gdbtrace.py --drive`, each ending in the Fragonir outdoor scene
 (`captures/t08-english-gameplay.png`).
 
 ### 10.2 All four variants share one asset id
