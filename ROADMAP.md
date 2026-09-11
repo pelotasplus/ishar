@@ -2109,3 +2109,25 @@ Compose rewrite has to do.
       *Unblocked: T37f landed. `frise.io` now traverses from entries [478, 27826, 29024,
       32526] covering 68.7% of its bytes, and it is the asset that draws the panel chrome
       (FINDINGS 4.15), so its `0x46` declarations are where the panel's positions should be.*
+      *Result: **they are not** (FORMATS 3.17). The entity block is found and the mechanism
+      confirmed — `ss:[0bf6]` reads live as `126b:02a0`, a declaration's word operand indexes
+      it, and `main.io`'s two records sit there verbatim: (127,86)/(255,125) at +24/+32 and
+      (319,199) at +84. But the block is **zero beyond +128**, so only those two entities
+      exist, and no (x,y) in it matches a polled panel position. Nor does any byte offset in
+      the `0x46` records of `frise.io` (20 declarations), `buste.io` (29) or `main.io` (8).
+      So `draw_pos_from_entity` serves those two rectangles, and the panel's sprites are
+      positioned by one of the **other** writers of `ss:[0c2c]`/`[0c2e]` — `seg_0000:469d`/
+      `46b6` (clamped) or `4768`-`4772`. See T40e.*
+
+- [ ] **T40e · Which writer positions the panel sprites?**
+      T40d ruled out entity records: the entity block at `126b:02a0` holds only `main.io`'s
+      two rectangle entities and nothing matching a panel position (FORMATS 3.17). The
+      panel's coordinates therefore come from one of the other writers of `ss:[0c2c]`/
+      `[0c2e]` — `seg_0000:469d`/`46b6`, which clamp against `ss:[0c62]`/`[0c64]`, or the
+      unclamped pair at `4768`-`4772`.
+      *Method: `tools/t29c-action.py`, which does not stop the machine — diff an idle window
+      against a portrait click and see which of those routines moves. `seg_0000:4197` and
+      `:4115` already showed up in that diff, and both sit in the same region. Then read what
+      DI points at when that writer runs, by polling rather than breaking.*
+      **Done when:** FORMATS names the structure the panel's X/Y come from, and a polled
+      position is predicted from it.

@@ -1624,9 +1624,23 @@ Neither candidate reading of the record lines up with a polled position either: 
 byte 12 gives (255,125) and (319,199). None of those appears among the positions polled
 during a panel redraw.
 
-**So the panel's entity records live in another asset's script**, and reading them needs
-that asset's entry points -- which is T37f. The mechanism in this section holds; what is
-missing is the data, and it is somewhere the disassembler cannot yet reach.
+**The entity block is located and the mechanism confirmed (T40d).** `ss:[0bf6]` is a far
+pointer, read live as **`126b:02a0`**, and a declaration's word operand is the index into
+it: `vm_op_declare_entity`'s handler does `lodsw / mov bx,ax / add bx,ss:[0bf6] /
+or es:[bx],40h`, so `main.io`'s first declaration -- operand **14** -- owns the structure at
+block offset +14. Dumping that block from a running game shows both of `main.io`'s records
+sitting there verbatim: `(127,86)` and `(255,125)` at +24 and +32, `(319,199)` at +84.
+
+**But the panel is not drawn from entity records.** The block is **zero beyond +128** -- only
+those two entities exist -- and no `(x,y)` pair anywhere in it matches a position polled
+during a panel redraw. Nor does any byte offset in the `0x46` records of `frise.io` (20
+declarations, now reachable), `buste.io` (29) or `main.io` (8).
+
+So `draw_pos_from_entity` serves those two rectangle entities, and the panel's sprites get
+their position from one of the **other** writers of `ss:[0c2c]`/`[0c2e]` -- the clamped
+setters at `seg_0000:469d`/`46b6`, or the pair at `4768`-`4772` -- fed from a different
+structure. Which of them runs during a panel draw is the open question, and the call-count
+diff can answer it without a breakpoint.
 
 **Verified by:** the instruction sequence above read from `ishar-listing.txt`; the three
 constants read live from a running game; the x=0,y=147 sample matching 3.13b's
