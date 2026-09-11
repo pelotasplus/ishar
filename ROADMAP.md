@@ -2066,7 +2066,7 @@ Compose rewrite has to do.
       `+6`, so it should be record byte 6, but that assumes DI and BX index the same
       structure — unchecked. See T40d.*
 
-- [ ] **T40d · Which byte of an entity record is its X?**
+- [!] **T40d · Which byte of an entity record is its X?**
       T40c showed a drawable's position is read from `[di+0x0c]`/`[di+0x0e]`, and that the
       records are built by `vm_op_declare_entity` (0x46) copying a 32-byte inline record to
       `es:[bx+6]` (FORMATS 3.17, 7.4). If DI and BX index the same structure, X is record
@@ -2078,3 +2078,14 @@ Compose rewrite has to do.
       entity draws — the technique that closed T40. A hit on two entities settles it.*
       **Done when:** FORMATS states the record's X and Y offsets, with a prediction from the
       file matching a polled position.
+      *Blocked on **T37f**, and the reason is the finding (FORMATS 3.17). `main.io` contains
+      only **two** genuine `0x46` declarations — the eight the traversal finds include six
+      misaligned decodes, with ids reading 3840, 12311, 30720 — and both genuine ones hold
+      what look like **rectangles**: (127,86)-(255,125) and (0,199)-(319,199). The second
+      pair is the bottom-right of a 320x200 screen, so these are clip or viewport rects, not
+      the portrait or the frieze.
+      Neither candidate offset reading matches a polled position: `+0x0c` as record byte 6
+      gives X=86 and 199 with Y=0 for both; as byte 12 it gives (255,125) and (319,199).
+      So **the panel's entity records are in another asset's script**, and reading them needs
+      that asset's entry points. The mechanism from T40c stands; the data is out of reach
+      until T37f lands.*

@@ -1604,9 +1604,29 @@ in the code. And the records are built by the script: `vm_op_declare_entity` (op
 structure at `es:[bx+6]` (7.4) -- the same kind of structure these offsets index.
 
 **So a rewrite should read panel layout from the entity records rather than hardcode it.**
-What is not yet pinned down is the exact byte within the 32-byte inline record that becomes
-`+0x0c`: the copy lands at `+6`, so it should be record byte 6, but that assumes `DI` and
-`BX` point at the same structure, which has not been checked.
+
+**But the panel's entities are not declared in `main.io` (T40d).** Traversing the whole
+reachable script finds **8** `0x46` statements, and six of them are misaligned decodes --
+their ids read 3840, 12311, 30720 and their records are noise. Only the two at the entry
+point are genuine, and both look like **rectangles** rather than sprite positions:
+
+| at | first pair | second pair | tail |
+|---|---|---|---|
+| 24 | (127, 86) | (255, 125) | `0,0,0,0xff00,255,1,0,0xff00` |
+| 60 | (0, 199) | (319, 199) | identical |
+
+(319, 199) is the bottom-right of a 320x200 screen, so these read as clip or viewport
+rectangles -- plausibly the 3D view and a full-width strip -- not as the portrait or the
+frieze.
+
+Neither candidate reading of the record lines up with a polled position either: taking
+`+0x0c` as record byte 6 gives X = 86 and 199 with Y = 0 for both, and taking it as record
+byte 12 gives (255,125) and (319,199). None of those appears among the positions polled
+during a panel redraw.
+
+**So the panel's entity records live in another asset's script**, and reading them needs
+that asset's entry points -- which is T37f. The mechanism in this section holds; what is
+missing is the data, and it is somewhere the disassembler cannot yet reach.
 
 **Verified by:** the instruction sequence above read from `ishar-listing.txt`; the three
 constants read live from a running game; the x=0,y=147 sample matching 3.13b's
