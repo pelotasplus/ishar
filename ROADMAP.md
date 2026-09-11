@@ -1923,7 +1923,7 @@ Compose rewrite has to do.
       a hedge with the frame changing 0.0–0.3%. Finding a monster needs data, not walking —
       see T29h.*
 
-- [ ] **T37f · The entry points of every script-carrying asset**
+- [x] **T37f · The entry points of every script-carrying asset**
       *Replaces T37b, T37c and T37e, which were three descriptions of one question and each
       carried a stale premise. Consolidated so the next reader inherits one account.*
 
@@ -1957,6 +1957,23 @@ Compose rewrite has to do.
       **Done when:** entry-point sets are recorded in FORMATS for `frise.io`, `dplt.io` and
       `samb.io`, and `tools/vmi.py` traversing from each set reaches over 90% of that asset's
       IP-verified live `DS:SI` samples — the measure that worked for `main.io`.
+      *Met, at **100%** for all three, and for four more besides (FORMATS 7.7).
+      The method changed: **poll, do not break**. `read_cpu_state` runs at ~3,550 samples/s
+      with the game unaffected, against ~2.6 useful stops/s for a breakpoint drowning in
+      ~340 background stops/s. `SI` is only the script PC while the CPU is inside `vm_run`'s
+      fetch loop, so samples are kept only when `CS == load` and `IP` is in `0x26eb..0x26f8`
+      — without that filter the poll attributes any moment `SI` points into a buffer, which
+      is not execution. One 215s cold-start run: 765,027 samples, 15,555 inside `vm_run`,
+      19 assets.
+      Entry sets cover every observed PC: `frise.io` 41/41 (68.7% of bytes), `dplt.io` 26/26
+      (70.3%), `samb.io` 18/18, `geren.io` 29/29, `param.io` 18/18 (63.0%), `affobj.io` 17/17
+      (**62.6%**, and it was 0% — that is T33's question answered), `encont.io` 24/24 (67.3%).
+      **An asset has a set of entries, not one**: traversing from 24 reaches 0% of observed
+      execution in seven of them.
+      Honest limit: a polled first-sighting is an **upper bound**, not proof of the engine's
+      entry — `logo.io` reads 68 here against the 24 proven by breakpoint. They are sound as
+      traversal seeds, which is what the disassembler needs. `main.io` came out at exactly 24,
+      which is the validation.*
 
 - [ ] **T42 · The input model of the boot sequence**
       The boot sequence is **input-gated, not timed** (FINDINGS 4.9, corrected): left alone
@@ -2066,7 +2083,7 @@ Compose rewrite has to do.
       `+6`, so it should be record byte 6, but that assumes DI and BX index the same
       structure — unchecked. See T40d.*
 
-- [!] **T40d · Which byte of an entity record is its X?**
+- [ ] **T40d · Which byte of an entity record is its X?**
       T40c showed a drawable's position is read from `[di+0x0c]`/`[di+0x0e]`, and that the
       records are built by `vm_op_declare_entity` (0x46) copying a 32-byte inline record to
       `es:[bx+6]` (FORMATS 3.17, 7.4). If DI and BX index the same structure, X is record
@@ -2089,3 +2106,6 @@ Compose rewrite has to do.
       So **the panel's entity records are in another asset's script**, and reading them needs
       that asset's entry points. The mechanism from T40c stands; the data is out of reach
       until T37f lands.*
+      *Unblocked: T37f landed. `frise.io` now traverses from entries [478, 27826, 29024,
+      32526] covering 68.7% of its bytes, and it is the asset that draws the panel chrome
+      (FINDINGS 4.15), so its `0x46` declarations are where the panel's positions should be.*

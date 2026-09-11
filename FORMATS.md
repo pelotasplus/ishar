@@ -1632,6 +1632,51 @@ missing is the data, and it is somewhere the disassembler cannot yet reach.
 constants read live from a running game; the x=0,y=147 sample matching 3.13b's
 framebuffer-verified origin.
 
+### 7.7 Entry point sets, found by polling (T37f)
+
+T37's blocker was that embedded scripts have no known entry point. They have several each,
+and they can be found without a breakpoint.
+
+**The method: poll, do not break.** A breakpoint on `vm_run` costs ~2.6 useful stops/s and
+drowns in ~340 background stops/s, which stalls the game. Polling `read_cpu_state` runs at
+**~3,550 samples/s** with the game unaffected. `SI` is only the script program counter
+while the CPU is inside `vm_run`'s fetch loop, so samples are kept only when
+`CS == load` and `IP` is in `0x26eb..0x26f8`; without that filter the poll attributes any
+moment `SI` happens to point into an asset buffer -- a string move, a block copy -- which
+is not execution at all. One 215s cold-start run gave 765,027 samples, **15,555 of them
+inside `vm_run`**, across 19 assets.
+
+**Entry sets, and what they cover.** Starting from the lowest observed PC and adding any
+observed PC the traversal still misses:
+
+| asset | entry set | observed PCs covered | bytes reached |
+|---|---|---|---|
+| `frise.io` | 478, 27826, 29024, 32526 | **41/41** | 68.7% |
+| `dplt.io` | 203, 249, 448, 1008, 3217, 3232 | **26/26** | 70.3% |
+| `samb.io` | 111, 213, 269, 428, 571, 1271 | **18/18** | 7.3% |
+| `geren.io` | 55, 85, 238, 931, 5387, 5402 | **29/29** | 35.2% |
+| `param.io` | 1794, 4183, 6640, 8600, 10955, 11245 | **18/18** | 63.0% |
+| `affobj.io` | 51, 65, 165, 548 | **17/17** | 62.6% |
+| `encont.io` | 47, 91, 116, 155, 291, 451, 805 | **24/24** | 67.3% |
+
+`affobj.io` was at 0% accounted for and is now **62.6% reachable script** -- which is what
+T33 was asking for. `param.io` and `encont.io` were also at 0%.
+
+**An asset has a set of entries, not one.** Traversing from offset 24 -- `main.io`'s loader
+entry -- reaches **0%** of observed execution in `frise.io`, `dplt.io`, `samb.io`,
+`gerdep.io`, `encont.io`, `souris.io` and `affobj.io`. The idea of a universal entry offset
+is dead, and 7.6's negative result on it stands.
+
+**What these offsets are, precisely.** Each is an offset at which the VM was *observed
+executing*, and the set is the smallest one whose traversal explains every observed PC. That
+is a weaker claim than "the engine enters here": a polled first-sighting is an upper bound,
+since polling can miss the true first statement -- `logo.io` reads 68 here against the 24
+established by breakpoint in 7.5. They are sound as *traversal seeds*, which is what a
+disassembler needs.
+
+**Verified by:** `.ish/t37f.json` and `.ish/t37f-entries.json`; the `CS`/`IP` filter; and
+`main.io` coming out at exactly **24**, its independently established entry.
+
 ### 7.3 A single-table disassembler cannot get `main.io`'s lengths right (T38b)
 
 `tools/vmdis.py` decodes every byte of `main.io` through the **statement** table at image
