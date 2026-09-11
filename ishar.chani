@@ -1636,4 +1636,17 @@ attr[seg_0000:28a9]: type = code; name = vm_op_attack_swing; comment = [[[
     combat-exclusive; the attack drives it roughly nine times harder. Attributed by
     call-count diff (T29f).
 ]]]
+attr[seg_0e97:038b]: type = code; name = sprite_blit_ingame; comment = [[[
+    **The in-game sprite blitter.** Fires 120 times when a character portrait is clicked
+    and 0 times in an equal idle window; also 106 on an ACTION menu draw, 112 on MAP and
+    23 on an attack (T40b, call-count diff).
+    This corrects two things. T11p recorded it firing 445 times during launcher/title/intro
+    and **zero in 30s of walking**, which was read as 'the seg_0e97 family does not draw the
+    game'. Both are true and not in conflict: it draws the **UI -- panel, portraits, menus**
+    -- and not the **3D viewport**, which has its own routines (FORMATS 3.13d).
+    Note it is reached without going through sprite_mode_dispatch (seg_0e97:0a30), which
+    takes 0 hits in the same windows, so there are two ways into this sprite code and the
+    in-game one bypasses the mode switch.
+    Its destination comes from the far pointer at ss:[0bc8]/[0bca].
+]]]
 end

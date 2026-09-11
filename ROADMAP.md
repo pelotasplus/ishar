@@ -1997,7 +1997,7 @@ Compose rewrite has to do.
       Two leads left, both offline: `en1.fic`'s word array, and the `cont*.fic` cell values
       (T11g3, still half-decoded).*
 
-- [ ] **T40b · Identify the in-game sprite blitter**
+- [x] **T40b · Identify the in-game sprite blitter**
       FORMATS 3.13c documents a five-mode sprite dispatcher in `seg_0e97`, and it draws the
       launcher, title and intro — but **not the game**: it takes 0 hits while the ACTION menu
       opens and closes, and T11p separately found its blitter firing zero times in 30s of
@@ -2011,3 +2011,19 @@ Compose rewrite has to do.
       once its address is known.*
       **Done when:** a breakpoint on the candidate fires while the party panel redraws in
       game, and the routine is named in `ishar.chani` with its destination register.
+      *Identified: **`seg_0e97:038b`**, now `sprite_blit_ingame` — 120 calls on a portrait
+      click against 0 idle, 106 on an ACTION menu draw, 112 on MAP, 23 on an attack. Its
+      destination comes from the far pointer at `ss:[0bc8]/[0bca]`.
+      Established by call-count diff rather than a breakpoint: three breakpoint attempts all
+      returned 0 hits because 5,000–6,000 stops in 20s slow the machine so much the keypress
+      never processes. The diff does not stop the machine, which is why T40's note said to
+      use it first.
+      **It also found a bug in my own tools**: both diff tools keyed call counts on the
+      **offset alone**, discarding the segment. Five segments are in play and two offsets
+      appear in more than one, so `seg_0e97:038b` was reported as `seg_0000:038b` — and
+      FINDINGS 4.16's `:0008` and `:01a8` are likewise `seg_0e97`. Both tools now key on
+      (segment, offset); FINDINGS 4.18 carries the correction.
+      This also reconciles T11p, which found the same routine firing 445 times in the intro
+      and **zero while walking**. Both hold: it draws the **UI**, not the **viewport**. And
+      the in-game path reaches it **without** `sprite_mode_dispatch` (0 hits), so there are
+      two entries into the sprite code.*

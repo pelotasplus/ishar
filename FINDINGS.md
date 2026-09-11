@@ -684,6 +684,25 @@ only twice across all 98 decoded assets, both inside image data (`krog.io` 22508
 `preson.io` 2051). So the destination is computed at draw time from an x and a y, not
 looked up.
 
+**CORRECTED (T40b): it draws the UI, just not the viewport.** The paragraph below was
+too broad, and it was built on a bug in my own tool -- `tools/t29c-action.py` keyed
+function call counts on the **offset alone**, discarding the segment. Five segments are
+present (`0x17d`, `0xabe`, `0x1014` = `seg_0e97`, `0x1554`, `0xf000`), so addresses were
+mislabelled: everything reported as `seg_0000:038b`, `:0008` and `:01a8` in FINDINGS 4.16
+is really in **`seg_0e97`**. Both diff tools now key on (segment, offset).
+
+Re-measured with that fixed: **`seg_0e97:038b` fires 120 times on a portrait click against
+0 idle**, and 106 on an ACTION menu draw. So the in-game sprite blitter *is* in that
+family, and is now `sprite_blit_ingame` in `ishar.chani`. What it does not draw is the
+**3D viewport** -- T11p's zero-in-30s-of-walking stands, and the viewport has its own
+routines (FORMATS 3.13d). The two results were never in conflict.
+
+Still true from the probes below: `sprite_mode_dispatch` (`seg_0e97:0a30`) and the
+mode-`0x10` path take 0 hits in the same windows, so the in-game path reaches the blitter
+**without going through the mode dispatcher** -- there are two ways into this sprite code.
+
+**Superseded reasoning follows.**
+
 **The sprite family documented in FORMATS 3.13c is not what draws the game.**
 `sprite_mode_dispatch` (`seg_0e97:0a30`) and its mode-`0x10` path (`seg_0e97:0b4c`) took
 **0 hits** while the ACTION menu was opened and closed, against **44** for a control at

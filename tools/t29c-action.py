@@ -31,7 +31,11 @@ def mcp(t, a=None):
 def snap():
     d = mcp("list_functions", {"limit": 5000})
     fs = d["Functions"] if isinstance(d, dict) and "Functions" in d else d
-    return {f.get("Address", {}).get("Offset", -1): f.get("CalledCount", 0) for f in fs}
+    # Key on (segment, offset). Functions live in five segments and two offsets occur in
+    # more than one, so keying on the offset alone merged them -- which mislabelled
+    # seg_0e97:038b, the sprite blitter, as seg_0000:038b in every earlier diff (T40b).
+    return {(f.get("Address", {}).get("Segment", -1),
+             f.get("Address", {}).get("Offset", -1)): f.get("CalledCount", 0) for f in fs}
 
 label, secs, cmd = sys.argv[1], float(sys.argv[2]), " ".join(sys.argv[3:])
 a = snap(); time.sleep(secs); b = snap()          # idle window
@@ -50,11 +54,14 @@ for k, v in act.items():
         rows.append((v / i, v, i, k))
 rows.sort(key=lambda r: (-r[0], -r[1]))
 print(f"[{label}] handlers used far more by the action than by idling:")
-for ratio, v, i, off in rows[:20]:
-    opcs = BY_ADDR.get(off, [])
-    nm = vmi.NAME.get(off, "")
+SEGNAME = {0x17d:"seg_0000", 0xabe:"seg_0abe", 0x1014:"seg_0e97", 0x1554:"seg_13d7", 0xf000:"bios"}
+for ratio, v, i, key in rows[:20]:
+    seg, off = key
+    opcs = BY_ADDR.get(off, []) if seg == 0x17d else []
+    nm = vmi.NAME.get(off, "") if seg == 0x17d else ""
     tag = ("  opcode " + ", ".join(f"{o:#04x}" for o in opcs)) if opcs else ""
     r = "only" if ratio == float("inf") else f"{ratio:5.1f}x"
-    print(f"   {r:>6}  action {v:<9d} idle {i:<9d} seg_0000:{off:04x} {nm[:28]:28s}{tag}")
-json.dump([(r[3], r[1], r[2]) for r in rows],
+    sn = SEGNAME.get(seg, f"seg_{seg:04x}")
+    print(f"   {r:>6}  action {v:<9d} idle {i:<9d} {sn}:{off:04x} {nm[:24]:24s}{tag}")
+json.dump([(list(r[3]), r[1], r[2]) for r in rows],
           open(os.path.join(HERE, ".ish", f"t29c-{label}.json"), "w"))
