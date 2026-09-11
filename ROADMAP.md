@@ -707,7 +707,12 @@ Compose rewrite has to do.
       identical and both correlate at 45, which is what parity-splitting a 90-wide grid does.
       The live half failed on the harness twice -- MCP `read_memory` needs ~45s for 4KB, and
       the GDB path saw no changed words before the emulator stalled at 1% CPU. T11g3b.*
-      *BLOCKER LIKELY STALE: a stalled emulator is not a property of this task. Restart and
+      *BLOCKER IS STALE, confirmed. Both halves of it have since been fixed and used:
+      MCP `read_memory` is not the route -- the GDB path reads 64 KB of VRAM in one go
+      (done this session, T48), and `tools/t11g3-pos.py` already notes it. The stalled
+      emulator was not a property of the task; one instance has since run a whole session
+      without stalling. The mouse also works now (T29c3), so the party can be driven to a
+      known cell instead of hoping a keyboard route exists. Nothing blocks the live half.*
       confirm the party moves before trusting any null result.*
 
 - [x] **T11r2 · Find the code that applies the palette group**
