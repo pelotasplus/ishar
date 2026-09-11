@@ -673,6 +673,38 @@ and blind exploration is not a method.
 
 **Evidence:** `tools/t29c-action.py` idle-vs-action windows; the three captures above.
 
+### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
+
+Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all
+negative, and the negatives narrow it usefully.
+
+**Positions are not stored as precomputed offsets.** `147 * 320 = 47040` -- what a linear
+destination for the portrait row would be -- appears nowhere in `start-unpacked.exe` and
+only twice across all 98 decoded assets, both inside image data (`krog.io` 22508,
+`preson.io` 2051). So the destination is computed at draw time from an x and a y, not
+looked up.
+
+**The sprite family documented in FORMATS 3.13c is not what draws the game.**
+`sprite_mode_dispatch` (`seg_0e97:0a30`) and its mode-`0x10` path (`seg_0e97:0b4c`) took
+**0 hits** while the ACTION menu was opened and closed, against **44** for a control at
+`vm_run` in the same session. That is consistent with T11p, which found `seg_0e97:038b`
+firing 445 times during launcher/title/intro and **zero in 30 seconds of walking**.
+
+The distinction matters and is easy to misread: the *format* in 3.13c is right -- `buste.io`'s
+portrait decodes byte-for-byte against VRAM as a mode `0x10` sprite (3.13b) -- but the
+*code* described there is the launcher and intro renderer. **The in-game blitter has not
+been identified**, and finding it is a prerequisite for this task rather than part of it.
+
+**Breakpoint probing of draw routines defeats itself.** Each attempt produced 5,000-6,000
+stops in 20 seconds, which slows the machine so much that the click being probed never
+gets processed -- the same trap as T37c, where a `vm_run` breakpoint froze the screen for
+270s. Any further work here needs the call-count diff (`tools/t29c-action.py`), which does
+not stop the machine, to identify the routine first, and a breakpoint only once the
+address is known.
+
+**Evidence:** the constant search across the executable and all 98 assets; three probe runs
+with a live control; T11p's earlier hit counts.
+
 ## 5. Known defects (ours and the game's)
 
 ### 5.0 A second garbage-execution fault

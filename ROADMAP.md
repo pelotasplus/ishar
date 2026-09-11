@@ -1983,3 +1983,18 @@ Compose rewrite has to do.
       coordinate shaped.
       Two leads left, both offline: `en1.fic`'s word array, and the `cont*.fic` cell values
       (T11g3, still half-decoded).*
+
+- [ ] **T40b · Identify the in-game sprite blitter**
+      FORMATS 3.13c documents a five-mode sprite dispatcher in `seg_0e97`, and it draws the
+      launcher, title and intro — but **not the game**: it takes 0 hits while the ACTION menu
+      opens and closes, and T11p separately found its blitter firing zero times in 30s of
+      walking (FINDINGS 4.18). So the routine that puts portraits and UI chrome on screen
+      during play is unknown, which blocks T40.
+      *Method: `tools/t29c-action.py` — it does not stop the machine, so the action actually
+      happens. Diff an idle window against one where the ACTION menu is opened, and against
+      one where a portrait is clicked; the routines common to both and absent from idle are
+      the drawing path. `ui_menu_draw_loop` (`seg_0000:35ae`, 4,248 calls) and
+      `seg_0000:038b` are the current candidates. Confirm by breaking on the winner only
+      once its address is known.*
+      **Done when:** a breakpoint on the candidate fires while the party panel redraws in
+      game, and the routine is named in `ishar.chani` with its destination register.
