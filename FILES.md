@@ -218,7 +218,7 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 
 4,370 bytes on disk, **7,296 decoded** · art
 
-**The starting NPC.** Three of its twelve sprites were caught drawn at three distances -- @2152 16x29, @1424 32x45, @3714 48x31 -- so the sprite changes with range, but not in size order, and a prediction from two distances failed at the third (FINDINGS 4.15f).
+**The starting NPC.** Three of its twelve sprites were caught drawn at three distances -- @2152 16x29, @1424 32x45, @3714 48x31 -- so the sprite changes with range -- and the twelve sprites are body PARTS at several ranges, not twelve whole figures. Adjacent, the NPC is @3714 (upper, 48x31) stacked over @2770 (lower, 48x39) (FINDINGS 4.15g).
 
 | bytes | len | what |
 |---|---|---|
@@ -228,7 +228,9 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 16..1,424 | 1,408 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,424..2,152 | 728 | **32x45 sprite, mode 0x10** - the starting NPC at ~2 cells: 32x45, drawn at (12,65) (FINDINGS 4.15f) (3.10) |
 | 2,152..2,392 | 240 | **16x29 sprite, mode 0x10** - the starting NPC at ~3 cells: 16x29, drawn at (224,72) and (136,72) (FINDINGS 4.15f) (3.10) |
-| 2,392..3,714 | 1,322 | 4 sprites, mode 0x10, 16x7 to 48x39 (+50 b between) (3.10) |
+| 2,392..2,720 | 328 | 3 sprites, mode 0x10, 16x7 to 16x19 (3.10) |
+| 2,720..2,770 | 50 | UNEXPLAINED |
+| 2,770..3,714 | 944 | **48x39 sprite, mode 0x10** - the starting NPC's LOWER half when adjacent: 48x39 at (104,91), stacked under @3714 -- 92.8% vs VRAM (FINDINGS 4.15g) (3.10) |
 | 3,714..4,466 | 752 | **48x31 sprite, mode 0x10** - the starting NPC at 1 cell: 48x31 at (103,60) -- **100% vs VRAM**, 779 opaque pixels (FINDINGS 4.15f) (3.10) |
 | 4,466..7,146 | 2,680 | 5 sprites, mode 0x10, 16x15 to 32x68 (3.10) |
 | 7,146..7,296 | 150 | UNEXPLAINED |

@@ -1233,6 +1233,71 @@ alongside @25490 and @25714, so its ladder is in use too.
 sprite independently confirmed by `tools/onscreen.py` at 100% of 779 opaque pixels;
 `captures/t54b-adjacent.png` showing the figure at that distance.
 
+### 4.15g A character is drawn from stacked parts, not one sprite per distance
+
+The question T54b was asking -- which rung of a size ladder goes with which distance -- is
+the wrong one for characters. Standing adjacent to the starting NPC, **two** `bormin.io`
+sprites are on screen, stacked:
+
+| sprite | size | at | match |
+|---|---|---|---|
+| `bormin.io` @3714 | 48x31 | (103, 60) | **100%** -- 779 of 779 opaque pixels |
+| `bormin.io` @2770 | 48x39 | (104, 91) | **92.8%** -- 950 of 1024 |
+
+They are contiguous: y 60..91 and y 91..130, one pixel apart in x. Together 48 x 70, which
+is the figure as it appears on screen. The lower half's 74 wrong pixels are where grass and
+flowers are drawn over his feet.
+
+**So `bormin.io`'s twelve sprites are body parts at several ranges, not twelve whole
+figures.** That explains the prediction that failed in 4.15f: 48x31 is not "a shorter rung
+than 32x45", it is the *upper half* of a nearer figure. Sorting the sprites by height was
+sorting a mixture of halves and wholes.
+
+**What a rewrite needs instead of a ladder:** for each range, the set of parts and their
+relative offsets. `@3714` over `@2770` at `dx = +1, dy = +31` is the adjacent pose; the
+16x29 seen at three cells (4.15f) is presumably whole at that size, since nothing stacked
+under it.
+
+**Why the earlier sweep missed it.** `tools/onscreen.py` steps its search by one pixel but
+the quick probe written to look for a second part stepped by two, and @2770's origin has an
+odd y. A grid that skips the answer reports its absence -- the same shape as the scar about
+zero-hit results being claims about the instrument.
+
+**Evidence:** exhaustive single-pixel search over x 80..180, y 40..140 for both sprites
+against live VRAM with the party adjacent and the dialogue panel dismissed
+(`captures/t54b-nodialogue.png`); opaque pixels only, counts above.
+
+### 4.15h Screen position: one solid number, and why the rest is hard
+
+**88 pixels per lateral cell at three cells' distance.** The same NPC sprite, `bormin.io`
+@2152 (16x29), was caught drawn at screen x **224** with the party at `(12,28)` and at
+**136** with the party at `(12,29)` -- one cell east, 88 pixels left, same y (72), same
+sprite.
+
+That difference is the useful form. **Absolute position cannot be read from one frame**,
+because a sprite's origin is not the object's centre: two lateral-zero observations of the
+same NPC put its centre at 144 and at 127, so each sprite carries an anchor offset nobody
+has measured. A difference between two frames cancels the anchor; a single frame does not.
+
+**A second, weaker point.** Taking the NPC's cell as `(15,29)`, @1424 at `(13,30)` gives
+about 116 pixels per cell at two cells' distance. A pure 1/z projection would predict 132
+from the 88 at three cells. Same direction, wrong size -- but the NPC's cell is an
+assumption and the sprite anchors differ, so this is a hint, not a measurement.
+
+**Three things make the NPC the wrong object for this.** He appears to **move** -- `(13,29)`
+became blocked between two visits; he is **occluded** at distance, so the framebuffer route
+finds nothing from three cells away while the breakpoint sees him drawn; and his **map cell
+is unknown**, which the acceptance criterion needs.
+
+So T54c wants a fixed object whose cell can be established -- a tree that blocks a move,
+which identifies its cell exactly -- measured by the breakpoint route at several lateral
+offsets per distance.
+
+**Evidence:** the two @2152 sightings from `tools/t54b-frames.py` at `(12,28)` and
+`(12,29)`; the anchor discrepancy from the four sightings tabulated in 4.15f; three failed
+attempts at more lateral points with `tools/t54c-slope.py`, which found nothing because the
+framebuffer cannot see an occluded distant sprite.
+
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
 Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all

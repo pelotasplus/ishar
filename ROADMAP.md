@@ -2667,6 +2667,18 @@ Compose rewrite has to do.
       Next: settle that first, and it is cheap. Stand adjacent and run `tools/onscreen.py`
       over every asset, not just `bormin.io` -- if a second sprite is on screen below @3714,
       the figure is composed of parts and "which rung" is the wrong question.*
+      *[!] **The question is wrong, which is the answer (FINDINGS 4.15g).** A second sprite
+      is there: adjacent to the NPC, `bormin.io` @3714 (48x31 at (103,60), 100% of 779
+      opaque pixels) sits on top of @2770 (48x39 at (104,91), 92.8% of 1024), contiguous and
+      one pixel apart in x, together 48x70 -- the figure as it appears. So `bormin.io`'s
+      twelve sprites are **body parts at several ranges, not twelve whole figures**, and the
+      prediction that failed in 4.15f failed because sorting them by height sorted a mixture
+      of halves and wholes.
+      This task is therefore closed as mis-framed rather than met. Its successor is T54d:
+      per range, the set of parts and their relative offsets.
+      One instrument note: the first probe for a second part stepped its search by two
+      pixels and @2770's origin has an odd y, so it reported 50.9% and looked like noise. A
+      grid that skips the answer reports its absence.*
 
 - [x] **T53b · Bind the polled chrome positions to their sprites**
       T53 confirmed two sprites; seven polled positions had no sprite attached.
@@ -2757,3 +2769,41 @@ Compose rewrite has to do.
       goes down.*
       **Done when:** `EVIDENCE_DEBT` is empty, or every remaining entry carries a
       `Status: not verified` line and a task for the measurement.
+
+- [ ] **T54d · The part list per range**
+      T54b is mis-framed: a character is drawn from **stacked parts**, not one sprite per
+      distance (FINDINGS 4.15g). Adjacent, the starting NPC is `bormin.io` @3714 over @2770
+      at `dx +1, dy +31`; at three cells he is a single 16x29 with nothing under it. So what
+      a rewrite needs is, per range, the parts and their relative offsets -- and how many
+      parts there are changes with range.
+      *Method: `tools/t54b-frames.py` already captures whole frames with each object's
+      sprite and origin, so walk one line toward the NPC capturing at every cell and read
+      the part sets straight off. Cross-check each with an exhaustive single-pixel
+      `tools/onscreen.py` search -- and step by one, since @2770 was missed by a grid of
+      two.*
+      **Done when:** FINDINGS gives the part set and offsets for the NPC at three ranges,
+      and a predicted composite matches the framebuffer at a range not used to derive it.
+
+- [~] **T54c · How a viewport object's screen position is computed**
+      The viewport blits 1:1 and the row step gives `DI`, which *is* the destination -- so
+      screen position is readable directly (FORMATS 3.13d, FINDINGS 4.15c). What is missing
+      is the rule: given the party's cell and an object's cell, where does it land?
+      **Done when:** an object's screen position is predicted from the party's cell and the
+      object's map cell, and the prediction holds at a cell not used to derive it.
+      *Filed late -- it was proposed in a reply and referenced from FINDINGS 4.15h before it
+      existed here, which `tools/checkdocs.py` caught. The scar about proposing work in the
+      reply rather than filing it, again.*
+      *One number established (FINDINGS 4.15h): **88 pixels per lateral cell at three cells'
+      distance**, from the same sprite caught at x=224 from `(12,28)` and x=136 from
+      `(12,29)`. Differences are the usable form -- **absolute position cannot be read from
+      one frame**, because a sprite's origin is not the object's centre and two lateral-zero
+      sightings of the same NPC put its centre at 144 and 127, so every sprite carries an
+      unmeasured anchor.
+      Not met, and the NPC is the wrong object for it: he **moves** (`(13,29)` became blocked
+      between visits), he is **occluded at distance** so the framebuffer route sees nothing
+      from three cells while the breakpoint sees him drawn, and his **map cell is unknown**,
+      which the criterion needs. Three attempts at more lateral points all failed on those.
+      *Next: pick a fixed object whose cell can be pinned -- a tree that refuses a move,
+      which identifies its cell exactly -- and measure with `tools/t54b-frames.py` at
+      several lateral offsets for each of two distances. The anchor cancels in the
+      differences, so the slope per distance is what comes out, and that is the projection.*

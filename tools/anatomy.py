@@ -26,8 +26,9 @@ ASSET_NOTES = {
                "this is the asset the 3D view is built from (FINDINGS 4.15c).",
     "bormin.io": "**The starting NPC.** Three of its twelve sprites were caught drawn at "
                  "three distances -- @2152 16x29, @1424 32x45, @3714 48x31 -- so the sprite "
-                 "changes with range, but not in size order, and a prediction from two "
-                 "distances failed at the third (FINDINGS 4.15f).",
+                 "changes with range -- and the twelve sprites are body PARTS at several "
+                 "ranges, not twelve whole figures. Adjacent, the NPC is @3714 (upper, "
+                 "48x31) stacked over @2770 (lower, 48x39) (FINDINGS 4.15g).",
     "main.io": "Also carries the **font**: 16x9 glyph sprites, drawn 7 pixels apart "
                "(FINDINGS 4.15e).",
     "plaine.io": "Outdoor scenery for the plains: the bushes and trees in the viewport, at "
@@ -88,6 +89,8 @@ IDENTIFIED = {
                          "(FINDINGS 4.15f)",
     ("bormin.io", 3714): "the starting NPC at 1 cell: 48x31 at (103,60) -- **100% vs "
                          "VRAM**, 779 opaque pixels (FINDINGS 4.15f)",
+    ("bormin.io", 2770): "the starting NPC's LOWER half when adjacent: 48x39 at (104,91), "
+                         "stacked under @3714 -- 92.8% vs VRAM (FINDINGS 4.15g)",
     ("arbre.io", 18890): "a tree, 48x38, seen drawn at (177,72) (FINDINGS 4.15f)",
     ("arbre.io", 25490): "a tree, 16x27, seen drawn at (247,61) -- one rung of the size "
                          "ladder (FINDINGS 4.15c)",

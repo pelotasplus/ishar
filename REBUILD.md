@@ -375,6 +375,20 @@ Two rungs were caught on screen **in the same frame** at different heights — @
 at (247,61) and @25714 (16x15) at (256,66) — which is the ladder in use. Which rung goes
 with which distance is still open.
 
+### Characters are drawn from stacked parts
+
+Not one sprite per distance. Adjacent to the starting NPC, two `bormin.io` sprites are on
+screen:
+
+    bormin.io @3714   48 x 31   at (103, 60)   the upper half   100%  vs VRAM
+    bormin.io @2770   48 x 39   at (104, 91)   the lower half   92.8%
+
+Contiguous, one pixel apart in x, together 48 x 70. So for a character you need, per range,
+**the set of parts and their relative offsets** — here upper over lower at dx +1, dy +31.
+
+At three cells away the same NPC is a single 16x29 sprite with nothing stacked under it, so
+the number of parts changes with range too.
+
 For a rewrite this is far less work than a projection: pick the sprite, blit it 1:1 at its
 position. No perspective maths.
 
