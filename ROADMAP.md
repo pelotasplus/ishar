@@ -2742,7 +2742,7 @@ Compose rewrite has to do.
       asset. The lesson is the one already in this file: a routine that fires is not a
       routine that fires when you care, and the same goes for a sprite.*
 
-- [ ] **T56b · Does an NPC block its cell?**
+- [x] **T56b · Does an NPC block its cell?**
       `0x0A` refuses a move at `(15,29)` and permits one at `(11,40)` -- the anomaly behind
       "blocking is not a function of the cell value" (FINDINGS 6.7b). The starting NPC
       stands about where `(15,29)` is, which would explain it: the cell is walkable and the
@@ -2752,6 +2752,14 @@ Compose rewrite has to do.
       a second data point on what RECRUIT does.*
       **Done when:** FINDINGS says whether occupancy blocks movement independently of the
       cell value.
+      *Met, and without needing to kill anyone (FINDINGS 4.15i). Cell `(13,29)` -- value
+      `0x02` throughout -- was refused, then walked onto, then refused again within a few
+      minutes. **Occupancy blocks; the cell value does not change.** That settles 6.7b's
+      anomaly: `0x0A` refused a move in one place and allowed it in another because
+      something was standing on one of them. A rewrite needs an occupancy layer over the
+      terrain grid.
+      The NPC also **wanders continuously**, which is why he is a useless measurement target
+      -- T54c and T54d have both now failed on the distance changing mid-measurement.*
 
 - [ ] **T57 · Give the 17 pre-Evidence sections an evidence line**
       `tools/checkdocs.py` now fails any numbered section in FINDINGS or FORMATS with no
@@ -2783,6 +2791,17 @@ Compose rewrite has to do.
       two.*
       **Done when:** FINDINGS gives the part set and offsets for the NPC at three ranges,
       and a predicted composite matches the framebuffer at a range not used to derive it.
+      *Part sets obtained for three ranges with the NPC pinned at `(15,29)` and the party
+      due south, so lateral offset zero (FINDINGS 4.15i): **1 cell** = `@3714` 48x31 at
+      (103,60) *and* `@2770` 48x39 at (104,91); **2 cells** = `@1424` 32x45 at (144,65);
+      **3 cells** = `@2152` 16x29 at (136,72). The number of parts changes with range -- two
+      adjacent, one beyond.
+      Not met: the prediction. At four cells the next smaller 16-wide sprite (`@2392` 16x19)
+      was expected, and the test could not be run because **the NPC walked behind the party**
+      before it could retreat (4.15i).
+      **Blocked on the same thing as T54c: a target that holds still.** Do not retry either
+      against an NPC. Pick a tree, pin its cell by finding the move it refuses, and measure
+      from there -- a tree cannot walk away and its cell is then exactly known.*
 
 - [~] **T54c · How a viewport object's screen position is computed**
       The viewport blits 1:1 and the row step gives `DI`, which *is* the destination -- so

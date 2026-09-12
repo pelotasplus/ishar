@@ -826,7 +826,9 @@ nothing, and no new script runs (4,323 samples), so entry needs something else -
 ACTION menu has **PICK LOCK**.
 
 **Not all low values are walkable.** `0x0A` refused a move, so `value < 0x40` is not a
-walkability test; the walkable/blocked split has to be per value.
+walkability test. **And the split is not per value either** -- the same value blocks in one
+place and not another because an NPC may be *standing* there (4.15i). Terrain and occupancy
+are separate layers.
 
 **There is a "bounce back to the start" event, and the game is gated by it.** Stepping
 north from `(13,57)` does not move the party: after a few attempts the scene reloads --
@@ -1297,6 +1299,45 @@ offsets per distance.
 `(12,29)`; the anchor discrepancy from the four sightings tabulated in 4.15f; three failed
 attempts at more lateral points with `tools/t54c-slope.py`, which found nothing because the
 framebuffer cannot see an occluded distant sprite.
+
+### 4.15i NPCs walk around, and an occupant blocks a cell
+
+**The starting NPC moves.** Cell `(13,29)` was refused, then walked onto, then refused
+again, within a few minutes and with no change to the map:
+
+```
+cont1.fic[(13,29)] = 0x02        the same value throughout
+(12,29) -> (13,29)  refused      he was standing there
+(12,29) -> (13,29)  MOVED        he had moved on
+(14,29) -> (15,29)  refused      he was there now
+(14,29) -> (13,29)  refused      he had gone back behind the party
+```
+
+**So occupancy blocks movement, and the cell value does not.** That settles the anomaly
+behind 6.7b's "blocking is not a function of the cell value": `0x0A` refused a move in one
+place and allowed it in another because something was *standing* on one of them. A rewrite
+needs an occupancy layer over the grid, separate from terrain.
+
+**And it makes the NPC useless as a measurement target.** Three tasks have now failed on it
+-- T54c's lateral slope, T54d's part sets, and an attempted distance-4 prediction -- because
+the distance to him changes while the measurement is being taken.
+
+**The part sets, as far as they got.** With him pinned at `(15,29)` and the party directly
+south, so lateral offset zero:
+
+| distance | parts | origins |
+|---|---|---|
+| 1 cell | `@3714` 48x31 **and** `@2770` 48x39 | (103,60), (104,91) |
+| 2 cells | `@1424` 32x45 | (144,65) |
+| 3 cells | `@2152` 16x29 | (136,72) |
+
+So the number of parts changes with range: two when adjacent, one beyond that. The
+distance-4 prediction -- the next smaller 16-wide sprite, `@2392` 16x19 -- could not be
+tested, because he walked behind the party before the party could retreat.
+
+**Evidence:** the four move attempts above, each read from the position bytes rather than
+from the screen; `tools/t54b-frames.py` captures at the three distances; `@3714` confirmed
+at 100% of 779 opaque pixels by `tools/onscreen.py` at distance 1.
 
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 

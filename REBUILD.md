@@ -286,6 +286,11 @@ Bit 6 splits the value space cleanly.
 
     value & 0x40 != 0    area terrain, in large blobs.
 
+**Two layers, not one.** A cell can be blocked by its terrain *or* by something standing on
+it. The starting NPC walks around, and the cell he occupies refuses entry while he is on it
+and allows it after he moves — with the grid byte unchanged throughout. So model occupancy
+separately from terrain.
+
 Specific values that are known:
 
     0xCC, 0xCD    water. Impassable.
