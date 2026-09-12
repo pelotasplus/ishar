@@ -878,10 +878,34 @@ behaviour by observation. That also explains 6.7b's "the walked path crosses eig
 walkable values in eighteen cells" and why `plaine.io`/`arbre.io` run only when the view
 changes (T44) -- those are the programs doing the drawing.
 
-**Not established: which script.** The three genuine reads attributed to `gerdep.io`,
-`lacustre.io` and `samb.io`, one sample each -- enough to say scripts read the map, not
-enough to name one. `gerdep` reads as *gestion deplacement* and is the busiest script in the
-game, which makes it the likely mover, but that is etymology plus a call count, not evidence.
+**The reader, and the access itself.** Widening the sample settles it. Driving the party
+back and forth across a watched cell gives **95 and 51 genuine stops** on two cells, and the
+single dominant site in both is `seg_0000:7153` with the script PC in **`lacustre.io` at
+offset 1190-1200** -- 36 and 23 hits, against scattered singletons everywhere else.
+`lacustre.io` is the *lakeside* scene script and the party is standing by the lake, so the
+reader is **the scene script for the terrain it is standing on**, not one global manager.
+
+The statement there decodes completely (FORMATS 7.2h):
+
+```
+1e                statement: eval_reset
+  38              begin an expression sequence
+    12 18         byte frame var 24          -- a subscript
+    40            push it
+    12 19         byte frame var 25          -- the other subscript
+    26 80 00      global[0x0080 + index]     -- the map
+  3a              end the sequence
+```
+
+**`0x26` is an indexed global load and the VM has real arrays.** `vm_index_byte` reads an
+array's descriptor from the bytes immediately *below* its data: a dimension count at
+`base-1` and a stride word per dimension below `base-2`. Read live for the map, the count is
+**1** and the stride is **90** -- so the map is declared `map[54][90]` and the access is
+`map[row][col]`. The stride the game stores is the one the grid geometry independently
+requires, which is the check.
+
+That retires the guess in the previous paragraph: `gerdep` was the favourite on etymology
+and call count, and the evidence names `lacustre.io`.
 
 **A walkability correction.** `0x0A` refused a move at `(14,29)` (4.19b) and permitted one at
 `(11,40)` in this session. **So blocking is not a function of the cell value alone** -- which

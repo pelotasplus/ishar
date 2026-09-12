@@ -1785,6 +1785,66 @@ findable: the operand of the selector expression names the variable outright.
 `frise.io` matching it -- 21 cases for 21 names, with the live value of global `0x3eac`
 equal to 0, 1 and 2 in the three regions visited.
 
+### 7.2h Arrays: how a script reads the world map
+
+The scripts index multi-dimensional arrays, and the world map is one. Three pieces.
+
+**Expression `0x26` -- indexed global byte load** (`vm_expr_load_global_indexed`,
+`seg_0000:6b0b`):
+
+```
+26 <base:u16>        ->  DX = byte at global[base + index]
+```
+
+`mov bp, ss:[0bf6]` takes the global base, `vm_index_byte` computes the element offset,
+`mov al, es:[bp] / cbw` returns it sign-extended.
+
+**The array descriptor sits immediately below the data** (`vm_index_byte`,
+`seg_0000:6c2e`). For an array at `base`:
+
+| where | width | meaning |
+|---|---|---|
+| `base-1` | u8 | number of **extra** dimensions -- 0 means a plain vector |
+| `base-4`, `base-6`, ... | u16 | the stride for each, innermost last |
+
+AX enters as the base and DX as the last subscript; the rest come off the expression stack
+at `SS:BX`. Each round is `sub di,2 / mul word ptr es:[di]`, accumulated in `ss:[0b0a]`.
+
+**The expression stack** is three more opcodes, all in the same block:
+
+| opcode | handler | |
+|---|---|---|
+| `0x40` | `7140` | push the accumulator (`sub bx,2 / mov ss:[bx],dx`) |
+| `0x36` | `7147` | pop it |
+| `0x38` | `7150` | evaluate sub-expressions in a loop (`call 069ab / jmp 7150`) |
+| `0x3a`, `0xe4` | `7156` | end that loop -- `add sp,2 / ret` discards its return address |
+
+`0x38`'s loop looks like a hang in the listing and is not: the terminator throws away the
+return address. It also explains why every breakpoint stop on a map cell reports
+`seg_0000:7153` -- that is the loop's return point, with the reading handler already
+returned.
+
+**Worked example: the map read.** `lacustre.io` offset 1190, which 23 of 51 genuine stops
+on a watched map cell land on:
+
+```
+1e                statement: eval_reset
+  38              begin an expression sequence
+    12 18         byte frame var 24          -- a subscript
+    40            push it
+    12 19         byte frame var 25          -- the other subscript
+    26 80 00      global[0x0080 + index]     -- THE MAP
+  3a              end the sequence
+```
+
+Base `0x0080` is exactly where `cont*.fic` is loaded (3.12). Its descriptor reads, live:
+`global[0x7f] = 1` -- one extra dimension -- and the stride word at `global[0x7c]` = **90**.
+So the declaration is `map[54][90]` and the access is `map[row][col]`.
+
+**Verified by:** the three annotated handlers; a MEMORY_READ breakpoint on one grid cell,
+which fires at `seg_0000:7153` and nowhere else across two watched cells; and the descriptor
+read live, where the stride is the 90 the grid geometry independently requires.
+
 ### 7.2f Why some branch targets are wrong: misaligned decodes (T39e)
 
 `0x14` targets land on a valid opcode **178/178 = 100%**, against a chance baseline of

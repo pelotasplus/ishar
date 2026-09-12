@@ -1830,4 +1830,49 @@ attr[seg_0000:6acd]: type = code; name = vm_op_load_byte_global; comment = [[[
     FINDINGS 4.19b. Read live it is 0 in FRAGONIR, 1 in ANGARAHN, 2 in OSGHIROD.
     `tools/region.py` reads it.
 ]]]
+attr[seg_0000:6b0b]: type = code; name = vm_expr_load_global_indexed; comment = [[[
+    Expression 0x26: `26 <base:u16>` -- load a byte from the global array at `base`,
+    subscripted. `mov bp, ss:[0bf6]` takes the global base, `vm_index_byte` computes the
+    element offset from the subscripts, `mov al, es:[bp]` reads it.
+
+    This is how a script reads the world map: `26 80 00` is `map[...]`, base 0x0080
+    (FORMATS 3.12). It is the only code path that touches a map cell -- a MEMORY_READ
+    breakpoint on one cell fires here and nowhere else (FINDINGS 4.19d).
+]]]
+attr[seg_0000:6c2e]: type = code; name = vm_index_byte; comment = [[[
+    Multi-dimensional array indexing, shared by the indexed byte opcodes. The array's
+    descriptor sits immediately BELOW its data:
+
+        base-1        u8    number of extra dimensions
+        base-4, -6..  u16   the stride for each, innermost last
+
+    AX enters as the base and DX as the last subscript; the remaining subscripts come off
+    the expression stack at SS:BX, pushed by expression 0x40. Each round does
+    `sub di,2 / mul word ptr es:[di]` and accumulates into ss:[0b0a].
+
+    Verified on the map: global 0x7f reads 1 (one extra dimension) and the stride word at
+    global 0x7c reads **90**, the grid's row stride -- so `26 80 00` with two subscripts is
+    `map[row][col]` (FINDINGS 4.19d).
+]]]
+attr[seg_0000:7140]: type = code; name = vm_expr_push; comment = [[[
+    Expression 0x40: `sub bx,2 / mov ss:[bx],dx` -- push the accumulator onto the
+    expression stack at SS:BX. Paired with vm_expr_pop (0x36) and used to supply the
+    extra subscripts vm_index_byte consumes.
+]]]
+attr[seg_0000:7147]: type = code; name = vm_expr_pop; comment = [[[
+    Expression 0x36: pop the expression stack into CX, moving the accumulator to DX.
+]]]
+attr[seg_0000:7150]: type = code; name = vm_expr_sequence; comment = [[[
+    Expression 0x38: `call 069ab / jmp 7150` -- evaluate sub-expressions in a loop. It is
+    not an infinite loop: the break-out handler at 7156 (expressions 0x3a and 0xe4) does
+    `add sp,2 / ret`, discarding this loop's return address.
+
+    A map read reads `38 <subscript> 40 <subscript> 26 <base> 3a`, so every stop caught on
+    a map cell reports IP = 7153, the loop's return point, with the reading handler already
+    returned (FINDINGS 4.19d).
+]]]
+attr[seg_0000:7156]: type = code; name = vm_expr_sequence_end; comment = [[[
+    Expressions 0x3a and 0xe4: `add sp,2 / ret` -- discards the caller's return address,
+    which is what ends vm_expr_sequence's loop.
+]]]
 end

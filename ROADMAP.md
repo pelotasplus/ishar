@@ -2367,10 +2367,22 @@ Compose rewrite has to do.
       Also corrected: `0x0A` blocked a move at `(14,29)` and allowed one at `(11,40)`, so
       **blocking is not a function of the cell value alone** -- which follows, since a script
       decides and can consult anything.
-      Left: which script. Three genuine reads attributed to `gerdep.io`, `lacustre.io` and
-      `samb.io`, one sample each -- enough to say scripts read the map, not enough to name
-      one. Next: widen that to dozens of samples, then read the reading script's bytecode
-      around its map access with `tools/vmi.py --listing`.*
+      Answered on the second pass. Widening to **95 and 51 genuine stops** on two watched
+      cells makes one site dominant in both: `seg_0000:7153` with the script PC in
+      **`lacustre.io` at 1190-1200** (36 and 23 hits, scattered singletons elsewhere).
+      `lacustre.io` is the *lakeside* scene script and the party is by the lake, so the
+      reader is the scene script for the terrain underfoot -- not `gerdep.io`, which was the
+      favourite on etymology and call count.
+      The statement decodes completely and gives the VM's **array machinery** (FORMATS 7.2h):
+      expression `0x26` is an indexed global byte load, `vm_index_byte` reads a descriptor
+      from the bytes *below* the data (dimension count at `base-1`, stride words below
+      `base-2`), and `0x40`/`0x36`/`0x38`/`0x3a` are push/pop/sequence/end on an expression
+      stack. The map is `26 80 00` -- base `0x0080`, dimension count 1, **stride 90 read
+      live** -- so `map[54][90]`, accessed `map[row][col]`. The stride the game stores is the
+      one the grid geometry independently requires, which is the check.
+      Left: the Done-when as literally written (three values matched to named sprites) stays
+      unmet and is now known to be the wrong question -- there is no table. The useful
+      successor is T11g3h.*
 
 - [~] **T11g3e · How does the party change region?**
       The six grids are self-contained -- no edge continues into another, each closed by its
@@ -2445,3 +2457,17 @@ Compose rewrite has to do.
       names the region in the facing direction, which corrects what 4.17b first said about it.
       Next: restart clean, reach the village without any menu interaction, and try walking
       into the door from each of the four sides before touching a verb.*
+
+- [ ] **T11g3h · Read what a scene script does with a map cell**
+      The access is located: `lacustre.io` at 1190 reads `map[row][col]` via expression
+      `0x26` (FORMATS 7.2h), and it is the scene script for the terrain underfoot that does
+      it. What it does with the value -- which sprite, at which position, at which scale --
+      is the last step between "can walk the world" and "can draw it".
+      *Method: `tools/vmi.py --listing` drifts around 1190 (the statement at 1190 renders as
+      three overlapping decodes), so fix the traversal there first -- the raw bytes
+      `1e 38 12 18 40 12 19 26 80 00` are a clean 10-byte statement and a correct stepper
+      must produce exactly that. Then read forward: the branch immediately after the load is
+      what turns a cell value into a decision, and `0x45` (`vm_op_load_asset`) or a sprite
+      draw should appear within a few statements.*
+      **Done when:** FINDINGS shows, for one cell value, the bytecode path from the map read
+      to the draw, and says what is drawn.
