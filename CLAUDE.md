@@ -1122,3 +1122,25 @@ alone.
 The game dies in the timer interrupt after a couple of minutes — see `FINDINGS.md`
 §5.1. Sessions are short until that is fixed; plan measurements accordingly and check
 the log for `Emulation failed` before trusting a reading taken near the end of a run.
+
+### The state a previous session left the game in is part of your measurement
+
+`tools/t59-globals.py`'s first run diffed the globals across six actions -- a step forward,
+three turns, a step back -- and reported thirteen bytes moving on each, all in one small
+region, none of them the party's position. The obvious reading was that the party's cell is
+not where FORMATS says it is.
+
+The emulator was sitting in the ORIENTATION dialog, left open by the previous session. A
+modal dialog eats the arrow keys, so every "action" was a no-op and the diff was a
+measurement of the clock (`captures/t59-modal-dialog.png`).
+
+This is the phantom-subtraction scar with the noise source *inside the game* rather than in
+the instrument, and the same fix applies: **make the probe prove the action happened.** The
+tool now reads the viewport with every snapshot and prints how much of the screen changed,
+plus the party's cell, and says `screen did not change -- this action did nothing` when a
+movement action moved nothing. The first honest run then found the party's row and column
+without being told where they were.
+
+The generalisation is cheap and worth reaching for before any run that drives the game:
+**a probe that cannot tell "the game did nothing" from "the game did something boring" will
+report the second when it means the first.**

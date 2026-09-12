@@ -8,7 +8,8 @@
     5  The 3D viewport      why it is not a blit, and what is still missing
     6  Text                 the four languages
     7  The script VM        what is code rather than data, and what that costs you
-    8  How much is proven
+    8  World state          the map, the party, the clock, the cast's names
+    9  How much is proven
 
 ---
 
@@ -355,7 +356,11 @@ in each scene script, and you either port those switches or reimplement what the
 
     grid_end + 0   row
     grid_end + 1   column
-    grid_end + 2   facing        reads 2 while ORIENTATION reports East
+    grid_end + 2   reads 2, and is not the facing
+
+The third byte was taken for the facing because ORIENTATION reported East while it read 2.
+It stays 2 through six moves in two axes, so whatever it is, movement does not write it.
+Where the facing lives is not known.
 
 ### Not known
 
@@ -563,7 +568,77 @@ The full tables are in `FORMATS.md` section 7.
 
 ---
 
-## 8. How much of this is proven
+## 8. World state
+
+Everything the game remembers about the world sits in one flat byte array. There is no
+separate save structure to reverse: the scripts read and write this array, and the array
+is the state.
+
+Its base is a far pointer the engine keeps at `ss:[0bf6]`. In two sessions that read
+`126b:02a0`, which is linear address `0x12950`. A rewrite allocates the array itself and
+never needs the pointer; what matters is the offsets into it.
+
+### The map and the party
+
+The grid is at `+0x0080` and the party's row, column and region id at `+0x137C`, `+0x137D`
+and `+0x3EAC`. Section 4 covers all of it.
+
+Six other places hold the party's cell as well -- three verbatim, three offset by one row
+and one column, one offset by a column. Which copy the engine treats as authoritative is
+not established, so write `+0x137C` and derive the rest.
+
+### Time
+
+| offset | bytes | field |
+|---|---|---|
+| `+0x438B` | 1 | step counter, 0..4 |
+| `+0x438C` | 1 | advances each time `+0x438B` wraps |
+
+Time advances when the party takes a step, in any direction, and not otherwise. Forty
+seconds of idling moves neither byte. Five steps advance `+0x438C` by one.
+
+A rewrite does not need a wall clock for this. Increment on a successful move.
+
+### Names
+
+The cast is a table of 33 fixed 8-byte slots at `+0x1746`, each a name padded with zero
+bytes. A second, byte-identical copy sits at `+0x2D68`.
+
+| slot | name | slot | name | slot | name |
+|---|---|---|---|---|---|
+| 0 | XYLAZ | 11 | KHALIN | 22 | MOLGO |
+| 1 | ZELORAN | 12 | SHEELDA | 23 | AKORMH |
+| 2 | KYRIAN | 13 | BROM | 24 | MOGH |
+| 3 | TARGHAN | 14 | AZIREK | 25 | MYRIELH |
+| 4 | ARAMIR | 15 | STILMAR | 26 | UNKNOWN |
+| 5 | DORIAN | 16 | YORNH | 27 | DELORIA |
+| 6 | FHIRONN | 17 | FONAHIR | 28 | BORMINH |
+| 7 | UNKNOWN | 18 | KLESH | 29 | MORGULA |
+| 8 | GAARTH | 19 | BOROMAN | 30 | KIRIELA |
+| 9 | KARORN | 20 | OBARMON | 31 | FRAGORN |
+| 10 | GOLNAL | 21 | NASHEER | 32 | MANATAR |
+
+Slots 7 and 26 really do read `UNKNOWN`; that is a name the game ships, not an empty slot.
+
+Slot 28, BORMINH, is the NPC standing two cells from the party's start. His sprite is
+`bormin.io`.
+
+The party leader's own name is written again at `+0x472E`, in the same 8-byte form, inside
+a record that also carries the party's row and column at `+0x470C` and `+0x470D`.
+
+### The current region's name
+
+`+0x4392` holds the region name as 8 bytes of text -- `FRAGONIR` when `+0x3EAC` is 0. The
+21 region names are listed in FINDINGS 4.19b.
+
+### What is rewritten every frame
+
+`+0x5C00` to `+0x7C00` changes wholesale on every redraw: roughly 1,300 bytes per step,
+and about the same when a menu opens or closes. Treat it as the engine's own render
+scratch rather than as world state.
+
+
+## 9. How much of this is proven
 
 Only **three** assets have been compared pixel for pixel against the running game:
 `logo.io`, `buste.io` and `dead.io`.

@@ -2426,3 +2426,85 @@ the routine that renders a glyph, which is still unfound (T13).
 **Evidence:** `tools/gdbtrace.py` across the transition, 0 calls in 70.8s; ten consecutive
 samples of `DS:SI` at the `vm_dispatch` fetch, each matched byte-for-byte into decoded
 `main.io`; `captures/t08-language-menu.png` showing the menu on screen at the time.
+
+### 6.11 The global variable area, field by field (T59)
+
+The VM's globals are one flat byte array based at the far pointer `ss:[0bf6]`
+(`126b:02a0` = linear `0x12950`). Three fields in it were named before this task -- the
+map grid, the party's row and column, and the region id. `tools/t59-globals.py` names
+seventeen more by snapshotting 32 KB of the area, performing one labelled action, and
+snapshotting again.
+
+**The method's control is an action that does nothing.** Seventeen bytes move with no
+input at all; subtracting them is what makes the rest legible. Twelve to fourteen bytes
+move on an `idle`, against roughly 1,300 on a single step.
+
+| offset | holds | how it was established |
+|---|---|---|
+| `+0x0080` | the 90x54 map grid, 4,860 bytes | 6.7b |
+| `+0x137C` | party row | changes by one on Up/Down, eight samples |
+| `+0x137D` | party column | changes by one on Left/Right, eight samples |
+| `+0x137E` | **not the facing** | constant at 2 across six moves in two axes |
+| `+0x1746` | **the character-name table: 33 entries of 8 bytes** | the names read as text |
+| `+0x2D68` | a second, byte-identical copy of that table | compared, 256 bytes equal |
+| `+0x3646` | party row, echoed | tracks the row, eight samples |
+| `+0x3EAC` | region id, 0..20 | 4.19b |
+| `+0x3FD0`, `+0x3FD1` | party row and column, echoed as a pair | eight samples |
+| `+0x4387` | **the row the party came from** | after a Down step from row 20 it reads 20, not 18 |
+| `+0x438B` | **step counter, cycles 0..4** | 3,3,4,0,1,2,3,4 over seven actions |
+| `+0x438C` | **step counter, increments when `+0x438B` wraps** | 16,16,16,17,17,17,17,17 |
+| `+0x4392` | **the current region's name as text**, `FRAGONIR` | string match, with `+0x3EAC` = 0 |
+| `+0x470C`, `+0x470D` | party row and column inside the leader's record | eight samples |
+| `+0x472E` | **the party leader's name**, `ARAMIR`, 8 bytes | string match |
+| `+0x4736` | `OSGHIROD`, the region ORIENTATION last reported | string match |
+| `+0x4892` | `40 - row` | eight samples |
+| `+0x4927` | `27 - row` | eight samples |
+| `+0x4B58`, `+0x4BF6`, `+0x4C96` | `(row+1, col+1)` pairs, ~0xA0 apart | eight samples |
+| `+0x4D36` | a `(row, col+1)` pair | eight samples |
+| `+0x5C00`..`+0x7C00` | rewritten wholesale on every redraw | ~1,300 bytes per step |
+
+**The name table is the content of the game's cast.** Thirty-three eight-byte slots at
+`+0x1746`: XYLAZ, ZELORAN, KYRIAN, TARGHAN, ARAMIR, DORIAN, FHIRONN, UNKNOWN, GAARTH,
+KARORN, GOLNAL, KHALIN, SHEELDA, BROM, AZIREK, STILMAR, YORNH, FONAHIR, KLESH, BOROMAN,
+OBARMON, NASHEER, MOLGO, AKORMH, MOGH, MYRIELH, UNKNOWN, DELORIA, BORMINH, MORGULA,
+KIRIELA, FRAGORN, MANATAR. Slots 7 and 26 read `UNKNOWN`, which is a placeholder the game
+ships rather than an empty slot.
+
+**Slot 28 is BORMINH** -- the NPC two steps from the start, whose sprite is `bormin.io`
+(4.15f). The asset name and the character name agree, which is the first link between the
+two.
+
+**A field that tracks the party is not necessarily the party's.** Seven places hold the
+party's cell, at four different offsets from it. Three carry it verbatim, three carry
+`(row+1, col+1)` and one `(row, col+1)`. Only `+0x137C` is known to be the one the engine
+acts on: writing the copies at `+0x137C` was already shown to change a readout and not a
+position (see the scar in `CLAUDE.md`), and nothing here says which copy is authoritative.
+
+**Evidence:** `tools/t59-globals.py`, four runs against one emulator session. Every
+coordinate claim is an exact fit of `v = +-1 * row + b` or `+-1 * col + b` across eight
+snapshots spanning four rows and four columns, which a constant or a timer cannot
+satisfy. The party's own row and column are re-derived by the same test, as the control.
+Each run reports the viewport's change percentage, because the tool's first run spent six
+actions inside a modal dialog an earlier session had left open and measured its timers as
+state (`captures/t59-modal-dialog.png`).
+
+### 6.12 Ishar's clock runs on footsteps, not on seconds (T64)
+
+`+0x438B` counts 0, 1, 2, 3, 4 and wraps; `+0x438C` increments each time it wraps. So the
+pair is a two-level counter with **five low units to one high unit**.
+
+**It does not advance with real time.** Four waits of ten seconds each, forty seconds
+with no input, left both bytes unchanged. The very next step wrapped `+0x438B` from 4 to 0
+and carried `+0x438C` from 17 to 18.
+
+**It advances on a step in any direction.** Three Up steps and three Left steps each
+advanced it by one; an idle of 1.3 seconds did not.
+
+So a rewrite does not need a wall clock for whatever this drives. Time passes when the
+party walks. What the high byte counts is not established -- 16 and 17 are consistent
+with an hour, and nothing on screen displays it.
+
+**Evidence:** `tools/t59-globals.py wait10 wait10 wait10 wait10 fwd`, six snapshots, both
+bytes identical across the four waits and both moving on the step; and
+`tools/t59-globals.py idle fwd fwd fwd left left left`, where the low byte reads
+3, 3, 4, 0, 1, 2, 3, 4 against an unchanged value on the idle.

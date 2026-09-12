@@ -1178,7 +1178,18 @@ rewrite reads `cont*.fic` off disk with no transform.
 | `+0x0080` | the 90x54 grid, 4,860 bytes |
 | `+0x137C` | party row |
 | `+0x137D` | party column |
+| `+0x1746` | the character-name table, 33 entries of 8 bytes |
+| `+0x2D68` | a byte-identical second copy of that table |
+| `+0x3646` | party row, echoed |
 | `+0x3EAC` | region id, 0..20 |
+| `+0x3FD0`, `+0x3FD1` | party row and column, echoed as a pair |
+| `+0x4387` | the row the party came from |
+| `+0x438B` | step counter, cycles 0..4 |
+| `+0x438C` | step counter, increments when `+0x438B` wraps |
+| `+0x4392` | the current region's name as 8 bytes of text |
+| `+0x470C`, `+0x470D` | party row and column inside the leader's record |
+| `+0x472E` | the party leader's name, 8 bytes |
+| `+0x5C00`..`+0x7C00` | rewritten wholesale on every redraw |
 
 So the world state is one flat byte array the scripts index with `vm_op_load_byte_global`
 (expression `0x1e`), and **the only code that reads a map cell is the expression evaluator**
@@ -1187,7 +1198,11 @@ So the world state is one flat byte array the scripts index with `vm_op_load_byt
 **Verified by:** autocorrelation over three files independently agreeing on 90; the
 rendering itself; the neighbour-count test that isolates `0xCE` as an outline in all
 six files; and the walked path, which is inside the map under `row * 90 + col` and outside
-it under the transpose.
+it under the transpose. The fields added below `+0x137D` come from T59: each coordinate
+one is an exact fit of `v = +-1 * row + b` or `+-1 * col + b` across eight snapshots
+spanning four rows and four columns, the text ones are string matches, and the step
+counters were separated from a real-time clock by forty seconds of idling that moved
+neither (FINDINGS 6.11, 6.12).
 
 ## 7. Scripts are stored in `.io` assets (T27, partial)
 

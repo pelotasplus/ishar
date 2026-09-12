@@ -2894,6 +2894,12 @@ Compose rewrite has to do.
       write a value into it and see whether the compass rose and the viewport follow, which
       would settle it in one step; the party-position bytes are a copy and writing them did
       nothing, so expect that outcome and treat a no-op as informative.*
+      **Half answered by T59, and the premise is now weaker:** `+0x137E` reads 2 through
+      six moves in two axes (FINDINGS 6.11), so movement does not write it and it cannot be
+      the facing *as movement updates it*. The remaining reading is a facing that only a
+      script changes, which is worth one check and no more. What is left of this task is the
+      harder half: **find where the facing actually lives**, since ORIENTATION reads one out
+      and nothing found so far writes one.
       **Done when:** FINDINGS gives the value-to-direction mapping for at least two
       directions, or says the byte is not the facing.
 
@@ -2916,7 +2922,7 @@ else to live. Three instruments compose into a loop that answers almost any mech
 
 Find the byte, find its writer, read the rule. Every task below is that loop.
 
-- [ ] **T59 · Map the global variable area**
+- [x] **T59 · Map the global variable area**
       Everything the scripts read and write is in one flat array, and only three fields in
       it are named. A map of the rest is the foundation for every mechanic below, and it is
       cheap: most of it comes from diffing.
@@ -2928,14 +2934,21 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       ends.*
       **Done when:** FINDINGS carries a table of global offsets with what each holds and the
       action that revealed it, for at least twelve fields.
+      **Done:** FINDINGS 6.11 names seventeen new fields, FORMATS 3.12's table carries them
+      and REBUILD 8 is the reimplementer's copy. `tools/t59-globals.py`. The coordinate ones
+      are exact fits of `v = +-1*row + b` across eight snapshots over four rows and four
+      columns; the party's own row and column fall out of the same test, as the control.
 
 - [ ] **T60 · Find the character records**
       Five party members with names, portraits, a LIFE bar and an ACTION menu that can give
       them items and money. Their stats are somewhere in the globals, in five copies.
-      *Method: five copies of one structure is a strong signature -- scan the globals for a
-      repeating stride, then confirm by finding the leader's name (`ARAMIR`, visible on
-      screen) as text and looking at what surrounds it. Cross-check by selecting a different
-      character in the panel and diffing.*
+      *Method: T59 did the first half. The leader's name sits at `+0x472E` in the same
+      8-byte form the 33-name table at `+0x1746` uses, and the record around it carries the
+      party's row and column at `+0x470C`/`+0x470D`, with seven small numbers at `+0x4713`
+      that look like attributes and are not yet anything but a guess. So the work is the
+      stride and the fields: the party has one member, so the other four records should be
+      zeros -- find them, and the stride falls out. Then confirm a field by changing it in
+      game (FIRST AID on a hurt character) rather than by reading it.*
       **Done when:** FINDINGS gives the record's stride and at least four named fields, with
       one field confirmed by changing it in game and watching it move.
 
@@ -2971,7 +2984,7 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       **Done when:** FINDINGS names the field damage is written to and the script that
       writes it.
 
-- [ ] **T64 · Does the game keep time?**
+- [x] **T64 · Does the game keep time?**
       A day/night cycle, hunger and spell regeneration would all need a clock, and nothing
       has looked. `encont.io` runs once at startup and then waits for a trigger nothing has
       produced (4.17b) -- a timer is a candidate.
@@ -2979,3 +2992,42 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       at all are timers. Sample the globals twice a minute apart with no input, then check
       whether any of them is what `encont.io` waits on.*
       **Done when:** FINDINGS says whether a clock exists and what advances it.
+      **Done:** FINDINGS 6.12. It exists and **footsteps advance it, not seconds**:
+      `+0x438B` cycles 0..4 and `+0x438C` carries on the wrap, so five steps are one unit.
+      Forty seconds of idling moved neither byte; the next step moved both.
+
+- [ ] **T65 · What the step counter's high byte counts**
+      `+0x438C` advances once per five steps and nothing on screen shows it (6.12). If it is
+      an hour then shops, NPCs and rest all hang off it, and it is the first mechanic that
+      is about the world rather than the party.
+      *Method: walk 120 steps, which is 24 units if it is an hour, and watch for anything
+      that changes at a boundary -- the sky in `fond.io`, an NPC that stops appearing, a
+      script that fires. Then the other direction: break on writes to `+0x438C` and read
+      `DS:SI` to name the script, which is the `gerdep.io` @7243 method from T11g3f.*
+      **Done when:** FINDINGS says what one unit of `+0x438C` means, or that nothing
+      observable keys on it.
+
+- [ ] **T66 · The four records that shadow the party at (row+1, col+1)**
+      Three places hold `(row+1, col+1)` and one holds `(row, col+1)`, all tracking the party
+      exactly, roughly 0xA0 apart (6.11). Something that always sits one cell diagonally from
+      the party is not an NPC, and four of them with a stride is a table.
+      *Method: the stride is not clean -- 0x9E then 0xA0 then 0xA0 -- so find the record
+      boundary before believing the stride. `de ff` and `63 00` sit at the same offset in
+      each, which is a header to key on: scan the whole global area for it and see how many
+      there are. Then recruit a second party member, which should add one if these are the
+      characters.*
+      **Done when:** FINDINGS says what the records are and gives their stride, or says the
+      0xA0 spacing is a coincidence.
+
+- [ ] **T67 · Is `+0x5C00`..`+0x7C00` the entity instance pool?**
+      Roughly 1,300 bytes there are rewritten on every redraw (6.11), and FORMATS 7.5
+      describes an instance structure reached through `ss:[0bf6]` with a position at `+0x0c`
+      and `+0x0e`. If they are the same thing, the four failed attempts at object identity
+      in T54 were looking in the wrong place the whole time.
+      *Method: offline first -- the snapshots are already saved by `tools/t59-globals.py`.
+      Take the offsets that changed on one step and look for a period. Then check whether the
+      words at `+0x0c` and `+0x0e` of each candidate record are the screen positions
+      `tools/onscreen.py` reports for the same frame.*
+      **Done when:** FINDINGS says whether the blob is the instance pool, with the record
+      stride if it is.
+
