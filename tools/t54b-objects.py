@@ -56,7 +56,7 @@ def main():
     g = Rsp(st["gdb"])
     drv = os.path.join(os.environ.get("CLAUDE_JOB_DIR", "/tmp"), "tmp", "t54b.sh")
     os.makedirs(os.path.dirname(drv), exist_ok=True)
-    open(drv, "w").write("#!/bin/sh\ncd %s\nfor k in Left Right Left Right; do\n"
+    open(drv, "w").write("#!/bin/sh\ncd %s\nfor k in Down Up Down Up Down Up; do\n"
                          " tools/ish keys $k >/dev/null 2>&1\n sleep 1.3\ndone\n" % HERE)
     os.chmod(drv, 0o755)
     subprocess.Popen([drv])

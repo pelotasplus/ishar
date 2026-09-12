@@ -32,7 +32,9 @@ ASSET_NOTES = {
 
     "arbre.io": "The 15 sprites are a **size ladder**, not 15 different trees: the "
                 "viewport blits 1:1 (FORMATS 3.13d), so distance is expressed by which "
-                "rung is drawn. Which rung at which distance is T54b.",
+                "rung is drawn. Two rungs -- @25490 16x27 and @25714 16x15 -- were caught "
+                "drawn in the SAME frame at different heights, which is the ladder in use. "
+                "Which rung at which distance is T54b.",
 }
 
 IDENTIFIED = {
@@ -76,6 +78,15 @@ IDENTIFIED = {
     ("main.io", 23896):  "a font glyph, 16x9 (FINDINGS 4.15e)",
     ("main.io", 24286):  "a font glyph, 16x9 (FINDINGS 4.15e)",
     ("main.io", 24598):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("arbre.io", 25490): "a tree, 16x27, seen drawn at (247,61) -- one rung of the size "
+                         "ladder (FINDINGS 4.15c)",
+    ("arbre.io", 25714): "a tree, 16x15, seen drawn at (256,66) -- a shorter rung than "
+                         "@25490 in the SAME frame (FINDINGS 4.15c)",
+    ("arbre.io", 12906): "the big foreground branch, 144x83, drawn at (256,0) clipped "
+                         "(FINDINGS 4.15c)",
+    ("plaine.io", 31600): "scenery, 48x19, seen at (43,76) (FINDINGS 4.15c)",
+    ("plaine.io", 32064): "scenery, 32x12, seen at (256,79) (FINDINGS 4.15c)",
+    ("plaine.io", 20934): "scenery, 48x9, seen at (76,94) (FINDINGS 4.15c)",
     ("plaine.io", 32264): "small scenery, 16x7, tiled every 24 pixels along y=81 "
                           "(FINDINGS 4.15e)",
     ("gerdep.io", 7243): "the region rule: `if (column < 46) && (region == 1)` -- region "

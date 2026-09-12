@@ -129,7 +129,7 @@ Section numbers in the `what` column point at FORMATS.md.
 
 16,476 bytes on disk, **25,976 decoded** · art + script
 
-The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits 1:1 (FORMATS 3.13d), so distance is expressed by which rung is drawn. Which rung at which distance is T54b.
+The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits 1:1 (FORMATS 3.13d), so distance is expressed by which rung is drawn. Two rungs -- @25490 16x27 and @25714 16x15 -- were caught drawn in the SAME frame at different heights, which is the ladder in use. Which rung at which distance is T54b.
 
 | bytes | len | what |
 |---|---|---|
@@ -137,7 +137,11 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,906 | 2,890 | script bytecode (entry set known, 7.7) (3.16) |
-| 2,906..25,842 | 22,936 | 15 sprites, mode 0x10, 16x15 to 144x83 (3.10) |
+| 2,906..12,906 | 10,000 | 4 sprites, mode 0x10, 32x25 to 80x128 (3.10) |
+| 12,906..18,890 | 5,984 | **144x83 sprite, mode 0x10** - the big foreground branch, 144x83, drawn at (256,0) clipped (FINDINGS 4.15c) (3.10) |
+| 18,890..25,490 | 6,600 | 8 sprites, mode 0x10, 16x43 to 32x101 (3.10) |
+| 25,490..25,714 | 224 | **16x27 sprite, mode 0x10** - a tree, 16x27, seen drawn at (247,61) -- one rung of the size ladder (FINDINGS 4.15c) (3.10) |
+| 25,714..25,842 | 128 | **16x15 sprite, mode 0x10** - a tree, 16x15, seen drawn at (256,66) -- a shorter rung than @25490 in the SAME frame (FINDINGS 4.15c) (3.10) |
 | 25,842..25,976 | 134 | UNEXPLAINED |
 
 **99.5% named.** **art usable** (15 sprites); logic to reimplement
@@ -1442,13 +1446,17 @@ Outdoor scenery for the plains: the bushes and trees in the viewport, at **palet
 | 16..4,306 | 4,290 | script bytecode (entry set known, 7.7) (3.16) |
 | 4,306..19,322 | 15,016 | 23 sprites, mode 0x10, 16x29 to 32x128 (3.10) |
 | 19,322..19,590 | 268 | UNEXPLAINED |
-| 19,590..23,298 | 3,708 | 11 sprites, mode 0x10, 16x2 to 48x42 (+52 b between) (3.10) |
+| 19,590..20,934 | 1,344 | 2 sprites, mode 0x10, 64x14 to 80x22 (3.10) |
+| 20,934..21,158 | 224 | **48x9 sprite, mode 0x10** - scenery, 48x9, seen at (76,94) (FINDINGS 4.15c) (3.10) |
+| 21,158..23,298 | 2,140 | 8 sprites, mode 0x10, 16x2 to 48x42 (+52 b between) (3.10) |
 | 23,298..23,408 | 110 | UNEXPLAINED |
 | 23,408..24,440 | 1,032 | 1 sprites, mode 0x10, 16x128 (3.10) |
 | 24,440..24,720 | 280 | **16x34 sprite, mode 0x10** - outdoor scenery, base 16, seen at (82,93) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
 | 24,720..26,120 | 1,400 | **48x58 sprite, mode 0x10** - outdoor scenery, base 16, seen at (98,68) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
 | 26,120..27,736 | 1,616 | **48x67 sprite, mode 0x10** - outdoor scenery, base 16, seen at (146,59) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
-| 27,736..32,264 | 4,528 | 7 sprites, mode 0x10, 32x12 to 48x50 (3.10) |
+| 27,736..31,600 | 3,864 | 5 sprites, mode 0x10, 16x25 to 48x50 (3.10) |
+| 31,600..32,064 | 464 | **48x19 sprite, mode 0x10** - scenery, 48x19, seen at (43,76) (FINDINGS 4.15c) (3.10) |
+| 32,064..32,264 | 200 | **32x12 sprite, mode 0x10** - scenery, 32x12, seen at (256,79) (FINDINGS 4.15c) (3.10) |
 | 32,264..32,328 | 64 | **16x7 sprite, mode 0x10** - small scenery, 16x7, tiled every 24 pixels along y=81 (FINDINGS 4.15e) (3.10) |
 | 32,328..32,488 | 160 | UNEXPLAINED |
 

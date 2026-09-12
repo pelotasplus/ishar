@@ -54,6 +54,9 @@ def main():
                 continue
             for base in range(0, 256, 16):
                 rows = rows_of(d, off, w, h, base)
+                # A ragged sprite -- a tree canopy -- may have no long opaque run in any
+                # row. Narrow sprites get a shorter probe; below 8 the match is not unique.
+                need = 14 if w >= 32 else max(8, w // 2)
                 probe = None
                 for y in range(h):
                     run, start = 0, 0
@@ -62,8 +65,8 @@ def main():
                             if run == 0:
                                 start = x
                             run += 1
-                            if run >= 14:
-                                probe = (y, start, bytes(rows[y][start:start + 14]))
+                            if run >= need:
+                                probe = (y, start, bytes(rows[y][start:start + need]))
                                 break
                         else:
                             run = 0

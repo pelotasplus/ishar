@@ -1067,10 +1067,47 @@ the source of "sky and ground bands", which is at best incomplete.
 A rewrite therefore needs a horizontal tile offset for the ground: -17 in this frame, and
 it is the obvious candidate for what makes the ground appear to move.
 
-**Not established: the size ladder.** `arbre.io`'s fifteen graded sprites are a fact about
-the *file*; `arbre.io` has **never been observed drawn**, and the scenery seen on screen
-comes from `plaine.io` and `fond.io`. "A tree twice as close is a different sprite" remains
-an inference from the 1:1 blit plus those dimensions, not an observation (T54b).
+**`arbre.io` IS drawn, and two rungs appear in one frame.** An earlier version of this
+paragraph said it had never been observed; that was true of the probes tried up to then and
+is now wrong. Attributing the masked expander's source at `(13,28)` gives, in a single
+frame:
+
+| sprite | size | drawn at |
+|---|---|---|
+| `arbre.io` @25490 | 16x27 | (247, 61) |
+| `arbre.io` @25714 | 16x15 | (256, 66) |
+| `arbre.io` @12906 | 144x83 | (256, 0), clipped to 43 px/row |
+
+Two *different* rungs of the 16-pixel-wide family on screen at once, at different heights
+-- which is what a distance ladder looks like in use. The 144x83 is the big foreground
+branch.
+
+**The masked expander draws everything that needs transparency**: `main.io`'s font glyphs,
+`plaine.io`'s scenery, and `arbre.io`'s trees. In the same frame it also drew `plaine.io`
+@31600 (48x19 at (43,76)), @32064 (32x12 at (256,79)), @20934 (48x9 at (76,94)), @23090,
+@23194, @23258.
+
+**Still not established: which rung at which distance**, and the way it failed is worth
+keeping because it separates the two instruments.
+
+Pairing a rung with a distance needs the same object at two party positions. The breakpoint
+route is unreliable frame to frame -- it slows the machine so far that a window catches
+only part of a redraw: `(13,28)` gave 14 objects, the same run length at `(17,28)` and
+`(14,28)` gave one and two.
+
+The breakpoint-free route (`tools/onscreen.py`, 4.15d) then found **no `arbre.io` sprite on
+screen at all** -- not at `(11,28)`, `(13,28)` or `(15,28)`, the very cell where the
+breakpoint had just watched three of them being drawn, and not along column 42 either.
+Lowering its probe length for narrow ragged sprites changed nothing.
+
+**So the two instruments see different things.** A breakpoint at the row step sees
+everything *drawn*; `onscreen.py` sees only what *survives* to the final frame. An
+`arbre.io` tree is drawn and then covered -- by a nearer object or by a later band -- so it
+never appears verbatim in video memory. That also bounds 4.15d: its seven 100% matches are
+the unoccluded sprites, not an inventory of everything composited.
+
+Anything about draw order or occlusion therefore has to come from the breakpoint, and
+anything about the finished frame from the framebuffer. See T54b.
 
 **A correction to which routine is which.** `seg_0e97:05c0`, named `viewport_row_loop` in
 FORMATS 3.13d, draws the **panel** in every window sampled: 9 of 9 rows from `frise.io` at

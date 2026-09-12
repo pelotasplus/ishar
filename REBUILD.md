@@ -371,6 +371,10 @@ From **which sprite is drawn**, not from how it is drawn.
 
 A tree twice as close is a different, larger sprite — not the same sprite scaled up.
 
+Two rungs were caught on screen **in the same frame** at different heights — @25490 (16x27)
+at (247,61) and @25714 (16x15) at (256,66) — which is the ladder in use. Which rung goes
+with which distance is still open.
+
 For a rewrite this is far less work than a projection: pick the sprite, blit it 1:1 at its
 position. No perspective maths.
 

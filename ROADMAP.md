@@ -2626,10 +2626,30 @@ Compose rewrite has to do.
       The size ladder is a fact about the file's sprite dimensions, not about how the game
       uses them, and the scenery actually seen on screen comes from `plaine.io`. Any work
       on "which rung at which distance" has to first catch `arbre.io` being drawn at all.
-      Blocked on the same thing as T56: the loop that draws **masked** scenery has not been
-      found. Three of the four row-step sites were tried -- 05f4 and 059a give panel
-      content, 0660 gives the backdrop -- so the next move is not a fourth guess but the
-      back-buffer-write probe in `tools/t56-writer.py`.*
+      Unblocked, and the pre-flight note above is now wrong: **`arbre.io` IS drawn.** The
+      masked expander (loop at `0568`, row step `059a`) draws everything transparent --
+      `main.io`'s font glyphs, `plaine.io`'s scenery and `arbre.io`'s trees -- and one frame
+      at `(13,28)` caught **two rungs of the ladder at once**: @25490 (16x27) at (247,61)
+      and @25714 (16x15) at (256,66), plus the 144x83 foreground branch @12906. Different
+      rungs, different heights, same frame -- the ladder in use (FINDINGS 4.15c).
+      Still not met: which rung at which distance. That needs the **same object** across two
+      party positions, and the capture is not reliable frame to frame -- the breakpoint slows
+      the machine so far that a window catches only part of a redraw. One run at `(13,28)`
+      gave 14 objects; the same run length at `(17,28)` and `(14,28)` gave one and two.
+      *That next step was tried and it does not work, which is itself the finding. The
+      breakpoint-free inventory (`tools/onscreen.py`) finds **no `arbre.io` sprite on screen
+      at all** -- not at `(11,28)`, `(13,28)` or `(15,28)`, the same cell where the
+      breakpoint had just watched three being drawn, and not along column 42 either; a
+      shorter probe for narrow ragged sprites changed nothing.
+      **The two instruments see different things.** The row-step breakpoint sees everything
+      *drawn*; `onscreen.py` sees only what *survives* to the final frame, and an `arbre.io`
+      tree is drawn and then covered. So 4.15d's seven 100% matches are the unoccluded
+      sprites, not an inventory of the frame.
+      Three approaches tried, stopping here. What would actually work: make the breakpoint
+      capture whole frames instead of windows -- arm it, let the game redraw once with no
+      input, and collect until `BP`-runs stop arriving, rather than driving the party and
+      sampling for a fixed time. That removes the partial-redraw problem without giving up
+      the only instrument that can see an overdrawn sprite.*
 
 - [x] **T53b · Bind the polled chrome positions to their sprites**
       T53 confirmed two sprites; seven polled positions had no sprite attached.
