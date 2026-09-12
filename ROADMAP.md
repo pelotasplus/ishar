@@ -2565,7 +2565,7 @@ Compose rewrite has to do.
       measured and the sentence around it was not.
       Superseded by T54b -- there is no projection to find.*
 
-- [ ] **T55 · Which asset does a viewport object come from?**
+- [x] **T55 · Which asset does a viewport object come from?**
       Instances carry a viewport object's X/Y (FORMATS 3.17) and the scene scripts read the
       map (FINDINGS 4.19d), but nothing connects a drawn object to the sprite it is drawn
       from -- and the framebuffer cannot answer it, because viewport pixels are sheared and
@@ -2576,6 +2576,15 @@ Compose rewrite has to do.
       lone tree and the same source should recur at growing sizes.*
       **Done when:** FINDINGS names the asset and sprite offset behind one identified
       viewport object, with the source pointer that establishes it.
+      *Met, with four (FINDINGS 4.15c). The viewport's backdrop is **`fond.io`** -- sprites
+      at 1366 (64x43), 2750 (64x85), 5478 (48x69) and 7142 (96x63), read from `DS:SI` at
+      the row step and matched against the decoded assets.
+      **The breakpoint had to move first.** `seg_0e97:05c0` -- named `viewport_row_loop` in
+      FORMATS 3.13d -- draws the **panel**: 9 of 9 sampled rows came from `frise.io` at
+      x=272. The 3D view is drawn by the opaque expander at `0644`, whose row step is
+      `0660`. Three loops in `seg_0e97` share the identical row-step idiom, so identifying
+      one of them by watching back-buffer writes never established which served the
+      viewport. `viewport_row_step_opaque` is annotated.*
 
 - [ ] **T54b · Which sprite of the ladder is drawn at which distance?**
       The viewport blits 1:1 (T54), so an object's apparent size is the size of the sprite
@@ -2590,6 +2599,16 @@ Compose rewrite has to do.
       collects the registers.*
       **Done when:** FINDINGS gives the sprite chosen at each distance for one object, and
       a prediction matches at a distance not used to derive it.
+      *Partial. The set of sprites drawn **does** change with the party's cell: at `(10,40)`
+      the view is built from `fond.io` @5478, @7142, @1366 and @2750; three steps north at
+      `(12,40)` it is almost entirely @1366. So sprite choice tracks position, as the
+      1:1-blit model requires.
+      Not met: pinning one object to one rung. Several objects are in view at once and the
+      probe reports them together, so "which sprite for this tree at this distance" cannot
+      be read off yet.
+      Next: the instances carry each drawable's viewport X/Y (FORMATS 3.17), so correlate a
+      row's `DI` -- which gives the screen position directly -- against the instance list,
+      and follow a single object across steps instead of aggregating the frame.*
 
 - [x] **T53b · Bind the polled chrome positions to their sprites**
       T53 confirmed two sprites; seven polled positions had no sprite attached.

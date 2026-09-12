@@ -1917,4 +1917,21 @@ attr[seg_0e97:05f4]: type = code; name = viewport_row_step; comment = [[[
     load + 0x0e97. Read in the load segment the same words give 34 and 9982, which looks
     plausible and is wrong.
 ]]]
+attr[seg_0e97:0660]: type = code; name = viewport_row_step_opaque; comment = [[[
+    The row tail of the OPAQUE expander at 0644 -- `lodsb / shr x4 / add al,bl / stosb`
+    forward, no zero test -- and the loop that actually draws the 3D view.
+
+    Identical idiom to viewport_row_step at 05f4: add si,cs:[002c] / add di,cs:[002e] /
+    mov cx,dx / dec bp / jne 063A. Three loops in this segment share it.
+
+    **Breaking here is how a viewport object is identified.** The blit is 1:1 (T54), so
+    DS:SI at the stop points into the source sprite: matching 48 bytes there against the
+    decoded assets names the file and the offset. Doing that live gives **fond.io**
+    (French *fond*, background) at offsets 1366 (64x43), 2750 (64x85), 5478 (48x69) and
+    7142 (96x63) -- 148 of 198 sampled rows landing inside the viewport rectangle.
+
+    Note what this corrects: the loop at 05c0, which FORMATS 3.13d named
+    `viewport_row_loop`, draws the **panel** in every window sampled -- 9 of 9 rows from
+    frise.io at x=272. The viewport path is this one.
+]]]
 end

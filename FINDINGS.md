@@ -991,9 +991,36 @@ and once cut off where it ran past the edge.
 it 1:1 at its position. That is considerably less work than the perspective maths the
 earlier reading implied. Which rung goes with which distance is open (T54b).
 
+**The viewport's backdrop is `fond.io`** -- *fond*, French for background. Breaking at the
+opaque expander's row step (`viewport_row_step_opaque`, `seg_0e97:0660`) and matching 48
+bytes at `DS:SI` against every decoded asset names the source directly, which the
+framebuffer cannot do because objects clip and overlap:
+
+| sprite | size | seen |
+|---|---|---|
+| `fond.io` @1366 | 64x43 | 120 rows, widths 64 and 15 |
+| `fond.io` @2750 | 64x85 | widths 64 and 15 |
+| `fond.io` @5478 | 48x69 | 68 rows, widths 48 and 64 |
+| `fond.io` @7142 | 96x63 | 33 rows, widths 96 and 48 |
+
+The same sprite appearing at two widths is the edge clipping again -- @1366 drawn at 64 and
+at 15, @5478 at 48 and at 64.
+
+**And which sprites are drawn changes as the party moves.** At `(10,40)` the view is built
+from @5478, @7142, @1366 and @2750; three steps north at `(12,40)` it is almost entirely
+@1366. That is the size-ladder model in action, though it does not yet pin one object to
+one rung -- several are in view at once (T54b).
+
+**A correction to which routine is which.** `seg_0e97:05c0`, named `viewport_row_loop` in
+FORMATS 3.13d, draws the **panel** in every window sampled: 9 of 9 rows from `frise.io` at
+x=272. The loop that draws the 3D view is the opaque one at `0644`/`0660`. Three loops in
+`seg_0e97` share the identical row-step idiom, so finding one of them by watching writes to
+the back buffer does not establish which one serves the viewport.
+
 **Evidence:** an execution breakpoint at `seg_0e97:05f4` reading `CX`, `DX`, `BP`, `SI` and
 `DI` at 30 stops (`tools/t54-rowloop.py`), where `dst - DX = 320` every time; sprite
-dimensions from `tools/chains.py` over `arbre.io`.
+dimensions from `tools/chains.py` over `arbre.io`; source attribution at `seg_0e97:0660`
+over 198 and 182 rows in two windows (`tools/t55-source.py`).
 
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 

@@ -235,7 +235,7 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,146 | 2,130 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,146..6,986 | 4,840 | 4 sprites, mode 0x10, 48x39 to 64x44 (3.10) |
-| 6,986..8,146 | 1,160 | **64x36 sprite, mode 0x10** - the leftmost portrait, drawn at (0,147) - verified vs VRAM (FORMATS 3.13b) (3.10) |
+| 6,986..8,146 | 1,160 | **64x36 sprite, mode 0x10** - a character portrait, drawn at (0,147) - 100% vs VRAM (FORMATS 3.13b, 3.17b) (3.10) |
 | 8,146..46,058 | 37,912 | 28 sprites, mode 0x10, 48x41 to 64x44 (3.10) |
 | 46,058..46,064 | 6 | UNEXPLAINED |
 
@@ -544,11 +544,19 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 32,049..34,696 | 2,647 | UNEXPLAINED |
 | 34,696..35,468 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 35,468..35,964 | 496 | UNEXPLAINED |
-| 35,964..46,766 | 10,802 | 22 sprites, modes 0x00, 0x10, 0x12, 16x8 to 64x44 (+76 b between) (3.10) |
+| 35,964..42,656 | 6,692 | 15 sprites, modes 0x00, 0x10, 0x12, 16x8 to 48x56 (+70 b between) (3.10) |
+| 42,656..43,176 | 520 | **64x16 sprite, mode 0x10** - the empty LIFE bar, base 192, drawn at x=0,64,128,192,256 y=184 - 100% at the four empty slots (FORMATS 3.17b) (3.10) |
+| 43,176..43,568 | 392 | **64x12 sprite, mode 0x12** - the ACTION/ATTACK bar, base 192, drawn at x=0,64,128,192,256 y=126 - 100% vs VRAM at all five (FORMATS 3.17b) (3.10) |
+| 43,568..43,574 | 6 | UNEXPLAINED |
+| 43,574..46,766 | 3,192 | 5 sprites, modes 0x10, 0x12, 32x12 to 64x44 (3.10) |
 | 46,766..48,382 | 1,616 | UNEXPLAINED |
 | 48,382..49,822 | 1,440 | 12 sprites, mode 0x10, 16x11 to 32x16 (3.10) |
 | 49,822..49,944 | 122 | UNEXPLAINED |
-| 49,944..51,456 | 1,512 | 9 sprites, modes 0x10, 0x14, 16x8 to 32x30 (3.10) |
+| 49,944..50,568 | 624 | 2 sprites, modes 0x10, 0x14, 16x8 to 32x30 (3.10) |
+| 50,568..50,640 | 72 | **16x8 sprite, mode 0x10** - 16x8 at (126,175), base 192 - 83.9% vs VRAM (FORMATS 3.17b) (3.10) |
+| 50,640..50,712 | 72 | 1 sprites, mode 0x10, 16x8 (3.10) |
+| 50,712..50,784 | 72 | **16x8 sprite, mode 0x10** - 16x8 at (254,175), base 208 - 95.0% vs VRAM (FORMATS 3.17b) (3.10) |
+| 50,784..51,456 | 672 | 4 sprites, modes 0x10, 0x14, 16x16 (3.10) |
 | 51,456..53,480 | 2,024 | **32x126 sprite, mode 0x10** - the right panel column, drawn at (288,0) - 97/126 rows verified vs VRAM (FINDINGS 4.15b) (3.10) |
 | 53,480..53,752 | 272 | 2 sprites, mode 0x10, 16x16 (3.10) |
 | 53,752..53,808 | 56 | UNEXPLAINED |
