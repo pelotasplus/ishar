@@ -22,6 +22,12 @@ GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
 # as they are confirmed -- a sprite named here is broken out of its chain in FILES.md
 # instead of disappearing into "N sprites", which is what made it invisible the first time.
 ASSET_NOTES = {
+    "fond.io": "The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- "
+               "this is the asset the 3D view is built from (FINDINGS 4.15c).",
+    "plaine.io": "Outdoor scenery for the plains: the bushes and trees in the viewport, at "
+                 "**palette base 16**. Three sprites matched 100% against video memory "
+                 "(FINDINGS 4.15d).",
+
     "arbre.io": "The 15 sprites are a **size ladder**, not 15 different trees: the "
                 "viewport blits 1:1 (FORMATS 3.13d), so distance is expressed by which "
                 "rung is drawn. Which rung at which distance is T54b.",
@@ -38,6 +44,30 @@ IDENTIFIED = {
                          "- 100% at the four empty slots (FORMATS 3.17b)",
     ("frise.io", 50568): "16x8 at (126,175), base 192 - 83.9% vs VRAM (FORMATS 3.17b)",
     ("frise.io", 50712): "16x8 at (254,175), base 208 - 95.0% vs VRAM (FORMATS 3.17b)",
+    ("frise.io", 50784): "the mouse cursor, base 160, drawn at (0,0) - 100% vs VRAM; the "
+                         "identical 16x16 sprite is also main.io @25760 (FINDINGS 4.15d)",
+    ("main.io", 25760):  "the mouse cursor, base 160, drawn at (0,0) - 100% vs VRAM; the "
+                         "identical 16x16 sprite is also frise.io @50784 (FINDINGS 4.15d)",
+    ("gerdep.io", 11718): "panel piece at (273,101), base 208 - 100% vs VRAM (4.15d)",
+    ("gerdep.io", 10990): "compass needle / direction indicator, drawn in the panel "
+                          "(FINDINGS 4.15d)",
+    ("gerdep.io", 11118): "compass needle / direction indicator, drawn in the panel "
+                          "(FINDINGS 4.15d)",
+    ("plaine.io", 24720): "outdoor scenery, base 16, seen at (98,68) - 100% vs VRAM in the "
+                          "VIEWPORT (FINDINGS 4.15d)",
+    ("plaine.io", 26120): "outdoor scenery, base 16, seen at (146,59) - 100% vs VRAM in the "
+                          "VIEWPORT (FINDINGS 4.15d)",
+    ("plaine.io", 24440): "outdoor scenery, base 16, seen at (82,93) - 100% vs VRAM in the "
+                          "VIEWPORT (FINDINGS 4.15d)",
+    ("fond.io", 1366):   "viewport backdrop, drawn via viewport_row_step_opaque; seen at "
+                         "widths 64 and 15, i.e. clipped at the edge (FINDINGS 4.15c)",
+    ("fond.io", 2750):   "viewport backdrop (FINDINGS 4.15c)",
+    ("fond.io", 5478):   "viewport backdrop (FINDINGS 4.15c)",
+    ("fond.io", 7142):   "viewport backdrop (FINDINGS 4.15c)",
+    ("gerdep.io", 8829): "the region-name switch: statement 0x2f with 21 cases, selector "
+                         "vm_op_load_byte_global 0x3eac (FORMATS 7.2g)",
+    ("lacustre.io", 1190): "reads the world map -- 26 80 00, global[0x0080 + index] -- the "
+                           "only code path that touches a map cell (FORMATS 7.2h)",
 }
 try:
     import vmi

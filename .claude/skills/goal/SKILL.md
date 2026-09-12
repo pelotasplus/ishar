@@ -47,6 +47,10 @@ For every premise the brief lists:
   invisible in the third for exactly this reason.
 - **If a reimplementer would need it, it also goes in `REBUILD.md`** — the answer only,
   without how it was found.
+- **Before reporting, run `python3 tools/checkdocs.py`** and the `uniq -d` check on
+  `ishar.chani`. The first catches a finding that named an asset offset and never reached
+  `FILES.md`; the second catches an address annotated twice. Both failures are silent, and
+  both happened repeatedly while the rule telling you to avoid them was already written.
 - **Any finding that names an address also goes into `ishar.chani`** -- name, type,
   comment -- and `tools/disasm.sh` gets rerun. Prose alone means the next reader
   re-derives it. This is the step that makes the work cumulative and it is the one that

@@ -448,13 +448,19 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 
 7,448 bytes on disk, **12,928 decoded** · art + script
 
+The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this is the asset the 3D view is built from (FINDINGS 4.15c).
+
 | bytes | len | what |
 |---|---|---|
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,366 | 1,350 | script bytecode (entry set known, 7.7) (3.16) |
-| 1,366..12,030 | 10,664 | 5 sprites, mode 0x12, 64x43 to 96x63 (3.10) |
+| 1,366..2,750 | 1,384 | **64x43 sprite, mode 0x12** - viewport backdrop, drawn via viewport_row_step_opaque; seen at widths 64 and 15, i.e. clipped at the edge (FINDINGS 4.15c) (3.10) |
+| 2,750..5,478 | 2,728 | **64x85 sprite, mode 0x12** - viewport backdrop (FINDINGS 4.15c) (3.10) |
+| 5,478..7,142 | 1,664 | **48x69 sprite, mode 0x12** - viewport backdrop (FINDINGS 4.15c) (3.10) |
+| 7,142..10,174 | 3,032 | **96x63 sprite, mode 0x12** - viewport backdrop (FINDINGS 4.15c) (3.10) |
+| 10,174..12,030 | 1,856 | 1 sprites, mode 0x12, 48x77 (3.10) |
 | 12,030..12,104 | 74 | UNEXPLAINED |
 | 12,104..12,876 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 12,876..12,928 | 52 | UNEXPLAINED |
@@ -556,7 +562,8 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 50,568..50,640 | 72 | **16x8 sprite, mode 0x10** - 16x8 at (126,175), base 192 - 83.9% vs VRAM (FORMATS 3.17b) (3.10) |
 | 50,640..50,712 | 72 | 1 sprites, mode 0x10, 16x8 (3.10) |
 | 50,712..50,784 | 72 | **16x8 sprite, mode 0x10** - 16x8 at (254,175), base 208 - 95.0% vs VRAM (FORMATS 3.17b) (3.10) |
-| 50,784..51,456 | 672 | 4 sprites, modes 0x10, 0x14, 16x16 (3.10) |
+| 50,784..50,920 | 136 | **16x16 sprite, mode 0x10** - the mouse cursor, base 160, drawn at (0,0) - 100% vs VRAM; the identical 16x16 sprite is also main.io @25760 (FINDINGS 4.15d) (3.10) |
+| 50,920..51,456 | 536 | 3 sprites, modes 0x10, 0x14, 16x16 (3.10) |
 | 51,456..53,480 | 2,024 | **32x126 sprite, mode 0x10** - the right panel column, drawn at (288,0) - 97/126 rows verified vs VRAM (FINDINGS 4.15b) (3.10) |
 | 53,480..53,752 | 272 | 2 sprites, mode 0x10, 16x16 (3.10) |
 | 53,752..53,808 | 56 | UNEXPLAINED |
@@ -644,7 +651,10 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 9,230..10,566 | 1,336 | UNEXPLAINED |
 | 10,566..10,854 | 288 | 4 sprites, mode 0x10, 16x8 (3.10) |
 | 10,854..10,990 | 136 | UNEXPLAINED |
-| 10,990..12,094 | 1,104 | 4 sprites, mode 0x10, 16x15 to 32x25 (3.10) |
+| 10,990..11,118 | 128 | **16x15 sprite, mode 0x10** - compass needle / direction indicator, drawn in the panel (FINDINGS 4.15d) (3.10) |
+| 11,118..11,310 | 192 | **16x23 sprite, mode 0x10** - compass needle / direction indicator, drawn in the panel (FINDINGS 4.15d) (3.10) |
+| 11,310..11,718 | 408 | 1 sprites, mode 0x10, 32x25 (3.10) |
+| 11,718..12,094 | 376 | **32x23 sprite, mode 0x10** - panel piece at (273,101), base 208 - 100% vs VRAM (4.15d) (3.10) |
 | 12,094..14,426 | 2,332 | 3 palettes: marker + 256 x RGB (+16 b between) (3.9) |
 | 14,426..14,472 | 46 | UNEXPLAINED |
 
@@ -991,7 +1001,10 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 19,991..21,590 | 1,599 | UNEXPLAINED |
 | 21,590..23,138 | 1,548 | 22 sprites, mode 0x00, 16x2 to 16x9 (3.10) |
 | 23,138..23,272 | 134 | UNEXPLAINED |
-| 23,272..26,380 | 3,108 | 42 sprites, modes 0x00, 0x10, 16x5 to 16x16 (+94 b between) (3.10) |
+| 23,272..25,760 | 2,488 | 36 sprites, mode 0x00, 16x5 to 16x9 (3.10) |
+| 25,760..25,896 | 136 | **16x16 sprite, mode 0x10** - the mouse cursor, base 160, drawn at (0,0) - 100% vs VRAM; the identical 16x16 sprite is also frise.io @50784 (FINDINGS 4.15d) (3.10) |
+| 25,896..25,974 | 78 | UNEXPLAINED |
+| 25,974..26,380 | 406 | 5 sprites, mode 0x00, 16x9 (+16 b between) (3.10) |
 | 26,380..26,384 | 4 | UNEXPLAINED |
 
 **27.1% named.** **art usable** (1 sprites); logic to reimplement
@@ -1400,6 +1413,8 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 
 18,864 bytes on disk, **32,488 decoded** · art + script
 
+Outdoor scenery for the plains: the bushes and trees in the viewport, at **palette base 16**. Three sprites matched 100% against video memory (FINDINGS 4.15d).
+
 | bytes | len | what |
 |---|---|---|
 | 0..2 | 2 | asset id (3.15) |
@@ -1410,7 +1425,11 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 19,322..19,590 | 268 | UNEXPLAINED |
 | 19,590..23,298 | 3,708 | 11 sprites, mode 0x10, 16x2 to 48x42 (+52 b between) (3.10) |
 | 23,298..23,408 | 110 | UNEXPLAINED |
-| 23,408..32,328 | 8,920 | 12 sprites, mode 0x10, 16x7 to 48x67 (3.10) |
+| 23,408..24,440 | 1,032 | 1 sprites, mode 0x10, 16x128 (3.10) |
+| 24,440..24,720 | 280 | **16x34 sprite, mode 0x10** - outdoor scenery, base 16, seen at (82,93) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
+| 24,720..26,120 | 1,400 | **48x58 sprite, mode 0x10** - outdoor scenery, base 16, seen at (98,68) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
+| 26,120..27,736 | 1,616 | **48x67 sprite, mode 0x10** - outdoor scenery, base 16, seen at (146,59) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
+| 27,736..32,328 | 4,592 | 8 sprites, mode 0x10, 16x7 to 48x50 (3.10) |
 | 32,328..32,488 | 160 | UNEXPLAINED |
 
 **98.2% named.** **art usable** (23 sprites); logic to reimplement

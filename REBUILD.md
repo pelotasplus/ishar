@@ -371,6 +371,30 @@ the same 32-pixel-wide sprite — the narrow one was clipped where it ran off th
 
 Flat colour bands, filled by a separate routine. Not artwork.
 
+### Which assets the view is built from
+
+    fond.io      the backdrop
+    plaine.io    outdoor scenery — the bushes and trees — at palette base 16
+    arbre.io     trees, in a size ladder
+
+Confirmed by matching stored sprite bytes against video memory:
+
+    plaine.io  @24720  48x58  base 16  seen at ( 98, 68)   100%
+    plaine.io  @26120  48x67  base 16  seen at (146, 59)   100%
+    plaine.io  @24440  16x34  base 16  seen at ( 82, 93)   100%
+
+### Reading a frame
+
+Because the blit is 1:1, a sprite on screen matches its stored bytes **exactly**. So you
+can check your renderer against the real game: take a sprite's longest opaque run, find it
+in a screenshot's indices, then compare the whole sprite.
+
+`tools/onscreen.py` does this across all 98 assets and lists what is on screen and where.
+
+Two things make a naive version of this fail. Masked sprites have background showing
+through their holes, so only *opaque* runs can be matched; and a whole asset never matches,
+only individual sprites.
+
 ### What is readable at runtime
 
 The list of objects to draw and their positions. Coordinates run x 9..272, y 6..94.
@@ -378,14 +402,12 @@ The list of objects to draw and their positions. Coordinates run x 9..272, y 6..
 ### Not known
 
 - Which sprite of the ladder is chosen at which distance, and how position is derived.
-- Which asset a given viewport object's pixels come from.
 - Which sprite a map cell selects — that is bytecode, not data.
+- **Where characters come from.** The NPC standing near the start is in **no asset** — every
+  sprite of all 98 files at every palette base was checked, while seven other things in the
+  same frame matched at 100%. Scenery is findable; people are not, yet.
 
-### Trap: viewport pixels are not in the framebuffer verbatim
 
-Matching the framebuffer against asset bytes finds nothing in the viewport — 1,517 runs, no
-hit — while the same method matches the UI panel immediately. Objects overlap and clip each
-other, so a whole sprite is rarely on screen intact.
 
 ---
 

@@ -23,6 +23,7 @@ Five documents, each with one job. A finding usually belongs in more than one of
 | `ROADMAP.md` | tasks, each with a method and a checkable **Done when** | by hand |
 | `ishar.chani` | every named address — the durable artefact | by hand |
 | `ishar-listing.txt` | the disassembly | **generated** — `tools/disasm.sh` |
+| `TOOLS.md` | every tool and what it does | **generated** — `tools/toolsindex.py` |
 | `captures/` | reference screenshots, linked from the section they illustrate | by hand |
 
 Every finding carries an **Evidence:** line saying how it was established. Every format
@@ -40,6 +41,25 @@ invisible in `FILES.md` — the generator had no way to know, so the chain conta
 collapsed to "12 sprites" and swallowed the one thing anybody had established.
 
 When a finding lands, ask which *inputs* it changes, not which documents mention it.
+
+**And do not rely on asking.** This was forgotten three times in one session *after* the
+rule above was written, each time caught by the user rather than by anything here. So it is
+a check now:
+
+```
+python3 tools/checkdocs.py     # every asset offset in the prose is in IDENTIFIED?
+```
+
+It greps `FINDINGS.md`, `FORMATS.md` and `REBUILD.md` for `name.io @NNNN` and fails on any
+that `IDENTIFIED` does not carry. On its first run it found two more nobody had noticed.
+Run it before committing, alongside the `uniq -d` check for `ishar.chani`.
+
+**All three are now a pre-commit hook** (`.githooks/pre-commit`, enabled with
+`git config core.hooksPath .githooks`): a finding that names an asset offset missing from
+`IDENTIFIED`, an address annotated twice with a name, or a tool added without a docstring
+and a `TOOLS.md` refresh will each refuse the commit. `--no-verify` bypasses it
+deliberately. This is what the top of this file means by *make a tool refuse* -- three
+prose rules in one session failed to change anything.
 
 ### Which document gets what
 
@@ -966,27 +986,22 @@ report. A goal whose premise died is finished, not a licence to improvise a new 
 
 ## Tools
 
+`TOOLS.md` lists all 90 of them, generated from each tool's own docstring by
+`tools/toolsindex.py`. A hand-written table drifted to 64 tools missing; a docstring
+cannot drift from the tool it is in, and the pre-commit hook fails on a tool without one.
+
+The ones worth knowing before you start:
+
 | | |
 |---|---|
-| `tools/unpack.py` | rebuild `start-unpacked.exe` from the shipped binary |
-| `tools/verify-unpack.py` | prove it byte for byte against the emulator — the gate |
-| `tools/segmap.py` | derive the segment map and far-call seeds from the relocation table |
-| `tools/symbols.py` | import the functions Spice86 executed as chani code seeds |
-| `tools/disasm.sh` | regenerate `ishar-listing.txt` and print coverage |
-| `tools/cover.py` | coverage only; refuses a listing older than the database |
-| `tools/addr.py` | runtime `CS:IP` ↔ listing `seg_xxxx:offset` |
 | `tools/ish` | the measurement harness: start/boot/status/regs/mem/dis/bp/keys/shot/wait |
-| `tools/rsp.py` | minimal GDB remote-protocol client for Spice86's stub |
-| `tools/gdbtrace.py` | DOS file-call tracer: MCP arms the breakpoint, GDB delivers stops |
-| `tools/png.py` | PNG read/write with no third-party imaging library |
-| `tools/mclick` | move the harness mouse to a normalised (x,y) and click |
-| `tools/mappos.py` | locate the resident map grid and the party's cell from scratch |
-| `tools/region.py` | the party's cell and region id, or a transect of them |
-| `tools/walkto.py` | drive the party to a map cell, learning blocked cells |
-| `tools/t44-when.py` | which assets' scripts run during a window, by polling |
+| `tools/disasm.sh` | regenerate `ishar-listing.txt` and print coverage |
+| `tools/anatomy.py` | one asset's byte map; `--files` regenerates `FILES.md` |
+| `tools/onscreen.py` | which sprites are on screen right now, and where |
+| `tools/region.py`, `walkto.py`, `mappos.py` | read and drive the party in the world |
 | `tools/vmi.py` | the script VM: dispatch tables, stepper, `--listing` |
-| `tools/fullscreen.py` | render an asset's whole 320x200 VGA pages |
-| `tools/anatomy.py` | byte map of one asset, every span tagged with its FORMATS section; `--files` regenerates `FILES.md` |
+| `tools/checkdocs.py` | every asset offset in the prose reaches `FILES.md`? |
+| `tools/toolsindex.py` | regenerate `TOOLS.md` |
 
 chani itself stays external and unvendored (`CHANI_HOME`): it carries no licence, so it
 is a local instrument like a debugger, never a build dependency.
