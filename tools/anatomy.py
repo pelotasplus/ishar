@@ -21,11 +21,23 @@ GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
 # Sprites identified against the running game. Keyed (asset, payload offset). Add to this
 # as they are confirmed -- a sprite named here is broken out of its chain in FILES.md
 # instead of disappearing into "N sprites", which is what made it invisible the first time.
+ASSET_NOTES = {
+    "arbre.io": "The 15 sprites are a **size ladder**, not 15 different trees: the "
+                "viewport blits 1:1 (FORMATS 3.13d), so distance is expressed by which "
+                "rung is drawn. Which rung at which distance is T54b.",
+}
+
 IDENTIFIED = {
     ("frise.io", 51456): "the right panel column, drawn at (288,0) - 97/126 rows "
                          "verified vs VRAM (FINDINGS 4.15b)",
-    ("buste.io", 6986):  "the leftmost portrait, drawn at (0,147) - verified vs VRAM "
-                         "(FORMATS 3.13b)",
+    ("buste.io", 6986):  "a character portrait, drawn at (0,147) - 100% vs VRAM "
+                         "(FORMATS 3.13b, 3.17b)",
+    ("frise.io", 43176): "the ACTION/ATTACK bar, base 192, drawn at x=0,64,128,192,256 "
+                         "y=126 - 100% vs VRAM at all five (FORMATS 3.17b)",
+    ("frise.io", 42656): "the empty LIFE bar, base 192, drawn at x=0,64,128,192,256 y=184 "
+                         "- 100% at the four empty slots (FORMATS 3.17b)",
+    ("frise.io", 50568): "16x8 at (126,175), base 192 - 83.9% vs VRAM (FORMATS 3.17b)",
+    ("frise.io", 50712): "16x8 at (254,175), base 208 - 95.0% vs VRAM (FORMATS 3.17b)",
 }
 try:
     import vmi
@@ -174,13 +186,15 @@ def compact(sp, gap=96):
             out.append((s0, e0, lab, ref))
             i += 1
             continue
-        j, n, modes, holes = i, 0, set(), 0
+        j, n, modes, holes, dims = i, 0, set(), 0, []
         while j < len(sp):
             kk = kindof(sp[j][2])
             if kk == k:
                 if sp[j][2].startswith("sprite header"):
                     n += 1
                     modes.add(sp[j][2].split("mode ")[1].split(",")[0])
+                    dims.append(tuple(int(v) for v in
+                                      sp[j][2].rsplit(", ", 1)[1].split("x")))
                 elif sp[j][2].startswith("string ("):
                     n += 1
                 elif sp[j][2].startswith("palette marker"):
@@ -195,6 +209,11 @@ def compact(sp, gap=96):
         span = (sp[i][0], sp[j - 1][1])
         if k == "sprites":
             lab = f"{n} sprites, mode{'s' if len(modes) > 1 else ''} {', '.join(sorted(modes))}"
+            if dims:
+                lo = min(dims, key=lambda d: d[0] * d[1])
+                hi = max(dims, key=lambda d: d[0] * d[1])
+                lab += (f", {lo[0]}x{lo[1]}" if lo == hi
+                        else f", {lo[0]}x{lo[1]} to {hi[0]}x{hi[1]}")
             ref = "3.10"
         elif k == "strings":
             lab = f"{n} NUL-terminated strings"
@@ -240,6 +259,8 @@ def write_files_md():
         if what:
             line += f" \u00b7 {what}"
         body.append(line + "\n")
+        if n in ASSET_NOTES:
+            body.append(ASSET_NOTES[n] + "\n")
         body.append("| bytes | len | what |")
         body.append("|---|---|---|")
         for s, e, lab, ref in compact(sp):

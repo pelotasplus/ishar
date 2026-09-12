@@ -1918,6 +1918,44 @@ of coordinates.
 **Status:** structural only. Nothing here yet says *where* a monster stands. The two leads
 that remain are `en1.fic`'s word array and the `cont*.fic` grids' cell values (T11g3).
 
+### 3.17b The UI chrome: which sprite is drawn where
+
+Every position below was found the same way -- take a run of screen pixels, subtract a
+palette base, repack two per byte and search the decoded asset -- then **verified by
+expanding the whole sprite and comparing every opaque pixel** against live video memory.
+
+| asset | offset | size | mode | base | drawn at | match |
+|---|---|---|---|---|---|---|
+| `frise.io` | 43176 | 64x12 | `0x12` | 192 | **x = 0, 64, 128, 192, 256** @ y=126 | **100%** |
+| `frise.io` | 42656 | 64x16 | `0x10` | 192 | **x = 64, 128, 192, 256** @ y=184 | **100%** |
+| `frise.io` | 42656 | 64x16 | `0x10` | 192 | x = 0 @ y=184 | 75.7% |
+| `buste.io` | 6986 | 64x36 | `0x10` | 208 | (0, 147) | **100%** |
+| `frise.io` | 51456 | 32x126 | `0x10` | 208 | (288, 0) | 85.8% |
+| `frise.io` | 50712 | 16x8 | `0x10` | 208 | (254, 175) | 95.0% |
+| `frise.io` | 50568 | 16x8 | `0x10` | 192 | (126, 175) | 83.9% |
+
+**The layout is a 64-pixel grid, one column per party member.** The ACTION/ATTACK bar and
+the LIFE bar are each a *single* sprite drawn five times at x = 0, 64, 128, 192, 256. A
+rewrite does not need five records; it needs one sprite and a stride of 64.
+
+**The sub-100% rows are all explained, and each explains something.**
+
+- The LIFE bar at x=0 scores 75.7% where the other four score 100% because the stored
+  sprite is the **empty** bar and character 1's is partly filled. So the fill is drawn over
+  the sprite, not baked into it.
+- The panel at (288,0) scores 85.8% because the region caption, the compass needle and the
+  DISK button are composited on top (4.15b).
+- The two 16x8 pieces sit in a row of small indicators at y=175.
+
+**What is not in any file: the empty-slot medallion.** The four unoccupied portrait slots
+show a grey medallion, and its pixels appear in **no asset at all** -- searched across all
+106 files, as 8bpp raw and as 4bpp at every palette base that could contain the run. The
+same probe finds the portrait, both bars and the panel in the same frame, so the instrument
+is sound. Tracked as T53c.
+
+**Status:** established. **Verified by:** whole-sprite comparison against `0xA0000` with the
+party panel on screen, opaque pixels only, counts in the table (`tools/t53b-chrome.py`).
+
 ### 3.18 Some assets are whole VGA pages, not sprite chains
 
 `dead.io` and `auteur.io` carry no sprite chain at all. After a short script and a palette

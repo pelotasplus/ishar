@@ -961,6 +961,40 @@ unknown format. `tools/chains.py` finds them all.
 Fragonir, 3,585 of 3,966 opaque pixels correct and every failure inside a compositing band;
 chain enumeration over the assets above.
 
+### 4.15c The viewport does not scale -- distance is a different sprite
+
+The 3D view copies sprites into the frame buffer **1:1**. Measured at the row step both
+viewport loops share (`viewport_row_step`, `seg_0e97:05f4`): the destination pointer
+advances **exactly 320 per row** and the source pointer **exactly one source row**, on 30
+of 30 stops across a walk.
+
+Nothing is stretched, squashed or sheared. FORMATS 3.13d previously read one of the loop's
+per-row constants as a shear "which is where the perspective comes from"; that is struck
+there, and the numbers behind it were real while the reading was not.
+
+**So an object's apparent size is the size of the sprite chosen.** `arbre.io` carries
+fifteen sprites in a graded ladder rather than fifteen different trees:
+
+```
+16x15   16x27   16x43   16x47   16x65
+32x25   32x40   32x62   32x71   32x101
+48x38   64x67   64x72   80x128  144x83
+```
+
+A tree twice as close is a larger sprite, not the same sprite enlarged.
+
+**Objects are clipped, not scaled, at the viewport edge.** The two draw widths seen, 17 px
+and 32 px, both had a source row stride of 16 bytes -- the same 32-pixel sprite, once whole
+and once cut off where it ran past the edge.
+
+**What this means for a rewrite.** There is no projection to reproduce: pick the rung, blit
+it 1:1 at its position. That is considerably less work than the perspective maths the
+earlier reading implied. Which rung goes with which distance is open (T54b).
+
+**Evidence:** an execution breakpoint at `seg_0e97:05f4` reading `CX`, `DX`, `BP`, `SI` and
+`DI` at 30 stops (`tools/t54-rowloop.py`), where `dst - DX = 320` every time; sprite
+dimensions from `tools/chains.py` over `arbre.io`.
+
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
 Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all

@@ -2590,3 +2590,29 @@ Compose rewrite has to do.
       collects the registers.*
       **Done when:** FINDINGS gives the sprite chosen at each distance for one object, and
       a prediction matches at a distance not used to derive it.
+
+- [x] **T53b · Bind the polled chrome positions to their sprites**
+      T53 confirmed two sprites; seven polled positions had no sprite attached.
+      **Done when:** every chrome sprite has (asset, offset, x, y, base) and the table
+      reproduces the panel against a captured frame.
+      *Met (FORMATS 3.17b). Six sprites placed, four of them at **100%** of their opaque
+      pixels against live VRAM. The finding that matters for a rewrite: **the layout is a
+      64-pixel grid** -- the ACTION/ATTACK bar and the LIFE bar are each ONE sprite drawn
+      five times at x = 0, 64, 128, 192, 256, so the seven "positions" polled in T40 were
+      repeats of two sprites, not seven different ones.
+      Every score below 100% is explained rather than tolerated: the LIFE bar at x=0 is
+      75.7% because the stored sprite is the *empty* bar and character 1's is filled, which
+      proves the fill is drawn over it; the panel is 85.8% because the caption, needle and
+      DISK button composite on top.*
+
+- [ ] **T53c · Where does the empty-slot medallion come from?**
+      The four unoccupied portrait slots show a grey medallion whose pixels are in **no
+      asset**: searched across all 106 files, as 8bpp raw and as 4bpp at every palette base
+      that could contain the run, zero hits. The same probe found the portrait, both bars
+      and the panel in the same frame, so the instrument is sound (FORMATS 3.17b).
+      *Method: it is drawn by something, so trace the drawer rather than search for the
+      bytes. Break in `sprite_blit_ingame` (`seg_0e97:038b`) during a panel redraw and read
+      DS:SI at each stop -- that is the source pointer, so it names where the pixels come
+      from even if they are built at runtime. If they are generated rather than stored, that
+      is the answer and a rewrite can draw the medallion any way it likes.*
+      **Done when:** FINDINGS says where the medallion's pixels come from.

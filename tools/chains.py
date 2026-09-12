@@ -68,4 +68,5 @@ def main():
         print(f"\n{len(names)} assets: best chain only {tot_one*100.0/tot_len:.1f}%, "
               f"all chains {tot_all*100.0/tot_len:.1f}% of {tot_len:,} bytes")
 
-main()
+if __name__ == "__main__":
+    main()

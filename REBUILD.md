@@ -196,20 +196,32 @@ schemes — that is what the palette base is for.
 Positions are **not stored in any file**. At runtime a script creates a structure for each
 drawable thing, and the X and Y live in that structure.
 
-Two are confirmed against the game's own video memory:
+Confirmed against the game's own video memory, opaque pixels only:
 
-    asset      offset   size      mode   base   drawn at
-    frise.io   51456    32 x 126  0x10   208    (288, 0)    the right panel column
-    buste.io    6986    64 x 36   0x10   208    (0, 147)    the leftmost portrait
+    asset      offset  size      mode  base  drawn at                    match
+    frise.io   43176   64 x 12   0x12  192   x = 0,64,128,192,256 y=126   100%
+    frise.io   42656   64 x 16   0x10  192   x = 64,128,192,256   y=184   100%
+    buste.io    6986   64 x 36   0x10  208   (0, 147)                     100%
+    frise.io   51456   32 x 126  0x10  208   (288, 0)                    85.8%
+    frise.io   50712   16 x 8    0x10  208   (254, 175)                  95.0%
+    frise.io   50568   16 x 8    0x10  192   (126, 175)                  83.9%
 
-The panel sprite matches on 97 of its 126 rows. The rows that differ are the ones the game
-draws over afterwards: the region caption at rows 2-9, the compass needle and its letters
-at 22-51, and the DISK button at 52-65.
+### The layout is a 64-pixel grid
 
-These positions are also real, read out of a live redraw, but not yet matched to a sprite:
+The ACTION/ATTACK bar and the LIFE bar are each **one sprite drawn five times**, at
+x = 0, 64, 128, 192, 256 — one column per party member.
 
-    (0, 139)    (24, 157)    (0, 175)    (14, 199)
-    (31, 152)   (19, 157)    (24, 152)
+You need one record and a stride of 64, not five records.
+
+### The scores below 100% are all overdraw
+
+The LIFE bar at x=0 scores 75.7% while the other four score 100%. The stored sprite is the
+**empty** bar; character 1's is partly filled, and the fill is drawn on top.
+
+The panel scores 85.8% because the region caption (rows 2-9), the compass needle (22-51)
+and the DISK button (52-65) are composited over it.
+
+So: draw the sprite, then draw the dynamic parts on top. Nothing is baked in.
 
 ### How a frame is put together
 
@@ -220,7 +232,9 @@ memory in one go.
 
 ### Not known
 
-The seven unmatched positions above.
+The grey medallion in an empty portrait slot is in **no asset**. Searched across all 106
+files, as 8bpp and as 4bpp at every palette base that could hold it — while the same probe
+found the portrait, both bars and the panel in the same frame.
 
 ---
 

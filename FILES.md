@@ -129,13 +129,15 @@ Section numbers in the `what` column point at FORMATS.md.
 
 16,476 bytes on disk, **25,976 decoded** · art + script
 
+The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits 1:1 (FORMATS 3.13d), so distance is expressed by which rung is drawn. Which rung at which distance is T54b.
+
 | bytes | len | what |
 |---|---|---|
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,906 | 2,890 | script bytecode (entry set known, 7.7) (3.16) |
-| 2,906..25,842 | 22,936 | 15 sprites, mode 0x10 (3.10) |
+| 2,906..25,842 | 22,936 | 15 sprites, mode 0x10, 16x15 to 144x83 (3.10) |
 | 25,842..25,976 | 134 | UNEXPLAINED |
 
 **99.5% named.** **art usable** (15 sprites); logic to reimplement
@@ -169,7 +171,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,302 | 1,286 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,302..9,366 | 8,064 | 5 sprites, mode 0x10 (3.10) |
+| 1,302..9,366 | 8,064 | 5 sprites, mode 0x10, 32x7 to 96x93 (3.10) |
 | 9,366..11,417 | 2,051 | UNEXPLAINED |
 | 11,417..11,424 | 7 | 1 NUL-terminated strings (10) |
 | 11,424..18,368 | 6,944 | UNEXPLAINED |
@@ -188,7 +190,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..747 | 731 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 747..755 | 8 | 1 NUL-terminated strings (10) |
 | 755..1,978 | 1,223 | UNEXPLAINED |
-| 1,978..14,150 | 12,172 | 34 sprites, modes 0x00, 0x10 (+6 b between) (3.10) |
+| 1,978..14,150 | 12,172 | 34 sprites, modes 0x00, 0x10, 10x2 to 48x77 (+6 b between) (3.10) |
 | 14,150..17,792 | 3,642 | UNEXPLAINED |
 
 **68.5% named.** **use directly** — 27 sprites
@@ -217,7 +219,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,424 | 1,408 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,424..7,146 | 5,722 | 12 sprites, mode 0x10 (+50 b between) (3.10) |
+| 1,424..7,146 | 5,722 | 12 sprites, mode 0x10, 16x7 to 32x68 (+50 b between) (3.10) |
 | 7,146..7,296 | 150 | UNEXPLAINED |
 
 **78.0% named.** **use directly** — 7 sprites
@@ -232,9 +234,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,146 | 2,130 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,146..6,986 | 4,840 | 4 sprites, mode 0x10 (3.10) |
+| 2,146..6,986 | 4,840 | 4 sprites, mode 0x10, 48x39 to 64x44 (3.10) |
 | 6,986..8,146 | 1,160 | **64x36 sprite, mode 0x10** - the leftmost portrait, drawn at (0,147) - verified vs VRAM (FORMATS 3.13b) (3.10) |
-| 8,146..46,058 | 37,912 | 28 sprites, mode 0x10 (3.10) |
+| 8,146..46,058 | 37,912 | 28 sprites, mode 0x10, 48x41 to 64x44 (3.10) |
 | 46,058..46,064 | 6 | UNEXPLAINED |
 
 **95.4% named.** **use directly** — 33 sprites
@@ -251,7 +253,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..2,972 | 2,956 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,972..2,981 | 9 | 1 NUL-terminated strings (10) |
 | 2,981..4,380 | 1,399 | UNEXPLAINED |
-| 4,380..27,502 | 23,122 | 32 sprites, modes 0x00, 0x10 (+100 b between) (3.10) |
+| 4,380..27,502 | 23,122 | 32 sprites, modes 0x00, 0x10, 16x3 to 64x67 (+100 b between) (3.10) |
 | 27,502..28,200 | 698 | UNEXPLAINED |
 
 **81.7% named.** **use directly** — 14 sprites
@@ -266,7 +268,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,026 | 2,010 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,026..10,210 | 8,184 | 20 sprites, mode 0x10 (3.10) |
+| 2,026..10,210 | 8,184 | 20 sprites, mode 0x10, 16x6 to 48x72 (3.10) |
 | 10,210..10,544 | 334 | UNEXPLAINED |
 
 **77.8% named.** **use directly** — 18 sprites
@@ -281,7 +283,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,488 | 1,472 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,488..8,032 | 6,544 | 9 sprites, modes 0x10, 0x14 (3.10) |
+| 1,488..8,032 | 6,544 | 9 sprites, modes 0x10, 0x14, 16x12 to 32x88 (3.10) |
 | 8,032..9,240 | 1,208 | UNEXPLAINED |
 
 **71.0% named.** **use directly** — 9 sprites
@@ -313,7 +315,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,506 | 1,490 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,506..10,184 | 8,678 | 25 sprites, modes 0x00, 0x10, 0x14 (+82 b between) (3.10) |
+| 1,506..10,184 | 8,678 | 25 sprites, modes 0x00, 0x10, 0x14, 16x5 to 80x69 (+82 b between) (3.10) |
 | 10,184..12,352 | 2,168 | UNEXPLAINED |
 
 **69.7% named.** **use directly** — 19 sprites
@@ -343,7 +345,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,718 | 1,702 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,718..16,062 | 14,344 | 13 sprites, mode 0x10 (3.10) |
+| 1,718..16,062 | 14,344 | 13 sprites, mode 0x10, 16x15 to 96x119 (3.10) |
 | 16,062..16,296 | 234 | UNEXPLAINED |
 
 **88.1% named.** **use directly** — 13 sprites
@@ -360,7 +362,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..300 | 284 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 300..307 | 7 | 1 NUL-terminated strings (10) |
 | 307..1,454 | 1,147 | UNEXPLAINED |
-| 1,454..11,686 | 10,232 | 16 sprites, mode 0x10 (3.10) |
+| 1,454..11,686 | 10,232 | 16 sprites, mode 0x10, 16x13 to 64x58 (3.10) |
 | 11,686..13,448 | 1,762 | UNEXPLAINED |
 
 **76.3% named.** **use directly** — 16 sprites
@@ -377,7 +379,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..220 | 204 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 220..227 | 7 | 1 NUL-terminated strings (10) |
 | 227..1,342 | 1,115 | UNEXPLAINED |
-| 1,342..5,334 | 3,992 | 9 sprites, modes 0x10, 0x14 (3.10) |
+| 1,342..5,334 | 3,992 | 9 sprites, modes 0x10, 0x14, 16x7 to 48x69 (3.10) |
 | 5,334..5,496 | 162 | UNEXPLAINED |
 
 **73.1% named.** **use directly** — 7 sprites
@@ -407,7 +409,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,724 | 2,708 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,724..12,748 | 10,024 | 8 sprites, mode 0x10 (3.10) |
+| 2,724..12,748 | 10,024 | 8 sprites, mode 0x10, 16x12 to 48x121 (3.10) |
 | 12,748..12,864 | 116 | UNEXPLAINED |
 
 **78.0% named.** **use directly** — 8 sprites
@@ -452,7 +454,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,366 | 1,350 | script bytecode (entry set known, 7.7) (3.16) |
-| 1,366..12,030 | 10,664 | 5 sprites, mode 0x12 (3.10) |
+| 1,366..12,030 | 10,664 | 5 sprites, mode 0x12, 64x43 to 96x63 (3.10) |
 | 12,030..12,104 | 74 | UNEXPLAINED |
 | 12,104..12,876 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 12,876..12,928 | 52 | UNEXPLAINED |
@@ -469,7 +471,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,546 | 2,530 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,546..5,934 | 3,388 | 11 sprites, modes 0x00, 0x10, 0x14 (3.10) |
+| 2,546..5,934 | 3,388 | 11 sprites, modes 0x00, 0x10, 0x14, 16x7 to 32x54 (3.10) |
 | 5,934..6,128 | 194 | UNEXPLAINED |
 
 **55.5% named.** **use directly** — 10 sprites
@@ -484,17 +486,17 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..3,546 | 3,530 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 3,546..43,986 | 40,440 | 33 sprites, mode 0x10 (3.10) |
+| 3,546..43,986 | 40,440 | 33 sprites, mode 0x10, 48x5 to 112x66 (3.10) |
 | 43,986..44,084 | 98 | UNEXPLAINED |
-| 44,084..44,848 | 764 | 2 sprites, mode 0x00 (3.10) |
+| 44,084..44,848 | 764 | 2 sprites, mode 0x00, 7x13 to 69x20 (3.10) |
 | 44,848..44,876 | 28 | UNEXPLAINED |
 | 44,876..45,874 | 998 | 31 NUL-terminated strings (+761 b between) (10) |
 | 45,874..45,914 | 40 | UNEXPLAINED |
-| 45,914..51,250 | 5,336 | 6 sprites, mode 0x10 (3.10) |
+| 45,914..51,250 | 5,336 | 6 sprites, mode 0x10, 16x4 to 160x39 (3.10) |
 | 51,250..51,254 | 4 | UNEXPLAINED |
 | 51,254..52,026 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 52,026..53,108 | 1,082 | UNEXPLAINED |
-| 53,108..57,684 | 4,576 | 4 sprites, modes 0x10, 0x14 (3.10) |
+| 53,108..57,684 | 4,576 | 4 sprites, modes 0x10, 0x14, 64x8 to 144x32 (3.10) |
 | 57,684..57,728 | 44 | UNEXPLAINED |
 
 **90.3% named.** **use directly** — 33 sprites
@@ -509,7 +511,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,436 | 1,420 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,436..7,388 | 5,952 | 12 sprites, mode 0x10 (3.10) |
+| 1,436..7,388 | 5,952 | 12 sprites, mode 0x10, 16x5 to 48x51 (3.10) |
 | 7,388..7,576 | 188 | UNEXPLAINED |
 
 **78.8% named.** **use directly** — 9 sprites
@@ -542,13 +544,13 @@ Section numbers in the `what` column point at FORMATS.md.
 | 32,049..34,696 | 2,647 | UNEXPLAINED |
 | 34,696..35,468 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 35,468..35,964 | 496 | UNEXPLAINED |
-| 35,964..46,766 | 10,802 | 22 sprites, modes 0x00, 0x10, 0x12 (+76 b between) (3.10) |
+| 35,964..46,766 | 10,802 | 22 sprites, modes 0x00, 0x10, 0x12, 16x8 to 64x44 (+76 b between) (3.10) |
 | 46,766..48,382 | 1,616 | UNEXPLAINED |
-| 48,382..49,822 | 1,440 | 12 sprites, mode 0x10 (3.10) |
+| 48,382..49,822 | 1,440 | 12 sprites, mode 0x10, 16x11 to 32x16 (3.10) |
 | 49,822..49,944 | 122 | UNEXPLAINED |
-| 49,944..51,456 | 1,512 | 9 sprites, modes 0x10, 0x14 (3.10) |
+| 49,944..51,456 | 1,512 | 9 sprites, modes 0x10, 0x14, 16x8 to 32x30 (3.10) |
 | 51,456..53,480 | 2,024 | **32x126 sprite, mode 0x10** - the right panel column, drawn at (288,0) - 97/126 rows verified vs VRAM (FINDINGS 4.15b) (3.10) |
-| 53,480..53,752 | 272 | 2 sprites, mode 0x10 (3.10) |
+| 53,480..53,752 | 272 | 2 sprites, mode 0x10, 16x16 (3.10) |
 | 53,752..53,808 | 56 | UNEXPLAINED |
 
 **34.4% named.** **art usable** (14 sprites); logic to reimplement
@@ -563,7 +565,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,320 | 1,304 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,320..16,240 | 14,920 | 3 sprites, mode 0x12 (3.10) |
+| 1,320..16,240 | 14,920 | 3 sprites, mode 0x12, 32x35 to 112x128 (3.10) |
 | 16,240..17,012 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 17,012..17,056 | 44 | UNEXPLAINED |
 
@@ -581,7 +583,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..1,348 | 1,332 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,348..2,120 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 2,120..3,456 | 1,336 | UNEXPLAINED |
-| 3,456..4,768 | 1,312 | 2 sprites, mode 0x10 (3.10) |
+| 3,456..4,768 | 1,312 | 2 sprites, mode 0x10, 32x11 to 80x28 (3.10) |
 | 4,768..4,800 | 32 | UNEXPLAINED |
 
 **43.8% named.** **use directly** — 2 sprites
@@ -615,7 +617,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,620 | 1,604 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,620..16,428 | 14,808 | 22 sprites, modes 0x10, 0x14 (3.10) |
+| 1,620..16,428 | 14,808 | 22 sprites, modes 0x10, 0x14, 16x12 to 48x102 (3.10) |
 | 16,428..16,856 | 428 | UNEXPLAINED |
 
 **87.9% named.** **use directly** — 22 sprites
@@ -632,9 +634,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..8,884 | 8,868 | script bytecode (entry set known, 7.7) (3.16) |
 | 8,884..9,230 | 346 | 21 NUL-terminated strings (+160 b between) (10) |
 | 9,230..10,566 | 1,336 | UNEXPLAINED |
-| 10,566..10,854 | 288 | 4 sprites, mode 0x10 (3.10) |
+| 10,566..10,854 | 288 | 4 sprites, mode 0x10, 16x8 (3.10) |
 | 10,854..10,990 | 136 | UNEXPLAINED |
-| 10,990..12,094 | 1,104 | 4 sprites, mode 0x10 (3.10) |
+| 10,990..12,094 | 1,104 | 4 sprites, mode 0x10, 16x15 to 32x25 (3.10) |
 | 12,094..14,426 | 2,332 | 3 palettes: marker + 256 x RGB (+16 b between) (3.9) |
 | 14,426..14,472 | 46 | UNEXPLAINED |
 
@@ -650,7 +652,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..5,894 | 5,878 | script bytecode (entry set known, 7.7) (3.16) |
-| 5,894..6,482 | 588 | 2 sprites, mode 0x00 (3.10) |
+| 5,894..6,482 | 588 | 2 sprites, mode 0x00, 5x5 to 33x33 (3.10) |
 | 6,482..6,680 | 198 | UNEXPLAINED |
 | 6,680..8,224 | 1,544 | 2 palettes: marker + 256 x RGB (3.9) |
 | 8,224..8,563 | 339 | UNEXPLAINED |
@@ -671,7 +673,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,558 | 1,542 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,558..6,958 | 5,400 | 8 sprites, mode 0x10 (3.10) |
+| 1,558..6,958 | 5,400 | 8 sprites, mode 0x10, 16x17 to 64x40 (3.10) |
 | 6,958..9,688 | 2,730 | UNEXPLAINED |
 
 **55.9% named.** **use directly** — 8 sprites
@@ -707,7 +709,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,732 | 2,716 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,732..15,532 | 12,800 | 14 sprites, modes 0x00, 0x10 (+14 b between) (3.10) |
+| 2,732..15,532 | 12,800 | 14 sprites, modes 0x00, 0x10, 23x4 to 80x130 (+14 b between) (3.10) |
 | 15,532..15,752 | 220 | UNEXPLAINED |
 
 **81.3% named.** **use directly** — 12 sprites
@@ -728,7 +730,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 1,180..3,522 | 2,342 | UNEXPLAINED |
 | 3,522..4,294 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 4,294..4,306 | 12 | UNEXPLAINED |
-| 4,306..76,372 | 72,066 | 34 sprites, modes 0x00, 0x10, 0x14, 0x16 (+6 b between) (3.10) |
+| 4,306..76,372 | 72,066 | 34 sprites, modes 0x00, 0x10, 0x14, 0x16, 16x5 to 256x126 (+6 b between) (3.10) |
 | 76,372..77,288 | 916 | UNEXPLAINED |
 | 77,288..77,317 | 29 | 2 NUL-terminated strings (+4 b between) (10) |
 | 77,317..77,799 | 482 | UNEXPLAINED |
@@ -755,7 +757,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,758 | 1,742 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,758..6,274 | 4,516 | 6 sprites, mode 0x00 (3.10) |
+| 1,758..6,274 | 4,516 | 6 sprites, mode 0x00, 16x10 to 64x75 (3.10) |
 | 6,274..6,576 | 302 | UNEXPLAINED |
 
 **68.9% named.** **use directly** — 6 sprites
@@ -778,11 +780,11 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2,411..4,286 | 1,875 | UNEXPLAINED |
 | 4,286..5,058 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 5,058..5,140 | 82 | UNEXPLAINED |
-| 5,140..5,856 | 716 | 2 sprites, mode 0x00 (3.10) |
+| 5,140..5,856 | 716 | 2 sprites, mode 0x00, 32x17 to 32x27 (3.10) |
 | 5,856..5,942 | 86 | UNEXPLAINED |
 | 5,942..6,714 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 6,714..7,858 | 1,144 | UNEXPLAINED |
-| 7,858..44,044 | 36,186 | 11 sprites, modes 0x00, 0x10, 0x12, 0x14 (+86 b between) (3.10) |
+| 7,858..44,044 | 36,186 | 11 sprites, modes 0x00, 0x10, 0x12, 0x14, 32x18 to 80x95 (+86 b between) (3.10) |
 | 44,044..44,160 | 116 | UNEXPLAINED |
 
 **86.9% named.** **use directly** — 9 sprites
@@ -799,7 +801,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..248 | 232 | script bytecode (entry set known, 7.7) (3.16) |
 | 248..255 | 7 | 1 NUL-terminated strings (10) |
 | 255..1,378 | 1,123 | UNEXPLAINED |
-| 1,378..7,122 | 5,744 | 10 sprites, mode 0x10 (3.10) |
+| 1,378..7,122 | 5,744 | 10 sprites, mode 0x10, 16x8 to 48x55 (3.10) |
 | 7,122..7,296 | 174 | UNEXPLAINED |
 
 **82.2% named.** **art usable** (9 sprites); logic to reimplement
@@ -814,7 +816,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,460 | 1,444 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,460..13,612 | 12,152 | 17 sprites, mode 0x10 (3.10) |
+| 1,460..13,612 | 12,152 | 17 sprites, mode 0x10, 16x7 to 64x65 (3.10) |
 | 13,612..14,700 | 1,088 | UNEXPLAINED |
 | 14,700..15,472 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 15,472..17,456 | 1,984 | UNEXPLAINED |
@@ -831,7 +833,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,128 | 2,112 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,128..21,016 | 18,888 | 29 sprites, modes 0x10, 0x14 (+80 b between) (3.10) |
+| 2,128..21,016 | 18,888 | 29 sprites, modes 0x10, 0x14, 16x9 to 96x76 (+80 b between) (3.10) |
 | 21,016..22,931 | 1,915 | UNEXPLAINED |
 | 22,931..22,938 | 7 | 1 NUL-terminated strings (10) |
 | 22,938..32,584 | 9,646 | UNEXPLAINED |
@@ -848,7 +850,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..3,030 | 3,014 | script bytecode (entry set known, 7.7) (3.16) |
-| 3,030..22,276 | 19,246 | 28 sprites, modes 0x00, 0x10 (3.10) |
+| 3,030..22,276 | 19,246 | 28 sprites, modes 0x00, 0x10, 16x3 to 80x91 (3.10) |
 | 22,276..22,416 | 140 | UNEXPLAINED |
 | 22,416..23,188 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 23,188..23,263 | 75 | UNEXPLAINED |
@@ -873,13 +875,13 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..698 | 682 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 698..705 | 7 | 1 NUL-terminated strings (10) |
 | 705..1,856 | 1,151 | UNEXPLAINED |
-| 1,856..20,168 | 18,312 | 4 sprites, modes 0x10, 0x14 (3.10) |
+| 1,856..20,168 | 18,312 | 4 sprites, modes 0x10, 0x14, 16x13 to 144x118 (3.10) |
 | 20,168..20,940 | 772 | 1 palette: marker + 256 x RGB (3.9) |
-| 20,940..31,508 | 10,568 | 3 sprites, modes 0x10, 0x14 (3.10) |
+| 20,940..31,508 | 10,568 | 3 sprites, modes 0x10, 0x14, 32x20 to 80x71 (3.10) |
 | 31,508..31,535 | 27 | UNEXPLAINED |
 | 31,535..32,649 | 1,114 | 38 NUL-terminated strings (+733 b between) (10) |
 | 32,649..32,756 | 107 | UNEXPLAINED |
-| 32,756..40,364 | 7,608 | 3 sprites, mode 0x14 (3.10) |
+| 32,756..40,364 | 7,608 | 3 sprites, mode 0x14, 32x31 to 128x35 (3.10) |
 | 40,364..40,632 | 268 | UNEXPLAINED |
 
 **92.7% named.** **use directly** — 4 sprites
@@ -894,7 +896,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,576 | 1,560 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,576..11,400 | 9,824 | 17 sprites, mode 0x10 (3.10) |
+| 1,576..11,400 | 9,824 | 17 sprites, mode 0x10, 16x9 to 32x95 (3.10) |
 | 11,400..11,456 | 56 | UNEXPLAINED |
 | 11,456..12,228 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 12,228..17,040 | 4,812 | UNEXPLAINED |
@@ -979,9 +981,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 18,445..19,954 | 1,509 | UNEXPLAINED |
 | 19,954..19,991 | 37 | 3 NUL-terminated strings (+16 b between) (10) |
 | 19,991..21,590 | 1,599 | UNEXPLAINED |
-| 21,590..23,138 | 1,548 | 22 sprites, mode 0x00 (3.10) |
+| 21,590..23,138 | 1,548 | 22 sprites, mode 0x00, 16x2 to 16x9 (3.10) |
 | 23,138..23,272 | 134 | UNEXPLAINED |
-| 23,272..26,380 | 3,108 | 42 sprites, modes 0x00, 0x10 (+94 b between) (3.10) |
+| 23,272..26,380 | 3,108 | 42 sprites, modes 0x00, 0x10, 16x5 to 16x16 (+94 b between) (3.10) |
 | 26,380..26,384 | 4 | UNEXPLAINED |
 
 **27.1% named.** **art usable** (1 sprites); logic to reimplement
@@ -1017,7 +1019,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 1,021..5,896 | 4,875 | UNEXPLAINED |
 | 5,896..6,668 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 6,668..6,686 | 18 | UNEXPLAINED |
-| 6,686..7,402 | 716 | 2 sprites, mode 0x00 (3.10) |
+| 6,686..7,402 | 716 | 2 sprites, mode 0x00, 32x17 to 32x27 (3.10) |
 | 7,402..39,881 | 32,479 | UNEXPLAINED |
 | 39,881..39,900 | 19 | 1 NUL-terminated strings (10) |
 | 39,900..40,888 | 988 | UNEXPLAINED |
@@ -1034,19 +1036,19 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..16,618 | 16,602 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 16,618..26,176 | 9,558 | 9 sprites, modes 0x00, 0x10 (+40 b between) (3.10) |
+| 16,618..26,176 | 9,558 | 9 sprites, modes 0x00, 0x10, 16x3 to 48x117 (+40 b between) (3.10) |
 | 26,176..26,276 | 100 | UNEXPLAINED |
-| 26,276..33,236 | 6,960 | 4 sprites, mode 0x10 (3.10) |
+| 26,276..33,236 | 6,960 | 4 sprites, mode 0x10, 48x59 to 32x128 (3.10) |
 | 33,236..33,354 | 118 | UNEXPLAINED |
-| 33,354..33,898 | 544 | 2 sprites, mode 0x10 (3.10) |
+| 33,354..33,898 | 544 | 2 sprites, mode 0x10, 16x33 (3.10) |
 | 33,898..34,016 | 118 | UNEXPLAINED |
-| 34,016..83,935 | 49,919 | 47 sprites, modes 0x00, 0x10, 0x12 (+94 b between) (3.10) |
+| 34,016..83,935 | 49,919 | 47 sprites, modes 0x00, 0x10, 0x12, 32x9 to 102x163 (+94 b between) (3.10) |
 | 83,935..83,938 | 3 | UNEXPLAINED |
 | 83,938..84,176 | 238 | 14 NUL-terminated strings (+56 b between) (10) |
 | 84,176..84,444 | 268 | UNEXPLAINED |
 | 84,444..84,790 | 346 | 14 NUL-terminated strings (+218 b between) (10) |
 | 84,790..85,060 | 270 | UNEXPLAINED |
-| 85,060..85,204 | 144 | 3 sprites, mode 0x10 (3.10) |
+| 85,060..85,204 | 144 | 3 sprites, mode 0x10, 16x3 to 16x7 (3.10) |
 | 85,204..86,544 | 1,340 | UNEXPLAINED |
 
 **77.8% named.** **use directly** — 45 sprites
@@ -1061,7 +1063,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,568 | 1,552 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,568..8,056 | 6,488 | 16 sprites, mode 0x10 (3.10) |
+| 1,568..8,056 | 6,488 | 16 sprites, mode 0x10, 16x5 to 48x81 (3.10) |
 | 8,056..15,536 | 7,480 | UNEXPLAINED |
 
 **41.9% named.** **use directly** — 13 sprites
@@ -1172,7 +1174,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..332 | 316 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 332..339 | 7 | 1 NUL-terminated strings (10) |
 | 339..1,708 | 1,369 | UNEXPLAINED |
-| 1,708..15,992 | 14,284 | 35 sprites, modes 0x00, 0x10, 0x12, 0x14 (+58 b between) (3.10) |
+| 1,708..15,992 | 14,284 | 35 sprites, modes 0x00, 0x10, 0x12, 0x14, 37x2 to 48x86 (+58 b between) (3.10) |
 | 15,992..16,971 | 979 | UNEXPLAINED |
 | 16,971..16,978 | 7 | 1 NUL-terminated strings (10) |
 | 16,978..20,864 | 3,886 | UNEXPLAINED |
@@ -1191,7 +1193,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..279 | 263 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 279..287 | 8 | 1 NUL-terminated strings (10) |
 | 287..1,418 | 1,131 | UNEXPLAINED |
-| 1,418..10,354 | 8,936 | 9 sprites, mode 0x10 (3.10) |
+| 1,418..10,354 | 8,936 | 9 sprites, mode 0x10, 16x13 to 80x113 (3.10) |
 | 10,354..10,364 | 10 | 1 NUL-terminated strings (10) |
 | 10,364..10,502 | 138 | UNEXPLAINED |
 | 10,502..10,832 | 330 | 6 NUL-terminated strings (+211 b between) (10) |
@@ -1204,7 +1206,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 12,552..12,735 | 183 | UNEXPLAINED |
 | 12,735..13,988 | 1,253 | 55 NUL-terminated strings (+695 b between) (10) |
 | 13,988..14,114 | 126 | UNEXPLAINED |
-| 14,114..19,554 | 5,440 | 2 sprites, mode 0x10 (3.10) |
+| 14,114..19,554 | 5,440 | 2 sprites, mode 0x10, 96x33 to 80x96 (3.10) |
 | 19,554..23,128 | 3,574 | UNEXPLAINED |
 
 **67.2% named.** **use directly** — 11 sprites
@@ -1234,9 +1236,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..599 | 583 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 599..607 | 8 | 1 NUL-terminated strings (10) |
 | 607..1,778 | 1,171 | UNEXPLAINED |
-| 1,778..6,218 | 4,440 | 11 sprites, mode 0x10 (3.10) |
+| 1,778..6,218 | 4,440 | 11 sprites, mode 0x10, 16x4 to 48x79 (3.10) |
 | 6,218..6,338 | 120 | UNEXPLAINED |
-| 6,338..7,282 | 944 | 2 sprites, mode 0x10 (3.10) |
+| 6,338..7,282 | 944 | 2 sprites, mode 0x10, 32x16 to 48x28 (3.10) |
 | 7,282..7,520 | 238 | UNEXPLAINED |
 
 **71.9% named.** **use directly** — 8 sprites
@@ -1253,7 +1255,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..455 | 439 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 455..463 | 8 | 1 NUL-terminated strings (10) |
 | 463..1,714 | 1,251 | UNEXPLAINED |
-| 1,714..12,914 | 11,200 | 24 sprites, modes 0x10, 0x14 (3.10) |
+| 1,714..12,914 | 11,200 | 24 sprites, modes 0x10, 0x14, 16x5 to 48x51 (3.10) |
 | 12,914..13,020 | 106 | UNEXPLAINED |
 | 13,020..13,792 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 13,792..16,344 | 2,552 | UNEXPLAINED |
@@ -1272,25 +1274,25 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..2,771 | 2,755 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,771..2,881 | 110 | 2 NUL-terminated strings (+93 b between) (10) |
 | 2,881..5,388 | 2,507 | UNEXPLAINED |
-| 5,388..6,292 | 904 | 11 sprites, mode 0x10 (3.10) |
+| 5,388..6,292 | 904 | 11 sprites, mode 0x10, 16x3 to 32x8 (3.10) |
 | 6,292..6,452 | 160 | UNEXPLAINED |
-| 6,452..11,076 | 4,624 | 21 sprites, mode 0x10 (3.10) |
+| 6,452..11,076 | 4,624 | 21 sprites, mode 0x10, 16x3 to 48x62 (3.10) |
 | 11,076..11,178 | 102 | UNEXPLAINED |
 | 11,178..11,950 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 11,950..12,400 | 450 | UNEXPLAINED |
-| 12,400..14,484 | 2,084 | 6 sprites, mode 0x10 (+36 b between) (3.10) |
+| 12,400..14,484 | 2,084 | 6 sprites, mode 0x10, 16x10 to 32x36 (+36 b between) (3.10) |
 | 14,484..14,664 | 180 | UNEXPLAINED |
-| 14,664..19,920 | 5,256 | 14 sprites, modes 0x10, 0x14 (3.10) |
+| 14,664..19,920 | 5,256 | 14 sprites, modes 0x10, 0x14, 16x25 to 32x26 (3.10) |
 | 19,920..19,934 | 14 | UNEXPLAINED |
 | 19,934..20,706 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 20,706..20,778 | 72 | UNEXPLAINED |
-| 20,778..25,590 | 4,812 | 37 sprites, modes 0x00, 0x10 (+108 b between) (3.10) |
+| 20,778..25,590 | 4,812 | 37 sprites, modes 0x00, 0x10, 16x2 to 32x26 (+108 b between) (3.10) |
 | 25,590..25,710 | 120 | UNEXPLAINED |
-| 25,710..29,922 | 4,212 | 21 sprites, modes 0x00, 0x10, 0x14 (+178 b between) (3.10) |
+| 25,710..29,922 | 4,212 | 21 sprites, modes 0x00, 0x10, 0x14, 16x2 to 32x32 (+178 b between) (3.10) |
 | 29,922..30,182 | 260 | UNEXPLAINED |
-| 30,182..30,870 | 688 | 2 sprites, mode 0x10 (3.10) |
+| 30,182..30,870 | 688 | 2 sprites, mode 0x10, 16x24 to 32x30 (3.10) |
 | 30,870..30,968 | 98 | UNEXPLAINED |
-| 30,968..35,128 | 4,160 | 20 sprites, mode 0x10 (+80 b between) (3.10) |
+| 30,968..35,128 | 4,160 | 20 sprites, mode 0x10, 16x3 to 32x29 (+80 b between) (3.10) |
 | 35,128..35,536 | 408 | UNEXPLAINED |
 
 **78.6% named.** **use directly** — 15 sprites
@@ -1307,9 +1309,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..413 | 397 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 413..421 | 8 | 1 NUL-terminated strings (10) |
 | 421..1,580 | 1,159 | UNEXPLAINED |
-| 1,580..3,844 | 2,264 | 11 sprites, mode 0x10 (3.10) |
+| 1,580..3,844 | 2,264 | 11 sprites, mode 0x10, 16x3 to 48x27 (3.10) |
 | 3,844..3,980 | 136 | UNEXPLAINED |
-| 3,980..4,684 | 704 | 2 sprites, mode 0x10 (3.10) |
+| 3,980..4,684 | 704 | 2 sprites, mode 0x10, 32x17 to 32x26 (3.10) |
 | 4,684..4,720 | 36 | UNEXPLAINED |
 
 **63.4% named.** **use directly** — 6 sprites
@@ -1328,7 +1330,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 355..475 | 120 | UNEXPLAINED |
 | 475..483 | 8 | 1 NUL-terminated strings (10) |
 | 483..1,718 | 1,235 | UNEXPLAINED |
-| 1,718..11,918 | 10,200 | 21 sprites, mode 0x10 (3.10) |
+| 1,718..11,918 | 10,200 | 21 sprites, mode 0x10, 16x7 to 64x53 (3.10) |
 | 11,918..11,922 | 4 | UNEXPLAINED |
 | 11,922..12,694 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 12,694..15,328 | 2,634 | UNEXPLAINED |
@@ -1347,7 +1349,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..285 | 269 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 285..293 | 8 | 1 NUL-terminated strings (10) |
 | 293..1,412 | 1,119 | UNEXPLAINED |
-| 1,412..9,588 | 8,176 | 9 sprites, modes 0x10, 0x14 (3.10) |
+| 1,412..9,588 | 8,176 | 9 sprites, modes 0x10, 0x14, 16x6 to 48x85 (3.10) |
 | 9,588..9,752 | 164 | UNEXPLAINED |
 
 **84.1% named.** **use directly** — 7 sprites
@@ -1381,7 +1383,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,922 | 2,906 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,922..4,682 | 1,760 | 5 sprites, mode 0x10 (3.10) |
+| 2,922..4,682 | 1,760 | 5 sprites, mode 0x10, 16x6 to 16x101 (3.10) |
 | 4,682..5,384 | 702 | UNEXPLAINED |
 
 **33.0% named.** **use directly** — 4 sprites
@@ -1396,11 +1398,11 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..4,306 | 4,290 | script bytecode (entry set known, 7.7) (3.16) |
-| 4,306..19,322 | 15,016 | 23 sprites, mode 0x10 (3.10) |
+| 4,306..19,322 | 15,016 | 23 sprites, mode 0x10, 16x29 to 32x128 (3.10) |
 | 19,322..19,590 | 268 | UNEXPLAINED |
-| 19,590..23,298 | 3,708 | 11 sprites, mode 0x10 (+52 b between) (3.10) |
+| 19,590..23,298 | 3,708 | 11 sprites, mode 0x10, 16x2 to 48x42 (+52 b between) (3.10) |
 | 23,298..23,408 | 110 | UNEXPLAINED |
-| 23,408..32,328 | 8,920 | 12 sprites, mode 0x10 (3.10) |
+| 23,408..32,328 | 8,920 | 12 sprites, mode 0x10, 16x7 to 48x67 (3.10) |
 | 32,328..32,488 | 160 | UNEXPLAINED |
 
 **98.2% named.** **art usable** (23 sprites); logic to reimplement
@@ -1415,7 +1417,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,400 | 1,384 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,400..9,536 | 8,136 | 10 sprites, modes 0x10, 0x14 (3.10) |
+| 1,400..9,536 | 8,136 | 10 sprites, modes 0x10, 0x14, 16x7 to 48x55 (3.10) |
 | 9,536..14,352 | 4,816 | UNEXPLAINED |
 
 **56.8% named.** **use directly** — 9 sprites
@@ -1433,12 +1435,12 @@ Section numbers in the `what` column point at FORMATS.md.
 | 92..99 | 7 | 1 NUL-terminated strings (10) |
 | 99..4,408 | 4,309 | UNEXPLAINED |
 | 4,408..5,180 | 772 | 1 palette: marker + 256 x RGB (3.9) |
-| 5,180..18,132 | 12,952 | 8 sprites, mode 0x10 (3.10) |
+| 5,180..18,132 | 12,952 | 8 sprites, mode 0x10, 96x22 to 144x31 (3.10) |
 | 18,132..18,354 | 222 | UNEXPLAINED |
-| 18,354..86,932 | 68,578 | 8 sprites, modes 0x10, 0x12, 0x16 (+18 b between) (3.10) |
+| 18,354..86,932 | 68,578 | 8 sprites, modes 0x10, 0x12, 0x16, 96x20 to 192x180 (+18 b between) (3.10) |
 | 86,932..87,078 | 146 | UNEXPLAINED |
 | 87,078..87,850 | 772 | 1 palette: marker + 256 x RGB (3.9) |
-| 87,850..143,358 | 55,508 | 11 sprites, modes 0x10, 0x14, 0x16 (+68 b between) (3.10) |
+| 87,850..143,358 | 55,508 | 11 sprites, modes 0x10, 0x14, 0x16, 16x5 to 160x200 (+68 b between) (3.10) |
 | 143,358..143,608 | 250 | UNEXPLAINED |
 
 **96.5% named.** **use directly** — 7 sprites
@@ -1476,7 +1478,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..231 | 215 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 231..242 | 11 | 1 NUL-terminated strings (10) |
 | 242..398 | 156 | UNEXPLAINED |
-| 398..22,172 | 21,774 | 9 sprites, mode 0x00 (3.10) |
+| 398..22,172 | 21,774 | 9 sprites, mode 0x00, 240x13 to 144x35 (3.10) |
 | 22,172..22,184 | 12 | UNEXPLAINED |
 
 **98.3% named.** **use directly** — 9 sprites
@@ -1491,7 +1493,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..4,962 | 4,946 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 4,962..27,976 | 23,014 | 26 sprites, mode 0x00 (+50 b between) (3.10) |
+| 4,962..27,976 | 23,014 | 26 sprites, mode 0x00, 16x16 to 48x121 (+50 b between) (3.10) |
 | 27,976..28,008 | 32 | UNEXPLAINED |
 
 **82.0% named.** **use directly** — 24 sprites
@@ -1506,19 +1508,19 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..5,470 | 5,454 | script bytecode (entry set known, 7.7) (3.16) |
-| 5,470..7,695 | 2,225 | 14 sprites, modes 0x00, 0x10, 0x14 (+50 b between) (3.10) |
+| 5,470..7,695 | 2,225 | 14 sprites, modes 0x00, 0x10, 0x14, 16x2 to 48x23 (+50 b between) (3.10) |
 | 7,695..7,892 | 197 | UNEXPLAINED |
-| 7,892..10,844 | 2,952 | 5 sprites, modes 0x10, 0x14 (3.10) |
+| 7,892..10,844 | 2,952 | 5 sprites, modes 0x10, 0x14, 16x6 to 112x20 (3.10) |
 | 10,844..10,966 | 122 | UNEXPLAINED |
-| 10,966..24,062 | 13,096 | 19 sprites, mode 0x10 (3.10) |
+| 10,966..24,062 | 13,096 | 19 sprites, mode 0x10, 32x2 to 240x21 (3.10) |
 | 24,062..24,737 | 675 | UNEXPLAINED |
 | 24,737..24,744 | 7 | 1 NUL-terminated strings (10) |
 | 24,744..24,770 | 26 | UNEXPLAINED |
-| 24,770..25,672 | 902 | 18 sprites, mode 0x10 (+14 b between) (3.10) |
+| 24,770..25,672 | 902 | 18 sprites, mode 0x10, 16x2 to 16x12 (+14 b between) (3.10) |
 | 25,672..25,872 | 200 | UNEXPLAINED |
 | 25,872..26,644 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 26,644..28,484 | 1,840 | UNEXPLAINED |
-| 28,484..29,972 | 1,488 | 3 sprites, mode 0x10 (3.10) |
+| 28,484..29,972 | 1,488 | 3 sprites, mode 0x10, 32x16 to 48x35 (3.10) |
 | 29,972..30,048 | 76 | UNEXPLAINED |
 
 **89.4% named.** **art usable** (17 sprites); logic to reimplement
@@ -1613,7 +1615,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..290 | 274 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 290..297 | 7 | 1 NUL-terminated strings (10) |
 | 297..1,428 | 1,131 | UNEXPLAINED |
-| 1,428..8,212 | 6,784 | 12 sprites, mode 0x10 (3.10) |
+| 1,428..8,212 | 6,784 | 12 sprites, mode 0x10, 16x9 to 48x78 (3.10) |
 | 8,212..8,424 | 212 | UNEXPLAINED |
 
 **80.8% named.** **use directly** — 11 sprites
@@ -1630,9 +1632,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..772 | 756 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 772..779 | 7 | 1 NUL-terminated strings (10) |
 | 779..2,006 | 1,227 | UNEXPLAINED |
-| 2,006..7,896 | 5,890 | 21 sprites, modes 0x00, 0x10 (+90 b between) (3.10) |
+| 2,006..7,896 | 5,890 | 21 sprites, modes 0x00, 0x10, 16x2 to 32x86 (+90 b between) (3.10) |
 | 7,896..8,012 | 116 | UNEXPLAINED |
-| 8,012..8,892 | 880 | 5 sprites, modes 0x10, 0x14 (3.10) |
+| 8,012..8,892 | 880 | 5 sprites, modes 0x10, 0x14, 16x12 to 16x20 (3.10) |
 | 8,892..9,024 | 132 | UNEXPLAINED |
 
 **74.3% named.** **use directly** — 13 sprites
@@ -1772,7 +1774,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 16..354 | 338 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 354..361 | 7 | 1 NUL-terminated strings (10) |
 | 361..1,476 | 1,115 | UNEXPLAINED |
-| 1,476..9,804 | 8,328 | 10 sprites, mode 0x10 (3.10) |
+| 1,476..9,804 | 8,328 | 10 sprites, mode 0x10, 16x36 to 48x109 (3.10) |
 | 9,804..9,968 | 164 | UNEXPLAINED |
 
 **83.8% named.** **use directly** — 10 sprites
@@ -1787,7 +1789,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,322 | 1,306 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,322..4,586 | 3,264 | 4 sprites, mode 0x10 (3.10) |
+| 1,322..4,586 | 3,264 | 4 sprites, mode 0x10, 32x13 to 80x49 (3.10) |
 | 4,586..4,712 | 126 | UNEXPLAINED |
 
 **69.6% named.** **use directly** — 4 sprites
@@ -1818,7 +1820,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 4,063..5,904 | 1,841 | UNEXPLAINED |
 | 5,904..6,676 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 6,676..6,694 | 18 | UNEXPLAINED |
-| 6,694..7,410 | 716 | 2 sprites, mode 0x00 (3.10) |
+| 6,694..7,410 | 716 | 2 sprites, mode 0x00, 32x17 to 32x27 (3.10) |
 | 7,410..39,860 | 32,450 | UNEXPLAINED |
 | 39,860..40,632 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 40,632..72,968 | 32,336 | UNEXPLAINED |
@@ -1835,9 +1837,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,664 | 2,648 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,664..5,128 | 2,464 | 12 sprites, mode 0x10 (3.10) |
+| 2,664..5,128 | 2,464 | 12 sprites, mode 0x10, 16x8 to 16x47 (3.10) |
 | 5,128..5,360 | 232 | UNEXPLAINED |
-| 5,360..7,064 | 1,704 | 6 sprites, mode 0x10 (3.10) |
+| 5,360..7,064 | 1,704 | 6 sprites, mode 0x10, 16x4 to 48x37 (3.10) |
 | 7,064..7,128 | 64 | UNEXPLAINED |
 
 **58.7% named.** **use directly** — 11 sprites
@@ -1865,7 +1867,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..3,096 | 3,080 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 3,096..49,738 | 46,642 | 19 sprites, modes 0x10, 0x14 (+50 b between) (3.10) |
+| 3,096..49,738 | 46,642 | 19 sprites, modes 0x10, 0x14, 64x6 to 224x123 (+50 b between) (3.10) |
 | 49,738..49,872 | 134 | UNEXPLAINED |
 
 **93.5% named.** **use directly** — 14 sprites
@@ -2011,13 +2013,13 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..3,176 | 3,160 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 3,176..21,110 | 17,934 | 22 sprites, modes 0x00, 0x10 (3.10) |
+| 3,176..21,110 | 17,934 | 22 sprites, modes 0x00, 0x10, 16x4 to 96x76 (3.10) |
 | 21,110..21,846 | 736 | UNEXPLAINED |
 | 21,846..22,618 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 22,618..22,754 | 136 | UNEXPLAINED |
 | 22,754..22,763 | 9 | 1 NUL-terminated strings (10) |
 | 22,763..22,906 | 143 | UNEXPLAINED |
-| 22,906..23,122 | 216 | 1 sprites, mode 0x10 (3.10) |
+| 22,906..23,122 | 216 | 1 sprites, mode 0x10, 16x26 (3.10) |
 | 23,122..24,584 | 1,462 | UNEXPLAINED |
 
 **77.1% named.** **use directly** — 21 sprites
@@ -2032,37 +2034,37 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..15,578 | 15,562 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 15,578..52,642 | 37,064 | 62 sprites, mode 0x10 (3.10) |
+| 15,578..52,642 | 37,064 | 62 sprites, mode 0x10, 16x6 to 80x53 (3.10) |
 | 52,642..53,236 | 594 | UNEXPLAINED |
 | 53,236..54,008 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 54,008..54,638 | 630 | UNEXPLAINED |
-| 54,638..59,520 | 4,882 | 25 sprites, modes 0x00, 0x10 (3.10) |
+| 54,638..59,520 | 4,882 | 25 sprites, modes 0x00, 0x10, 16x2 to 32x43 (3.10) |
 | 59,520..59,816 | 296 | UNEXPLAINED |
 | 59,816..59,877 | 61 | 2 NUL-terminated strings (+3 b between) (10) |
 | 59,877..61,070 | 1,193 | UNEXPLAINED |
-| 61,070..65,230 | 4,160 | 7 sprites, mode 0x10 (3.10) |
+| 61,070..65,230 | 4,160 | 7 sprites, mode 0x10, 32x7 to 80x36 (3.10) |
 | 65,230..65,754 | 524 | UNEXPLAINED |
-| 65,754..67,094 | 1,340 | 6 sprites, mode 0x00 (3.10) |
+| 65,754..67,094 | 1,340 | 6 sprites, mode 0x00, 16x9 to 16x53 (3.10) |
 | 67,094..67,406 | 312 | UNEXPLAINED |
 | 67,406..68,178 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 68,178..70,100 | 1,922 | UNEXPLAINED |
 | 70,100..70,129 | 29 | 1 NUL-terminated strings (10) |
 | 70,129..70,130 | 1 | UNEXPLAINED |
-| 70,130..72,458 | 2,328 | 6 sprites, mode 0x10 (3.10) |
+| 70,130..72,458 | 2,328 | 6 sprites, mode 0x10, 16x6 to 48x49 (3.10) |
 | 72,458..74,960 | 2,502 | UNEXPLAINED |
-| 74,960..81,360 | 6,400 | 22 sprites, modes 0x10, 0x14 (3.10) |
+| 74,960..81,360 | 6,400 | 22 sprites, modes 0x10, 0x14, 16x3 to 64x40 (3.10) |
 | 81,360..81,620 | 260 | UNEXPLAINED |
 | 81,620..82,392 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 82,392..82,445 | 53 | UNEXPLAINED |
 | 82,445..82,462 | 17 | 1 NUL-terminated strings (10) |
 | 82,462..82,774 | 312 | UNEXPLAINED |
-| 82,774..88,318 | 5,544 | 14 sprites, mode 0x10 (3.10) |
+| 82,774..88,318 | 5,544 | 14 sprites, mode 0x10, 16x6 to 64x44 (3.10) |
 | 88,318..88,680 | 362 | UNEXPLAINED |
-| 88,680..90,898 | 2,218 | 7 sprites, mode 0x00 (3.10) |
+| 88,680..90,898 | 2,218 | 7 sprites, mode 0x00, 16x5 to 48x46 (3.10) |
 | 90,898..92,040 | 1,142 | UNEXPLAINED |
-| 92,040..95,946 | 3,906 | 4 sprites, mode 0x10 (+74 b between) (3.10) |
+| 92,040..95,946 | 3,906 | 4 sprites, mode 0x10, 80x16 to 80x39 (+74 b between) (3.10) |
 | 95,946..96,204 | 258 | UNEXPLAINED |
-| 96,204..100,408 | 4,204 | 5 sprites, modes 0x00, 0x10 (3.10) |
+| 96,204..100,408 | 4,204 | 5 sprites, modes 0x00, 0x10, 16x2 to 32x86 (3.10) |
 | 100,408..100,712 | 304 | UNEXPLAINED |
 
 **73.9% named.** **use directly** — 55 sprites
@@ -2077,7 +2079,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,442 | 1,426 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,442..6,980 | 5,538 | 14 sprites, modes 0x00, 0x10 (3.10) |
+| 1,442..6,980 | 5,538 | 14 sprites, modes 0x00, 0x10, 16x5 to 64x54 (3.10) |
 | 6,980..10,384 | 3,404 | UNEXPLAINED |
 
 **53.5% named.** **use directly** — 12 sprites
@@ -2092,7 +2094,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,844 | 1,828 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,844..8,124 | 6,280 | 13 sprites, mode 0x10 (3.10) |
+| 1,844..8,124 | 6,280 | 13 sprites, mode 0x10, 16x11 to 48x97 (3.10) |
 | 8,124..9,816 | 1,692 | UNEXPLAINED |
 
 **64.1% named.** **use directly** — 13 sprites
@@ -2107,7 +2109,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,950 | 1,934 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,950..7,686 | 5,736 | 21 sprites, mode 0x10 (3.10) |
+| 1,950..7,686 | 5,736 | 21 sprites, mode 0x10, 16x11 to 80x27 (3.10) |
 | 7,686..8,021 | 335 | UNEXPLAINED |
 | 8,021..8,793 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 8,793..11,272 | 2,479 | UNEXPLAINED |
