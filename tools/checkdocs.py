@@ -24,10 +24,12 @@ def identified():
             for m in re.finditer(r'\("([a-z0-9.]+)",\s*(\d+)\)', block)}
 
 
-# Addresses named in prose that deliberately have no annotation, with the reason. A gate
-# that cannot be satisfied gets bypassed, so anything genuinely unannotatable belongs here
-# rather than in a permanent failure.
+# Identifiers named in prose that deliberately do not resolve, each with its reason. A gate
+# that cannot be satisfied gets bypassed, so anything genuinely unresolvable belongs here
+# rather than in a permanent failure. Keyed by rule label prefix.
 ALLOW = {
+    "T36": "renumbered away (ROADMAP:1049); references are to the closed "
+           "corpus-verification task",
     "seg_0000:0022": "the four spare `ret` bytes below the dispatch tables, not a routine",
     "seg_0000:038b": "quoted as a mislabelling; the real routine is seg_0e97:038b",
     "seg_13d7:03a6": "chani panics on code seeds here (CLAUDE.md); dropped-seed list",
@@ -56,8 +58,6 @@ def annotated(reach=96):
 
     class Covered:
         def __contains__(self, addr):
-            if addr in ALLOW:
-                return True
             seg, _, off = addr.partition(":")
             off = int(off, 16)
             near = [a for a in attrs.get(seg, ()) if 0 <= off - a <= reach]
@@ -65,6 +65,22 @@ def annotated(reach=96):
         def __len__(self):
             return sum(len(v) for v in attrs.values())
     return Covered()
+
+
+def captures_on_disk():
+    d = os.path.join(HERE, "captures")
+    out = set()
+    for root, _, files in os.walk(d):
+        rel = os.path.relpath(root, HERE)
+        for f in files:
+            out.add(os.path.join(rel, f).replace(os.sep, "/"))
+    return out
+
+
+def roadmap_tasks():
+    return {m.group(1) for m in
+            re.finditer(r"\*\*(T\d+[a-z0-9]*)\s*\u00b7",
+                        open(os.path.join(HERE, "ROADMAP.md")).read())}
 
 
 def tools_listed():
@@ -92,6 +108,30 @@ RULES = [
      lambda m: m.group(1),
      tools_listed,
      "give it a docstring, then: python3 tools/toolsindex.py"),
+
+    ("capture -> a file in captures/",
+     re.compile(r"`(captures/[A-Za-z0-9_./-]+\.png)`"),
+     lambda m: m.group(1),
+     captures_on_disk,
+     "take the screenshot with `tools/ish shot NAME`, or fix the reference"),
+
+    ("task id -> an entry in ROADMAP.md",
+     re.compile(r"\b(T\d+[a-z0-9]*)\b"),
+     lambda m: m.group(1),
+     roadmap_tasks,
+     "file the task in ROADMAP.md, or fix the reference"),
+]
+
+# What this script does NOT check, stated so the gate's coverage is visible rather than
+# assumed. Every line here is a place a finding can still go missing silently -- which is
+# how 25 stranded addresses accumulated while an earlier version of this file passed.
+BLIND_SPOTS = [
+    "whether a claim is TRUE -- only a measurement does that",
+    "whether a section carries an Evidence: or Verified by: line",
+    "whether a struck or superseded claim has reappeared unstruck elsewhere",
+    "whether a number in the prose still matches what its tool prints",
+    "whether an IDENTIFIED entry is actually VISIBLE in FILES.md, or collapsed into a span",
+    "anything in ROADMAP.md, CLAUDE.md or the skills",
 ]
 
 
@@ -109,6 +149,8 @@ def main():
                     continue
                 for m in pat.finditer(line):
                     k = key(m)
+                    if k in ALLOW:
+                        continue
                     if k not in have:
                         missing.setdefault(k, []).append(f"{doc}:{n}")
         if missing:
@@ -119,6 +161,9 @@ def main():
             print(f"  fix: {fix}\n")
         else:
             print(f"ok ({len(have)} known) -- {label}")
+    print("\nnot checked by this script:")
+    for b in BLIND_SPOTS:
+        print(f"  - {b}")
     return bad
 
 

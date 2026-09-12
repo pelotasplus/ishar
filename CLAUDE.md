@@ -64,6 +64,15 @@ fails on any that is stranded:
 | `name.io @NNNN` | `IDENTIFIED` in `tools/anatomy.py`, which is what puts it in `FILES.md` |
 | `seg_xxxx:yyyy` | an `attr[]` in `ishar.chani` covering it |
 | `tools/x.py` | `TOOLS.md` |
+| `captures/x.png` | a file on disk |
+| `T42`, `T11g3f` | an entry in `ROADMAP.md` |
+
+**It prints what it does not check.** `BLIND_SPOTS` lists them, so the gate's coverage is
+visible instead of assumed -- whether a claim is *true*, whether a section carries an
+**Evidence:** line, whether a struck claim has reappeared unstruck, whether a number still
+matches what its tool prints, and whether an `IDENTIFIED` entry is actually *visible* in
+`FILES.md` rather than collapsed into a span. Every line there is a way a finding can still
+go missing silently. Read it before trusting a green run.
 
 **The first version checked only the first row**, because it was written in response to one
 failure -- and code addresses then went missing from `ishar.chani` in exactly the same way,
