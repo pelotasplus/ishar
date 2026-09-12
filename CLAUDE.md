@@ -3,8 +3,11 @@
 Reverse engineering *Ishar: Legend of the Fortress* (Silmarils, 1992) toward a Compose
 Multiplatform rewrite. The game files are not ours to commit.
 
-Skills carry the recipes (`.claude/skills/`). This file carries the scars: the mistakes
-already made here, and the check that would have caught each one. Add to it the moment
+Skills carry the recipes (`.claude/skills/`): `drive-ishar` to run and steer it,
+`explore-world` to move the party and read the map, `find-consumer` to find who touches a
+value, `read-vm-bytecode` to read the scripts, `chani-annotate` to record a finding,
+`trace-dos-calls` for file I/O, `goal` for an unsupervised session. This file carries the
+scars: the mistakes already made here, and the check that would have caught each one. Add to it the moment
 something goes wrong — the entry is worth least when you finally remember to write it.
 
 ## Where things go
@@ -920,6 +923,13 @@ report. A goal whose premise died is finished, not a licence to improvise a new 
 | `tools/rsp.py` | minimal GDB remote-protocol client for Spice86's stub |
 | `tools/gdbtrace.py` | DOS file-call tracer: MCP arms the breakpoint, GDB delivers stops |
 | `tools/png.py` | PNG read/write with no third-party imaging library |
+| `tools/mclick` | move the harness mouse to a normalised (x,y) and click |
+| `tools/mappos.py` | locate the resident map grid and the party's cell from scratch |
+| `tools/region.py` | the party's cell and region id, or a transect of them |
+| `tools/walkto.py` | drive the party to a map cell, learning blocked cells |
+| `tools/t44-when.py` | which assets' scripts run during a window, by polling |
+| `tools/vmi.py` | the script VM: dispatch tables, stepper, `--listing` |
+| `tools/fullscreen.py` | render an asset's whole 320x200 VGA pages |
 
 chani itself stays external and unvendored (`CHANI_HOME`): it carries no licence, so it
 is a local instrument like a debugger, never a build dependency.

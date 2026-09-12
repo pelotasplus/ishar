@@ -36,8 +36,11 @@ shipped.
 - **Keys need down *and* up.** `send_keyboard_key` twice, `isPressed` true then false.
 - **"Enqueued while paused" does not mean paused.** To know if the machine runs, sample
   `read_cpu_state` twice and compare `Cycles`.
-- **A black screen is usually the intro**, which runs for minutes. Check cycles before
-  calling anything hung.
+- **A still screen is not a hung screen — and not a slow one either.** `tools/ish status`
+  first, story never: it reads the log and says `faulted` in a second. The sentence that
+  used to sit here, "a black screen is usually the intro, which runs for minutes", was
+  wrong and got offered to the user as the explanation for a dead machine. The intro is
+  about three screens.
 - **`list_functions` needs an explicit limit** or it returns an error; it also defaults
   to 100, which looks like a complete answer.
 - **Emulators pile up.** `ish stop --all` kills every one it can find; `start` reaps
@@ -45,7 +48,26 @@ shipped.
 - **The game crashes** in the timer interrupt after a couple of minutes, and there is a
   second garbage-execution fault (FINDINGS §5.0, §5.1). `ish status` says `faulted`;
   check it before trusting a late reading.
-- **The mouse cannot be driven** — `send_mouse_move` does not move the in-game cursor.
+- **`send_mouse_move` takes normalised 0.0-1.0 coordinates**, not pixels. Pixels answer
+  `Mouse moved to (1.000, 1.000)` — clamped to the corner, so nothing fires, and it
+  reports success either way. Use `tools/mclick X Y --click`.
+
+## Driving the game's UI
+
+The mouse works (T29c3 wired the device to the input hub instead of the GUI — two lines
+in `Spice86DependencyInjection.cs`, committed there, not pushed). Everything below the
+viewport is pointer-driven.
+
+    tools/mclick 0.055 0.663 --click     # ACTION on character 1
+    tools/mclick 0.133 0.663 --click     # ATTACK on character 1
+
+- **Verbs are two-step and modal.** ATTACK and PICK LOCK arm the pointer — its shape
+  changes — and then need a *target* click. Until one is used or cancelled, **the arrow
+  keys do not move the party**, which reads exactly like the game having frozen.
+- **Clicking a menu entry once highlights it; twice commits it.**
+- **Do not click destructive verbs while sweeping a menu.** A KILL click during an
+  exploratory pass left the game in a state that could not be reasoned about, and there
+  were then two candidate causes for the damage instead of none.
 
 ## Screen comparisons
 

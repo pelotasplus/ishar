@@ -36,6 +36,40 @@ Segment names are the paragraph offset into the image, which is also
 **Seed the instruction, not the return address.** A code seed at the address after an
 `int 21h` lands mid-instruction and decodes nothing; seed where the sequence starts.
 
+## Check the batch before moving on
+
+Three checks, in this order, after any set of annotations:
+
+```
+grep -c '^attr\[' ishar.chani                              # fell? an edit ate entries
+grep -o '^attr\[[^]]*\]' ishar.chani | sort | uniq -d      # duplicated addresses
+tools/disasm.sh                                            # coverage moved the wrong way?
+```
+
+- **Adding an annotation to an address that already has one is completely silent.** No
+  warning, no parse error, no coverage change — both entries sit there and the listing
+  renders one. Two of a single session's annotations did this, and an older pair had been
+  duplicated for months with each half carrying facts the other lacked. Expect `uniq -d`
+  to report hits: most are an unnamed `type = code` seed from `tools/symbols.py` paired
+  with a named entry, which is the normal shape. **Two *named* entries at one address is
+  the real finding**, and the older half is where a superseded claim hides — one of them
+  was still asserting the mouse could not be driven, months after that was fixed.
+- **Never edit the database with a multi-line regex.** `re.sub(..., re.DOTALL)` on one
+  annotation once swallowed the 149 that followed, because `.*?` ran to the next `]]]`
+  anywhere in the file. Nothing complained; it showed up as coverage sliding two tasks
+  later. Edit line by line.
+
+## Annotate the road, not only the destination
+
+The expression dispatcher at `seg_0000:69ab` — `jmp cs:[di+1f2h]`, the routine every
+expression opcode in the VM passes through — had **no annotation at all** after four
+sessions of VM work. It was never the subject of a finding, only the way to one, so it was
+never written down.
+
+When a finding is reached *through* a routine, name that routine too. The rule "a finding
+with an address goes in the database" quietly reads as "the address the finding is about",
+and the plumbing is what the next reader trips over.
+
 ## Two traps that produce confident nonsense
 
 - **chani loads the FILE, header and all.** Segment ranges must be biased by the MZ
