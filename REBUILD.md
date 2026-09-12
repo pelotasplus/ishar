@@ -260,6 +260,20 @@ Two bytes hold the party's position, and they sit immediately after the grid in 
     party row = the byte after the last grid byte
     party col = the byte after that
 
+### Where the NPCs are
+
+`en1.fic`, read raw like the grids:
+
+    offset 57     32 x u16 LE   NPC row
+    offset 197    32 x u16 LE   NPC column
+    offset 2590   33 x 8 bytes  the cast-name table, NUL-padded
+
+Entity 0 is (15, 29): the NPC the party meets a few steps north of the start.
+
+Which name goes with which entity is **not known** -- the names are indexed separately from
+the positions, and the array joining them has not been found. Nor are per-NPC attributes:
+the starting NPC's 1/7/6/8/6 is not in this file at any stride.
+
 ### Where the game starts
 
 A new game begins in `cont1.fic`, at **row 11, column 29**, in region 0, FRAGONIR.
@@ -665,16 +679,33 @@ The rows between these carry values that do not change when a member joins, so t
 per-character, or not yet identified. Which row holds the race is not known: both observed
 characters are HUMAIN.
 
-**Classes** are an index into a list of sixteen in the message asset (`messagee.io` @7166,
-`message.io` @7404 for French), each stored as `1e 04 <NAME> 00`:
+**Classes** are an index into a list of seventeen in the message asset (`messagee.io`
+@7166, `message.io` @7404 for French), each stored as `1e 04 <NAME> 00`:
 
-    0 PALADIN   4 THIEF    8 SPY         12 ASSASSIN
-    1 WARRIOR   5 CLERIC   9 PRIEST      13 HYPNOTIST
-    2 RANGER    6 WIZARD  10 MERCENARY   14 WITCH
-    3 BARBARIAN 7 ARCHER  11 PRINCESS    15 DARK KNIGHT
+    0 PALADIN   5 CLERIC  10 MERCENARY   15 DARK KNIGHT
+    1 WARRIOR   6 WIZARD  11 PRINCESS    16 OCCULT MONK
+    2 RANGER    7 ARCHER  12 ASSASSIN
+    3 BARBARIAN 8 SPY     13 HYPNOTIST
+    4 THIEF     9 PRIEST  14 WITCH
 
 **Races** are five records in the same form at `messagee.io` @7048: HUMAIN, ELF, DWARF,
 ORC, LIZARD. `HUMAIN` is spelled that way in the English file too.
+
+### Items and spells
+
+Both are index lists in the same `1e 04 <NAME> 00` form, in the same file.
+
+**41 items** at `messagee.io` @5456, index 0..40. Index 0..32 is equipment and index 33..40
+is reagents. A weapon or armour bonus is written into the name (`LONG SWORD (+2)`), so there
+is no separate bonus field to read.
+
+**33 spells** at `messagee.io` @7520, index 0..32, with the level written into the name the
+same way (`FIREBALL 3`). `ANTI KROGH` is the one entry with no number.
+
+`textin*.io` carries its own equipment and spell lists -- 33 and 35 entries -- which are
+different counts from these and have not been reconciled.
+
+FINDINGS 6.16 has both lists in full.
 
 ### Recruiting
 

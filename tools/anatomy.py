@@ -9,12 +9,21 @@ which is the number that matters when porting a decoder.
     tools/anatomy.py dead.io
     tools/anatomy.py --all            one line per asset, accounted-for percentage
 """
-import os, struct, sys
+import os, re, struct, sys
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(HERE, "tools"))
 import ioscan
 import chains as _chains
 from ioscan import decode, extract, geometry
+
+def _lists(d):
+    """tools/t72-lists.py's detector, imported by path because of the dash in its name."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "t72lists", os.path.join(os.path.dirname(os.path.abspath(__file__)), "t72-lists.py"))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m.lists(d)
 
 GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
 
@@ -43,10 +52,23 @@ ASSET_NOTES = {
 }
 
 IDENTIFIED = {
+    ("textine.io", 7514):  "4 of the ACTION verbs: LISTEN, EAT, SLEEP, RECRUIT "
+                           "(FINDINGS 6.16)",
+    ("textine.io", 9376):  "a second equipment list, 33 entries -- different count from "
+                           "messagee.io's 41, not reconciled (FINDINGS 6.16)",
+    ("messagee.io", 4978): "the main menu: 4 entries -- SAVE CURRENT GAME, LOAD PREVIOUS "
+                           "SAVED GAME, PLAY A NEW GAME, EXIT (FINDINGS 6.16)",
+    ("messagee.io", 5456): "**the item list**: 41 records of `1e 04 <NAME> 00`, index 0..40 "
+                           "-- RUNE TABLET..DRAGON BONE, with the weapon and armour bonus "
+                           "in the name (FINDINGS 6.16)",
+    ("messagee.io", 6598): "the incantation list: 6 records, WORD : EFFECT -- CLOPATOS.."
+                           "KRAKOS (FINDINGS 6.16)",
     ("messagee.io", 7048): "the race list: 5 records of `1e 04 <NAME> 00`, index 0..4 -- "
                            "HUMAIN, ELF, DWARF, ORC, LIZARD (FINDINGS 6.15)",
-    ("messagee.io", 7166): "the class list: 16 records of `1e 04 <NAME> 00`, index 0..15 -- "
-                           "PALADIN..DARK KNIGHT; THIEF is 4 (FINDINGS 6.15)",
+    ("messagee.io", 7166): "**the class list**: 17 records of `1e 04 <NAME> 00`, index 0..16 "
+                           "-- PALADIN..OCCULT MONK; THIEF is 4 (FINDINGS 6.15)",
+    ("messagee.io", 7520): "**the spell list**: 33 records of `1e 04 <NAME> 00`, index 0..32 "
+                           "-- HEALING 1..INVISIBLE TEAM 5, level in the name (FINDINGS 6.16)",
     ("message.io", 7404):  "the class list in French, same 16 records, same order "
                            "(FINDINGS 6.15)",
     ("message.io", 7280):  "the race list in French, same 5 records (FINDINGS 6.15)",
@@ -227,6 +249,20 @@ def spans(name):
             out.append((16, end,
                         "UNEXPLAINED (reads as script bytecode, never traversed - no entry set)"
                         if looks else "UNEXPLAINED", ""))
+
+    # Lists of named things in the text assets (FORMATS 3.22b). These are *found*, not
+    # declared: the detector reads the file, so a table nobody has written a sentence about
+    # still gets a row. Forty-one item names and thirty-three spell names sat in decoded
+    # assets for four sessions because every other pass here waits to be told.
+    if re.match(r"(message|textin)", name.lower()):
+        try:
+            for grp in _lists(d):
+                st, _, first = grp[0]
+                out.append((st, grp[-1][1],
+                            f"{len(grp)} `1e 04` records, a list: {first!r}..{grp[-1][2]!r}",
+                            "3.22b"))
+        except Exception:
+            pass
 
     # Any identified offset the passes above did not already emit as its own row. The
     # script region has done this for its own marks since gerdep.io @7243 disappeared into

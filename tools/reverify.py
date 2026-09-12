@@ -83,10 +83,36 @@ def m_class_index(name="THIEF"):
     return names.index(name) if name in names else -1
 
 
+def _list_at(off, name="messagee.io"):
+    """How many entries the `1e 04` list starting at `off` has, found from record spacing.
+
+    Not from a byte range: reading the class list out of a hand-picked window is what made
+    it 16 instead of 17, because the window ended after DARK KNIGHT (FINDINGS 6.16).
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "t72lists", os.path.join(HERE, "tools", "t72-lists.py"))
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    d = ioscan.decode(open(os.path.join(GAME, name), "rb").read())[0]
+    for grp in m.lists(d):
+        if grp[0][0] == off:
+            return len(grp)
+    return -1
+
+
 def m_class_count():
     """How many classes messagee.io lists."""
-    d = ioscan.decode(open(os.path.join(GAME, "messagee.io"), "rb").read())[0]
-    return len(re.findall(rb"\x1e\x04[A-Z][A-Z ]{1,14}\x00", d[0x1bf0:0x1d00]))
+    return _list_at(7166)
+
+
+def m_item_count():
+    """How many items messagee.io lists."""
+    return _list_at(5456)
+
+
+def m_spell_count():
+    """How many spells messagee.io lists."""
+    return _list_at(7520)
 
 
 CLAIMS = [
@@ -97,8 +123,10 @@ CLAIMS = [
     ("logo.io equal-nibble %",             lambda: m_equal_nibble("logo.io"),   53.6, "FORMATS 3.19"),
     ("dead.io equal-nibble %",             lambda: m_equal_nibble("dead.io"),   25.5, "FORMATS 3.19"),
     ("arbre.io distinct sprite sizes",     m_arbre_sizes,             15,     "FINDINGS 4.15c"),
-    ("FILES.md named %",                   m_named_percent,         61.8,     "FILES.md header"),
-    ("messagee.io classes listed",         m_class_count,             16,     "FINDINGS 6.15"),
+    ("FILES.md named %",                   m_named_percent,         62.0,     "FILES.md header"),
+    ("messagee.io classes listed",         m_class_count,             17,     "FINDINGS 6.16"),
+    ("messagee.io items listed",           m_item_count,              41,     "FINDINGS 6.16"),
+    ("messagee.io spells listed",          m_spell_count,             33,     "FINDINGS 6.16"),
     ("THIEF's class index",                m_class_index,              4,     "FINDINGS 6.15"),
 ]
 

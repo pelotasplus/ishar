@@ -1192,3 +1192,27 @@ in it -- one sentence, and it would have saved a task and a published falsehood.
 The cheap habit that catches it: search for something you already know is there, in the same
 snapshot, as a positive control. ARAMIR's stats were the control and they were sitting four
 bytes away.
+
+### "I searched the assets" means "I searched what the decoder accepted"
+
+The starting NPC's data sat in `en1.fic` -- his name in plain ASCII, his cell as two `u16`
+arrays -- for four sessions, while the question "where does this NPC come from?" was asked
+repeatedly. Every corpus search in this project runs over `decode()`d assets. `.fic` files
+are stored **raw**: the decoder does not reject them, it produces noise, so `en1.fic` was
+searched every time and could never match.
+
+Then the same question was asked of 640 KB of RAM, which found the cast table in memory and
+the investigation stopped there instead of asking where memory had got it from. `grep`ping
+the game directory for `BORMINH` -- one line, no emulator -- would have answered it at any
+point.
+
+Three habits:
+
+- **Search the raw bytes as well as the decoded ones.** A decoder that transforms everything
+  it is handed turns "not found in any asset" into "not found in the assets that happened to
+  be compressed".
+- **When a value is found in memory, ask which file it was loaded from** before building on
+  the memory address. The address is a runtime detail; the file is the artefact a rewrite
+  reads.
+- **Try the stupidest search first.** The name was visible in `strings`. Four sessions of
+  stride searches, snapshot diffs and RAM dumps went past it.

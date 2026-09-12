@@ -3103,3 +3103,25 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       `16 fe 0a XX 00`, so the trailer distinguishes one list from another.*
       **Done when:** `IDENTIFIED` carries every `1e 04` list in `messagee.io` with what each
       one is, and `FILES.md` shows them.
+
+- [~] **T73 · `en1.fic`, the NPC table**
+      Found (6.18): 32 NPC rows at offset 57, 32 columns at 197, the 33-entry cast-name
+      table at 2590, and entity 0 standing exactly where the starting NPC does. What remains
+      is the join and the stats.
+      *Method: 2,169 bytes between offset 421 and the name table are unread, and the array
+      linking an entity to its name must be in them -- look for a 32-entry array whose values
+      are all under 33 and whose first entry is 28. For the attributes, `tab1.fic` is 361
+      bytes nothing has opened; open it before theorising.*
+      **Done when:** FINDINGS names which cast member each entity is, and says where an NPC's
+      attributes come from.
+
+- [ ] **T74 · Search the files, not the decoded files**
+      `en1.fic` hid for four sessions because every corpus search ran over `decode()`d
+      assets, and `.fic` files are stored raw -- the decoder turns them into noise. Any other
+      raw-stored file is equally invisible to every search this project has run.
+      *Method: re-run the searches that produced negatives over the **raw** bytes of every
+      file in the game directory as well as the decoded ones. `tools/t68-stats.py` and the
+      corpus scans in `tools/ioscan.py` are the two that matter.*
+      **Done when:** a single search helper reads both forms, and the negatives recorded in
+      FINDINGS have been re-run through it.
+

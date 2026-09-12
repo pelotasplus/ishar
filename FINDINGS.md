@@ -2641,14 +2641,19 @@ makes.
 two members and three empty seats. Every other row uses 0 for an empty slot, so this row is
 the one to test occupancy on.
 
-**The class index is into a list in the message asset.** `messagee.io` @7166 holds sixteen
+**The class index is into a list in the message asset.** `messagee.io` @7166 holds seventeen
 records of `1e 04 <NAME> 00`:
 
-| 0 PALADIN | 4 THIEF | 8 SPY | 12 ASSASSIN |
+| 0 PALADIN | 5 CLERIC | 10 MERCENARY | 15 DARK KNIGHT |
 |---|---|---|---|
-| 1 WARRIOR | 5 CLERIC | 9 PRIEST | 13 HYPNOTIST |
-| 2 RANGER | 6 WIZARD | 10 MERCENARY | 14 WITCH |
-| 3 BARBARIAN | 7 ARCHER | 11 PRINCESS | 15 DARK KNIGHT |
+| 1 WARRIOR | 6 WIZARD | 11 PRINCESS | 16 OCCULT MONK |
+| 2 RANGER | 7 ARCHER | 12 ASSASSIN | |
+| 3 BARBARIAN | 8 SPY | 13 HYPNOTIST | |
+| 4 THIEF | 9 PRIEST | 14 WITCH | |
+
+There are **seventeen**. An earlier count said sixteen because it was taken from a
+hand-picked byte range that ended after DARK KNIGHT; `tools/t72-lists.py` finds the list's
+end from the record spacing instead, and OCCULT MONK sits one record further on.
 
 BORMINH's class byte is **4** and his panel says **THIEF**. ARAMIR's is 1, so he is a
 WARRIOR.
@@ -2672,3 +2677,168 @@ the attributes were not in the global area, from a stride search over 64 KB that
 nothing. The array was at `+0x1684` in that very snapshot. What the search looked for was
 BORMINH's values, in a snapshot taken while he was still an NPC -- the column that now
 holds them was zero, and the column that was populated held ARAMIR's 16, 14, 11, 12.
+
+### 6.16 The game's content lists: items, spells, verbs (T72)
+
+The text assets store every named thing the game can refer to as a `1e 04 <NAME> 00`
+record, in runs with a constant gap. Each run is a table something indexes into, and the
+index is the number stored in the world -- so these are the lists a rewrite needs before it
+can name anything.
+
+**41 items**, `messagee.io` @5456, index 0..40. The bonus is part of the name, which means
+the game does not compute it from a separate field:
+
+```
+ 0 RUNE TABLET          14 SHORT SWORD (+1)     28 THROWING DAGGER (+1)
+ 1 MAGIC FLASK          15 LONG SWORD (+2)      29 HEAVY SHIELD (+2)
+ 2 YGWEN TURTLE         16 HEAVY SWORD (+3)     30 MAGIC SHIELD (+3)
+ 3 MENTAL VISION HELMET 17 MAGIC SWORD (+6)     31 FOOD
+ 4 PROTECTION RING      18 MACE (+3)            32 ARROW
+ 5 LEATHER ARMOUR (+2)  19 FLAIL (+2)           33 TOAD EYE
+ 6 CHAINMAIL (+4)       20 BOW                  34 SALAMANDER OIL
+ 7 MAGIC ARMOUR (+10)   21 CROSSBOW             35 TRAPDOOR SPIDER WEB
+ 8 HEAVY ARMOUR (+6)    22 AXE (+1)             36 DRIED MISTLETOE
+ 9 MONK ROBE            23 HEAVY AXE (+4)       37 RAT BRAIN
+10 LIGHT HELMET (+1)    24 DAGGER               38 GARGOYLE CLAW
+11 HELMET (+2)          25 MAGIC DAGGER (+2)    39 TURTLE SLOBBER
+12 MAGIC HELMET (+4)    26 SABRE (+2)           40 DRAGON BONE
+13 HEAVY HELMET (+3)    27 SPEAR (+3)
+```
+
+Items 33 to 40 are reagents, not equipment -- TOAD EYE, SALAMANDER OIL, TRAPDOOR SPIDER
+WEB, DRIED MISTLETOE, RAT BRAIN, GARGOYLE CLAW, TURTLE SLOBBER, DRAGON BONE.
+
+**33 spells**, `messagee.io` @7520, index 0..32, with the level in the name:
+
+```
+ 0 HEALING 1          11 FLAMME WALL 8       22 BINDING 5
+ 1 HEALING 3          12 RESURRECTION 10     23 INVULNERABILITY 6
+ 2 HEALING 5          13 INVERSION 4         24 MENTAL SHIELD 6
+ 3 PROTECTION 1       14 PSYSHIC HAMMER 6    25 MAGIC SHIELD 7
+ 4 PROTECTION 3       15 BURNING HANDS 1     26 REGENERATION 7
+ 5 PROTECTION 5       16 MAGIC MISSILE 1     27 PSYCHIC HAND 9
+ 6 SLEEP 1            17 CHARM 1             28 ANTI KROGH
+ 7 CURE POISON 2      18 BLINDNESS 3         29 CONFUSION 3
+ 8 FIRE PROTECTION 5  19 FIREBALL 3          30 DETECT INVISIBILITY 4
+ 9 DISSOLVE 6         20 INVISIBILITY 4      31 PARTY PROTECTION 6
+10 RADAR 3            21 LIGHTNING 4         32 INVISIBLE TEAM 5
+```
+
+`ANTI KROGH` carries no number, so the level is not a field the game reads out of the
+string uniformly. `PSYSHIC HAMMER` and `FLAMME WALL` are the game's own spellings.
+
+**4 verbs**, `textine.io` @7514: LISTEN, EAT, SLEEP, RECRUIT. These are four of the ten on
+the ACTION menu (4.17b); the other six are elsewhere.
+
+**6 incantations**, `messagee.io` @6598, in the form `WORD : EFFECT` -- CLOPATOS :
+INVULNERABILITY, DROULI : CURE BLINDNESS, WORGAZ : APNEA, ZARKLUG : DISRUPT CHARME,
+ARBOOL : PIG DETRANSFORMATION, KRAKOS : BRAIN WASH. These are words the player types or
+speaks, not indexed spells.
+
+**The main menu**, `messagee.io` @4978: SAVE CURRENT GAME, LOAD PREVIOUS SAVED GAME, PLAY A
+NEW GAME, EXIT. So the game has save slots, which nothing here has looked at.
+
+**Every list exists once per language, in the same order**, and `textin*.io` carries its own
+copies -- 33 equipment names at `textine.io` @9376 and 35 spells at @10464, which are
+different counts from the `message*` versions and not yet reconciled.
+
+**Evidence:** `tools/t72-lists.py`, which finds a list from the spacing of its records
+rather than from an address someone chose, over the decoded assets; `FILES.md` shows every
+run it finds, in every text asset, with its first and last entry. The class count came out
+as sixteen when it was read from a hand-picked range and seventeen when read this way,
+which is the case the detector exists for.
+
+**How this was missed for four sessions.** Every other check in this repo fires on prose:
+writing `messagee.io @7166` into a document forces an entry into `IDENTIFIED`, which forces
+a row into `FILES.md`. Nothing fires on a *file*. Forty-one item names and thirty-three
+spell names sat in an asset that had been decoded since the beginning, in a file already
+described as "99 strings", because no sentence had ever been written about them and so no
+rule had ever looked. `tools/checkdocs.py` now runs the detector over every text asset and
+fails on any list `FILES.md` does not show -- the first check here that reads the game
+rather than the documentation. Its first run found twenty-six.
+
+### 6.17 The creature table, and what is still not known about NPCs
+
+Immediately after the 33-entry cast-name table (6.11) there is a second 8-byte-slot table
+at `+0x187E`, holding lowercase names. Ten of them are `.io` files that ship with the game:
+
+| 0 krog | 5 dealer | 10 spectre | 15 meduse |
+|---|---|---|---|
+| 1 predator | 6 dealer | 11 dragon | 16 dwizard |
+| 2 (`night`, with a leading NUL) | 7 minotor | 12 dwarrior | 17 momo |
+| 3 azal | 8 sorcier | 13 geant | |
+| 4 dealer | 9 (empty) | 14 geant | |
+
+`krog`, `predator`, `azal`, `dealer`, `minotor`, `sorcier`, `spectre`, `dragon`, `geant` and
+`momo` are all assets on disk. `dwarrior`, `dwizard`, `meduse` and `night` are not, so the
+table is not a file list -- it names creature *types*, and most types happen to have a
+sprite of the same name.
+
+`krog` is corroborated from the other side: the spell list has **ANTI KROGH** (6.16).
+
+`dealer` appears three times and `geant` twice, so a slot is an *instance* rather than a
+type -- three dealers and two giants exist at once.
+
+**What is still not known, and it is the part that matters:**
+
+- **Where each one stands.** Nothing here holds a row and column. The only NPC position ever
+  observed is the starting one, read by walking into him and watching moves get refused
+  (4.15i) -- and he moves.
+- **Their class and attributes.** BORMINH's sheet was rendered from somewhere before he
+  joined the party, and his values were *not* in the party attribute array at that point
+  (6.15) -- his column was zero until the recruit. So an NPC's stats come from a second
+  store that has not been located.
+- **Which cast name goes with which creature slot.** BORMINH is cast slot 28; no byte has
+  been seen linking him to a creature slot.
+
+**Evidence:** the table read out of a 640 KB RAM dump (`tools/t68-stats.py`'s cache) at
+`+0x187E`, on an 8-byte grid continuing the cast table's; the ten filename matches against
+the game directory. The gaps above are stated as gaps: no position or stat for any NPC has
+been measured, and this section makes no claim that one exists at these offsets.
+
+### 6.18 `en1.fic` is the NPC table, and it holds their positions (T73)
+
+**Where the starting NPC's data comes from: `en1.fic`.** It is 3,640 bytes, stored
+verbatim like the map grids -- not compressed, which is why it never showed up in searches
+of the decoded assets.
+
+| offset | what |
+|---|---|
+| 57 | **32 rows**, `u16` little-endian, 6..50 (the grid has 54 rows) |
+| 197 | **32 columns**, `u16` little-endian, 6..82 (the grid has 90 columns) |
+| 421.. | unread |
+| 2590 | **the 33-entry cast-name table**, 8-byte slots -- the one resident at `+0x1746` |
+
+**Entity 0 is at row 15, column 29.** The party starts at (11, 29) and the NPC stands a few
+cells north of it, which is where 4.15i watched him at rows 13, 14 and 15 in column 29 while
+he wandered. The column is exact and the row is his starting cell.
+
+The first eight entities read `(15,29) (32,69) (28,35) (7,31) (11,36) (50,50) (20,63)
+(20,56)`, all inside a 54 x 90 grid.
+
+**The cast-name table in the file is the one in memory.** All 33 entries, in order, the same
+8-byte slots: XYLAZ, ZELORAN, ... BORMINH at slot 28 ... MANATAR. So the game reads this file
+and keeps the table, exactly as it does with `cont1.fic` and the grid.
+
+**What this does not yet give:**
+
+- **Which name belongs to which entity.** Entity 0 stands where BORMINH stands, but BORMINH
+  is *name* slot 28, and no array was found whose first value is 28. The link exists
+  somewhere in the 2,169 unread bytes between offset 421 and the name table.
+- **Per-NPC attributes.** BORMINH's panel reads 1, 7, 6, 8, 6 (6.13) and that sequence does
+  not occur anywhere in `en1.fic` at any stride from 1 to 59, raw. So either it is derived,
+  or it is stored transformed, or it is in `tab1.fic` -- 361 bytes that nothing has looked
+  at.
+
+**Why this took so long to find, which is the more useful half.** The search that should
+have found it is one line: look for the name in the game's files. It was not run for four
+sessions. What was run instead was a search of *decoded* assets -- which silently excluded
+`en1.fic`, because `.fic` files are stored raw and the decoder mangles them -- and then a
+search of 640 KB of RAM, which found the table in memory and stopped there rather than
+asking where memory got it. A negative result over "all the assets" was really a negative
+over the assets that happened to decode.
+
+**Evidence:** `BORMINH` as plain ASCII at offset 2814 of `en1.fic`, which is
+`2590 + 28 * 8`; the two `u16` arrays read directly out of the file; entity 0's `(15,29)`
+against the walked observations in 4.15i, which were taken from the party's position bytes
+rather than from the screen.

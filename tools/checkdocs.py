@@ -291,6 +291,49 @@ def evidence_names_something_real():
 # What this script does NOT check, stated so the gate's coverage is visible rather than
 # assumed. Every line here is a place a finding can still go missing silently -- which is
 # how 25 stranded addresses accumulated while an earlier version of this file passed.
+# Lists the detector finds that are deliberately not recorded. A run of three NPC lines
+# whose gaps happen to match is not a table.
+NOT_A_LIST = {("messagee.io", 2791)}
+
+
+def unrecorded_lists():
+    """Tables `tools/t72-lists.py` finds in the message assets that IDENTIFIED does not have.
+
+    Every other check here fires on prose: write `messagee.io @7166` in FINDINGS and the
+    entry is forced into IDENTIFIED. That polices *what was written down*, which cannot
+    catch the thing that keeps going wrong -- a list decoded, understood, and never
+    mentioned, so no rule ever sees it. Forty-one item names and thirty-three spell names
+    sat in a decoded asset through four sessions for exactly that reason.
+
+    This one fires on the data instead. The detector reads the file; whatever it finds has
+    to be accounted for, whether or not anybody wrote a sentence about it.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "t72lists", os.path.join(HERE, "tools", "t72-lists.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    files_md = open(os.path.join(HERE, "FILES.md")).read()
+    out = []
+    game = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
+    for name in sorted(os.listdir(game)):
+        low = name.lower()
+        if not (low.startswith(("message", "textin")) and low.endswith(".io")):
+            continue
+        try:
+            d = mod.decode(open(os.path.join(game, name), "rb").read())[0]
+        except Exception:
+            continue
+        for grp in mod.lists(d):
+            start = grp[0][0]
+            # Visible in FILES.md is the bar, not merely present in IDENTIFIED: the
+            # generator has collapsed a named span away three times now.
+            if (low, start) in NOT_A_LIST or f"| {start:,}.." in files_md:
+                continue
+            out.append((low, start, len(grp), grp[0][2]))
+    return out
+
+
 BLIND_SPOTS = [
     "whether a claim is TRUE -- checked only as far as `tools/reverify.py` reaches",
     "anything in CLAUDE.md or the skills",
@@ -332,6 +375,17 @@ def main():
         print("  fix: add the line, or say what is not established\n")
     else:
         print("ok -- every section carries evidence")
+
+    stray = unrecorded_lists()
+    if stray:
+        bad = 1
+        print(f"{len(stray)} lists found in the data that IDENTIFIED does not record:")
+        for asset, off, n, first in stray:
+            print(f"  {asset} @{off}  {n} entries, first is {first!r}")
+        print("  fix: add it to IDENTIFIED in tools/anatomy.py, or to NOT_A_LIST "
+              "in tools/checkdocs.py with a reason\n")
+    else:
+        print("ok -- every list in the message assets is recorded")
 
     hidden = identified_visible()
     if hidden:

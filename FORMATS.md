@@ -1162,6 +1162,12 @@ other except degenerately (`cont5`'s right column and `cont4`'s left are both 54
 `0xCE`; `cont6` is 97% zero). Each is closed by its own `0xCE` outline, so region changes
 must be scripted.
 
+**`en1.fic` is the NPC table, in the same raw form.** 3,640 bytes: 32 `u16` rows at offset
+57, 32 `u16` columns at 197, and the 33-entry cast-name table at 2590 in 8-byte slots --
+the table the game keeps at global `+0x1746`. Entity 0 is `(15, 29)`, the starting NPC's
+cell. Offsets 421..2589 are unread. `tab1.fic` (361 bytes) has not been looked at.
+See FINDINGS 6.18.
+
 **`map.io` is not the same thing.** It decodes normally and autocorrelates at lag 160 --
 160 bytes per row is 320 pixels at 4bpp -- so it is the rendered map *picture* shown to
 the player, not the grid the game walks on.
@@ -1181,6 +1187,7 @@ rewrite reads `cont*.fic` off disk with no transform.
 | `+0x150C` | the party roster, 8-byte name slots, one per member |
 | `+0x1664`..`+0x16D3` | character attributes, **column-major**: one 8-byte row per attribute, byte N = party slot N (FINDINGS 6.15) |
 | `+0x1746` | the character-name table, 33 entries of 8 bytes |
+| `+0x187E` | the creature table, 8-byte slots of lowercase type names (FINDINGS 6.17) |
 | `+0x2D68` | a byte-identical second copy of that table |
 | `+0x3646` | party row, echoed |
 | `+0x3EAC` | region id, 0..20 |
@@ -3377,6 +3384,35 @@ means the same thing in each:
 
 Labels are **padded with spaces to a fixed width** so the colons line up in the character
 sheet -- the padding is part of the stored string, not applied at draw time.
+
+### 3.22b The tag byte says what kind of string it is
+
+The byte before the constant `04` is not part of the record's length. In `messagee.io` it
+takes three values:
+
+| tag | count | what |
+|---|---|---|
+| `0x1e` | 129 | a **named thing** -- an item, a spell, a class, a race, a menu entry, a line of dialogue |
+| `0xb9` | 46 | a **UI label**, space-padded to a fixed width (`LEVEL     : `) |
+| `0x38` | 1 | one line, `I, ` |
+
+**`0x1e` records come in runs, and a run is a table.** Records inside one list sit a
+constant few bytes apart -- 6 or 7 -- because the bytes between them are that list's
+per-entry data. The gap changes at a list boundary, which is how the lists are found
+without choosing an address: `tools/t72-lists.py` groups on it, and `FILES.md` carries
+every run it finds in every text asset.
+
+`messagee.io` holds seven such runs: the main menu (4), the items (41), the incantations
+(6), the races (5), the classes (17), the spells (33), and one three-line run of dialogue
+that is a coincidence of spacing rather than a table. The same seven exist in each of the
+four languages, in the same order, at different offsets. `textin*.io` carries its own
+equipment and spell lists with different counts.
+
+**Status:** the tag counts and the run boundaries are measured; what the inter-record bytes
+hold is not known.
+**Verified by:** `tools/t72-lists.py` over all four `message*.io` and all four `textin*.io`;
+the class list's length is 17 by this method and came out as 16 when read from a hand-picked
+byte range, with `messagee.io` @7166 the case that separates them (FINDINGS 6.16).
 
 ### 10.4 Reading them
 
