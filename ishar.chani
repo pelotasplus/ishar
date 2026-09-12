@@ -1934,4 +1934,36 @@ attr[seg_0e97:0660]: type = code; name = viewport_row_step_opaque; comment = [[[
     `viewport_row_loop`, draws the **panel** in every window sampled -- 9 of 9 rows from
     frise.io at x=272. The viewport path is this one.
 ]]]
+attr[seg_0e97:0568]: type = code; name = viewport_expand_masked; comment = [[[
+    The masked expander, and the routine that draws **everything transparent in the 3D
+    view**. Forward walk (`inc di`), `test` before `add al,bl`, so nibble 0 is skipped and
+    the pixel underneath survives.
+
+    Confirmed by watching writes to one back-buffer pixel -- the tree canopy at (172,65) --
+    with a control breakpoint on never-written memory: `0597`, inside this loop, took 3
+    hits against **0** in the control, alongside viewport_fill_rect (06d5) and the opaque
+    expander (0644). The control produced 7,709 stops over 171 sites in half the time, so
+    subtracting it is what makes the result readable.
+
+    Attributing DS:SI at its row step (059a) names what it draws: `main.io`'s 16x9 font
+    glyphs, `plaine.io`'s scenery and `arbre.io`'s trees -- including two rungs of
+    arbre.io's size ladder in one frame, @25490 (16x27) and @25714 (16x15). FINDINGS 4.15e.
+
+    Earlier probes of this loop caught only panel content, which was the window and not the
+    routine.
+]]]
+attr[seg_0e97:059a]: type = code; name = viewport_row_step_masked; comment = [[[
+    This loop's row tail, the same four instructions as viewport_row_step (05f4) and
+    viewport_row_step_opaque (0660):
+
+        add si, cs:[002c] / add di, cs:[002e] / mov cx, dx / dec bp / jne 0568
+
+    Three loops in this segment share the idiom, which is why identifying one of them by
+    watching back-buffer writes never established which served the viewport.
+
+    Break here and DS:SI points into the source sprite (the blit is 1:1, T54), BP counts
+    the rows remaining, and DI is the destination -- so a run of stops with BP decreasing is
+    one object and its first DI is the origin. That is how the trees, the scenery and the
+    font were identified (FINDINGS 4.15e).
+]]]
 end

@@ -2757,8 +2757,9 @@ spot -- 16 hits at each of two sites, against a control that produced 0 there:
 |---|---|
 | `viewport_row_loop` `seg_0e97:05c0` | per-row loop; `and bh,bh / je` picks masked or not |
 | `viewport_expand_4bpp` `seg_0e97:0644` | high nibble, `add al,bl`, `stosb`, then low nibble -- **no zero test, opaque** |
-| `viewport_expand_4bpp_mirrored` `seg_0e97:05e5` | right-to-left (`dec di`, `es:[di-1]`) and **does** test zero |
-| `viewport_fill_rect` `seg_0e97:06d5` | `rep stosb / add di,bx / dec bp / jnz` -- sky and ground bands |
+| `viewport_expand_4bpp_mirrored` `seg_0e97:05e5` | right-to-left (`dec di`, `es:[di-1]`) and **does** test zero. Row step `05f4`; in every window sampled it drew the **panel**, not the viewport |
+| `viewport_expand_masked` `seg_0e97:0568` | forward, tests zero. Row step `059a`. **This is what draws everything transparent in the 3D view** -- `arbre.io`'s trees, `plaine.io`'s scenery, `main.io`'s font glyphs (FINDINGS 4.15e) |
+| `viewport_fill_rect` `seg_0e97:06d5` | `rep stosb / add di,bx / dec bp / jnz` -- a solid rectangle. It writes viewport pixels (0 control hits at (172,65)), but **the sky and ground are not flat fills**: they are `fond.io` sprites tiled through the opaque expander (FINDINGS 4.15c). What this routine fills is not yet identified |
 
 So there are now **five** 4bpp expanders in the game, not one: the panel's masked
 (`0b63`), the panel's opaque (`0ad1`), and these three. All use the same nibble order and
