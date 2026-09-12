@@ -1144,3 +1144,29 @@ without being told where they were.
 The generalisation is cheap and worth reaching for before any run that drives the game:
 **a probe that cannot tell "the game did nothing" from "the game did something boring" will
 report the second when it means the first.**
+
+### One session is not an A/B either
+
+`FINDINGS.md` 6.12 was published as "Ishar's clock runs on footsteps": `+0x438B` advanced
+by one on each of six moves, wrapped at five, carried into `+0x438C`, and did not move
+across forty seconds of idling. Six moves, six increments, a clean carry, and a real-time
+control that came back negative. It went into FINDINGS, into FORMATS' table, and into
+REBUILD as *"a rewrite does not need a wall clock -- increment on a successful move"*.
+
+The next session, on a fresh game, the pair advanced once and then sat still through nine
+moves, and jumped by 135 across a RECRUIT with no step taken and no carry -- which the
+model forbids outright.
+
+`One A and one B is not an A/B -- again` is already in this file and says two runs are not
+evidence for a flag. This is the same shape one level up: **six observations inside one
+session are one observation of that session.** The party had been walked for an hour by
+then, and whatever made the byte move was a property of that state, not of walking.
+
+So before a measured regularity becomes a rule in REBUILD -- the file that says what to
+build -- reproduce it **from a fresh boot**, which costs 90 seconds. Everything else in
+6.11 survived that test; the one claim that did not was the one phrased as a mechanism
+("time advances when the party walks") rather than as a measurement.
+
+And the tell was available and skipped: `+0x438C` had no reason to be 16 on a game in
+progress and 0 on a fresh one if it were a step counter with five steps to a unit -- an
+hour of walking is far more than 80 steps.

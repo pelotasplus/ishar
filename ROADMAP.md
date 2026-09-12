@@ -2939,7 +2939,7 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       are exact fits of `v = +-1*row + b` across eight snapshots over four rows and four
       columns; the party's own row and column fall out of the same test, as the control.
 
-- [ ] **T60 · Find the character records**
+- [~] **T60 · Find the character records**
       Five party members with names, portraits, a LIFE bar and an ACTION menu that can give
       them items and money. Their stats are somewhere in the globals, in five copies.
       *Method: T59 did the first half. The leader's name sits at `+0x472E` in the same
@@ -2951,6 +2951,14 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       game (FIRST AID on a hurt character) rather than by reading it.*
       **Done when:** FINDINGS gives the record's stride and at least four named fields, with
       one field confirmed by changing it in game and watching it move.
+      **Half done (6.13).** The roster is at `+0x150C`, 8-byte name slots, confirmed by
+      recruiting BORMINH and watching `+0x1514` go from zeros to his name -- the only
+      zero-to-name transition in 64 KB. The sheet names the fields: name, class, race, level,
+      strength, constitution, agility, intelligence.
+      **What is left is where the values live.** They are **not** in the global area: 1, 7,
+      6, 8, 6 does not occur in 64 KB at any stride 1..8, raw or divided by ten. The roster
+      is a list of names, not of records, so the records are somewhere else -- follow the
+      code that renders the sheet rather than searching memory again.
 
 - [ ] **T61 · What the ACTION verbs actually do**
       Ten verbs are listed (4.17b) and none is traced. RECRUIT and DISMISS build the party;
@@ -2984,7 +2992,7 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       **Done when:** FINDINGS names the field damage is written to and the script that
       writes it.
 
-- [x] **T64 · Does the game keep time?**
+- [!] **T64 · Does the game keep time?**
       A day/night cycle, hunger and spell regeneration would all need a clock, and nothing
       has looked. `encont.io` runs once at startup and then waits for a trigger nothing has
       produced (4.17b) -- a timer is a candidate.
@@ -2992,9 +3000,13 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       at all are timers. Sample the globals twice a minute apart with no input, then check
       whether any of them is what `encont.io` waits on.*
       **Done when:** FINDINGS says whether a clock exists and what advances it.
-      **Done:** FINDINGS 6.12. It exists and **footsteps advance it, not seconds**:
-      `+0x438B` cycles 0..4 and `+0x438C` carries on the wrap, so five steps are one unit.
-      Forty seconds of idling moved neither byte; the next step moved both.
+      **Reopened, and the first answer was wrong.** FINDINGS 6.12 said footsteps advanced
+      the pair at `+0x438B`/`+0x438C`, from six moves in one session. In the next session, a
+      fresh game, the pair advanced once and then sat still through nine moves, and jumped by
+      135 across a RECRUIT with no step and no carry. So it counts something else.
+      *Method: stop guessing from the outside. Break on writes to `+0x438C` with the guard
+      that the watched bytes actually changed, and read `DS:SI` -- the `gerdep.io` @7243
+      method from T11g3f. One stop names the script and the script says what it counts.*
 
 - [ ] **T65 · What the step counter's high byte counts**
       `+0x438C` advances once per five steps and nothing on screen shows it (6.12). If it is
@@ -3031,3 +3043,35 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       **Done when:** FINDINGS says whether the blob is the instance pool, with the record
       stride if it is.
 
+- [ ] **T68 · Where character records actually live**
+      T60 found the roster and the sheet's field names and could not find a single attribute
+      value anywhere in the 64 KB global array (6.13). So there is a second store, and every
+      mechanic that touches a character -- combat, FIRST AID, the team vote, levelling --
+      goes through it.
+      *Method: the sheet is the way in. It renders `THIEF` and `HUMAIN` into `+0x4FA8` and
+      `+0x4FBA`, so break on a write to `+0x4FA8` -- with the guard that the watched bytes
+      hold what you think was written -- and the caller is holding a pointer to the record.
+      Read the registers at that stop rather than searching memory for values again, which
+      has now failed once.*
+      **Done when:** FINDINGS says where a character's attributes are stored and gives the
+      record's layout for at least four fields.
+
+- [ ] **T69 · What a party member's vote depends on**
+      Recruiting is put to a vote of the existing members and each answers OK or not (6.13).
+      With one member there is one vote, so it has never been seen to fail. This is the first
+      mechanic found that reads party state rather than world state.
+      *Method: needs a second member, which T60 now provides, and a recruit that gets
+      refused. Try recruiting a character of a different class or alignment and see whether
+      an existing member votes against. Then read the script behind the panel.*
+      **Done when:** FINDINGS says what a vote reads, or records a refusal and what differed.
+
+- [ ] **T70 · How to close the inventory panel**
+      Clicking a portrait opens it and it blocks all movement; Escape, a second portrait
+      click, a right click and the panel's red square all failed, and recovering cost a
+      restart (6.14). Until this is known the inventory -- items, weapons, what a character
+      carries -- cannot be measured at all.
+      *Method: it is a mouse-driven panel, so find its hit regions rather than guessing.
+      Sweep the panel with `tools/mclick` one cell at a time, reading the party's position
+      after each to detect the moment movement comes back. Do it on a machine that is
+      expendable, since the failure mode is a restart.*
+      **Done when:** `drive-ishar` carries the gesture that closes it, demonstrated twice.

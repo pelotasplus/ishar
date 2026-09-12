@@ -221,6 +221,9 @@ STRUCK = {
     "Dragonia": "the starting region is FRAGONIR",
     "never been observed drawn": "arbre.io was caught drawn at (13,28)",
     "no asset matches": "viewport sprites do appear verbatim; three matched at 100%",
+    "clock runs on footsteps": "the pair at +0x438B froze through nine moves next session",
+    "step counter, cycles": "+0x438C jumped 135 on a RECRUIT with no carry (6.12)",
+    "leader's record": "+0x470C..473D is the open dialog's content, not a record (6.11)",
 }
 
 # A line that is marking a claim as wrong, rather than making it.

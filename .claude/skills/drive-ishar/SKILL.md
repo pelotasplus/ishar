@@ -65,6 +65,13 @@ viewport is pointer-driven.
   changes — and then need a *target* click. Until one is used or cancelled, **the arrow
   keys do not move the party**, which reads exactly like the game having frozen.
 - **Clicking a menu entry once highlights it; twice commits it.**
+- **Clicking a portrait opens that character's inventory, and nothing found closes it.**
+  The panel swaps the face for a slot grid, and while it is up the arrow keys do not move
+  the party -- which reads as the game having frozen, and `tools/walkto.py` reports every
+  direction refused. Escape, a second click on the portrait (that click lands on an
+  inventory slot instead), a right click, and the red square in the panel's corner were all
+  tried and none closed it. Recovering cost a restart. Do not open it unless the inventory
+  is the thing being measured (`captures/t60-inventory.png`).
 - **Do not click destructive verbs while sweeping a menu.** A KILL click during an
   exploratory pass left the game in a state that could not be reasoned about, and there
   were then two candidate causes for the damage instead of none.

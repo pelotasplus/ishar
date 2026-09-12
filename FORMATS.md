@@ -1178,17 +1178,16 @@ rewrite reads `cont*.fic` off disk with no transform.
 | `+0x0080` | the 90x54 grid, 4,860 bytes |
 | `+0x137C` | party row |
 | `+0x137D` | party column |
+| `+0x150C` | the party roster, 8-byte name slots, one per member |
 | `+0x1746` | the character-name table, 33 entries of 8 bytes |
 | `+0x2D68` | a byte-identical second copy of that table |
 | `+0x3646` | party row, echoed |
 | `+0x3EAC` | region id, 0..20 |
 | `+0x3FD0`, `+0x3FD1` | party row and column, echoed as a pair |
 | `+0x4387` | the row the party came from |
-| `+0x438B` | step counter, cycles 0..4 |
-| `+0x438C` | step counter, increments when `+0x438B` wraps |
+| `+0x438B`, `+0x438C` | a pair that tracked movement in one session and not in another -- **not a step counter** (FINDINGS 6.12) |
 | `+0x4392` | the current region's name as 8 bytes of text |
-| `+0x470C`, `+0x470D` | party row and column inside the leader's record |
-| `+0x472E` | the party leader's name, 8 bytes |
+| `+0x470C`..`+0x473D` | the open dialog's rendered content -- a cell, a name and a region name, none of them a record (FINDINGS 6.11) |
 | `+0x5C00`..`+0x7C00` | rewritten wholesale on every redraw |
 
 So the world state is one flat byte array the scripts index with `vm_op_load_byte_global`

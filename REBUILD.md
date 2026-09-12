@@ -589,15 +589,12 @@ not established, so write `+0x137C` and derive the rest.
 
 ### Time
 
-| offset | bytes | field |
-|---|---|---|
-| `+0x438B` | 1 | step counter, 0..4 |
-| `+0x438C` | 1 | advances each time `+0x438B` wraps |
+**Not known.** This section said the pair at `+0x438B`/`+0x438C` was a step counter and
+that five steps made one unit. It was measured over six moves in one session and did not
+survive the next: in a fresh game the pair advanced once and then stayed fixed through
+nine moves, and it jumped by 135 across a RECRUIT with no step taken.
 
-Time advances when the party takes a step, in any direction, and not otherwise. Forty
-seconds of idling moves neither byte. Five steps advance `+0x438C` by one.
-
-A rewrite does not need a wall clock for this. Increment on a successful move.
+Nothing establishes that the game keeps time at all. Forty seconds of idling moves nothing.
 
 ### Names
 
@@ -623,13 +620,41 @@ Slots 7 and 26 really do read `UNKNOWN`; that is a name the game ships, not an e
 Slot 28, BORMINH, is the NPC standing two cells from the party's start. His sprite is
 `bormin.io`.
 
-The party leader's own name is written again at `+0x472E`, in the same 8-byte form, inside
-a record that also carries the party's row and column at `+0x470C` and `+0x470D`.
+The **party roster** is a separate list at `+0x150C`, in the same 8-byte form: one slot per
+member, in party order. Recruiting a second character writes their name into the second
+slot. The panel has five portraits, so expect five slots.
+
+The roster holds names and nothing else. Character attributes are not in this array at all
+-- see below.
 
 ### The current region's name
 
 `+0x4392` holds the region name as 8 bytes of text -- `FRAGONIR` when `+0x3EAC` is 0. The
 21 region names are listed in FINDINGS 4.19b.
+
+### What a character has
+
+The sheet the game shows for a character names the fields:
+
+    name          8 bytes, as in the roster
+    class         THIEF, ...
+    race          HUMAIN, ...
+    level
+    strength
+    constitution
+    agility
+    intelligence
+
+**Where these are stored is not known.** A character whose sheet read 1, 7, 6, 8, 6 has no
+matching byte sequence anywhere in 64 KB of the global array, at any stride from 1 to 8,
+raw or divided by ten. So character records live outside it.
+
+### Recruiting
+
+Aiming RECRUIT at a non-player character shows their sheet first, uncommitted. Committing
+it opens a **team vote**: one line per existing party member, each answering OK or not,
+then the outcome. With one member there is one vote. What a member's answer depends on is
+not known.
 
 ### What is rewritten every frame
 

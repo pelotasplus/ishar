@@ -2445,18 +2445,19 @@ move on an `idle`, against roughly 1,300 on a single step.
 | `+0x137C` | party row | changes by one on Up/Down, eight samples |
 | `+0x137D` | party column | changes by one on Left/Right, eight samples |
 | `+0x137E` | **not the facing** | constant at 2 across six moves in two axes |
+| `+0x150C` | **the party roster: 8-byte name slots, one per member** | `+0x1514` went from zeros to `BORMINH` when he joined (6.13) |
 | `+0x1746` | **the character-name table: 33 entries of 8 bytes** | the names read as text |
 | `+0x2D68` | a second, byte-identical copy of that table | compared, 256 bytes equal |
 | `+0x3646` | party row, echoed | tracks the row, eight samples |
 | `+0x3EAC` | region id, 0..20 | 4.19b |
 | `+0x3FD0`, `+0x3FD1` | party row and column, echoed as a pair | eight samples |
 | `+0x4387` | **the row the party came from** | after a Down step from row 20 it reads 20, not 18 |
-| `+0x438B` | **step counter, cycles 0..4** | 3,3,4,0,1,2,3,4 over seven actions |
-| `+0x438C` | **step counter, increments when `+0x438B` wraps** | 16,16,16,17,17,17,17,17 |
+| `+0x438B` | ~~step counter~~ -- advances with moves in one session, not in another | 6.12 |
+| `+0x438C` | ~~carries from `+0x438B`~~ -- jumped 135 on a RECRUIT with no carry | 6.12 |
 | `+0x4392` | **the current region's name as text**, `FRAGONIR` | string match, with `+0x3EAC` = 0 |
-| `+0x470C`, `+0x470D` | party row and column inside the leader's record | eight samples |
-| `+0x472E` | **the party leader's name**, `ARAMIR`, 8 bytes | string match |
-| `+0x4736` | `OSGHIROD`, the region ORIENTATION last reported | string match |
+| `+0x470C`, `+0x470D` | party row and column -- **dialog scratch, not a record** | eight samples; gone once another dialog ran |
+| `+0x472E` | `ARAMIR` -- **dialog scratch**; the name the open dialog was about | string match; replaced by `BORMINH` at a different offset |
+| `+0x4736` | `OSGHIROD` -- dialog scratch, the region ORIENTATION had reported | string match |
 | `+0x4892` | `40 - row` | eight samples |
 | `+0x4927` | `27 - row` | eight samples |
 | `+0x4B58`, `+0x4BF6`, `+0x4C96` | `(row+1, col+1)` pairs, ~0xA0 apart | eight samples |
@@ -2480,6 +2481,15 @@ party's cell, at four different offsets from it. Three carry it verbatim, three 
 acts on: writing the copies at `+0x137C` was already shown to change a readout and not a
 position (see the scar in `CLAUDE.md`), and nothing here says which copy is authoritative.
 
+**And a field that tracks the party is not necessarily a field.** The table above once
+called `+0x470C`/`+0x470D` the party's cell "inside the leader's record", because `ARAMIR`
+sat `0x22` bytes further on. That is struck: there is no leader's record there. Recruiting a second character (6.13) emptied all of it: the name
+went, the cell went, and `BORMINH` appeared 138 bytes earlier with the same surrounding
+shape. The whole block is **the open dialog's rendered content** -- the ORIENTATION panel
+an earlier session had left up, whose subject was ARAMIR, whose party cell it was showing,
+and whose answer was OSGHIROD. Eight snapshots agreeing was a real measurement of a buffer
+that happened not to be rewritten in between.
+
 **Evidence:** `tools/t59-globals.py`, four runs against one emulator session. Every
 coordinate claim is an exact fit of `v = +-1 * row + b` or `+-1 * col + b` across eight
 snapshots spanning four rows and four columns, which a constant or a timer cannot
@@ -2488,23 +2498,106 @@ Each run reports the viewport's change percentage, because the tool's first run 
 actions inside a modal dialog an earlier session had left open and measured its timers as
 state (`captures/t59-modal-dialog.png`).
 
-### 6.12 Ishar's clock runs on footsteps, not on seconds (T64)
+### 6.12 ~~Ishar's clock runs on footsteps~~ -- the pair at `+0x438B` is not a step counter (T64)
 
-`+0x438B` counts 0, 1, 2, 3, 4 and wraps; `+0x438C` increments each time it wraps. So the
-pair is a two-level counter with **five low units to one high unit**.
+**This section said `+0x438B`/`+0x438C` were a step counter and that is struck.** The
+claim was written from one session, and the next session contradicted it. What follows is
+both observations, because the first one is still a real measurement and the model built
+on it was not.
 
-**It does not advance with real time.** Four waits of ten seconds each, forty seconds
-with no input, left both bytes unchanged. The very next step wrapped `+0x438B` from 4 to 0
-and carried `+0x438C` from 17 to 18.
+**Session one, a game that had been played for a while.** `+0x438B` read 3, 3, 4, 0, 1, 2,
+3, 4 across seven actions -- one increment per move, wrapping at five -- while `+0x438C`
+read 16, 16, 16, 17, 17, 17, 17, 17, carrying exactly when the low byte wrapped. Six moves,
+six increments, no increment on the idle. Then four waits of ten seconds each left both
+bytes unchanged and the very next step moved both.
 
-**It advances on a step in any direction.** Three Up steps and three Left steps each
-advanced it by one; an idle of 1.3 seconds did not.
+**Session two, a fresh game.** Both bytes start at 0. The first step makes it 1/0. After
+that the pair sat at 1/135 through **nine further moves in three directions**, with the
+party's row and column changing on each and the emulator healthy.
 
-So a rewrite does not need a wall clock for whatever this drives. Time passes when the
-party walks. What the high byte counts is not established -- 16 and 17 are consistent
-with an hour, and nothing on screen displays it.
+**And it jumped by 135 on a RECRUIT**, with no step taken and without the low byte
+wrapping -- which the carry model forbids outright.
 
-**Evidence:** `tools/t59-globals.py wait10 wait10 wait10 wait10 fwd`, six snapshots, both
-bytes identical across the four waits and both moving on the step; and
-`tools/t59-globals.py idle fwd fwd fwd left left left`, where the low byte reads
-3, 3, 4, 0, 1, 2, 3, 4 against an unchanged value on the idle.
+So the pair counts something that a move advanced six times in one session and never in
+another. It is not the number of steps, and it is not seconds either. T64 is reopened.
+
+The honest reading of session one is that the low byte advanced *alongside* movement, not
+because of it. Whatever the real driver is, it was active then and is not now.
+
+**Evidence:** `tools/t59-globals.py idle fwd fwd fwd left left left` and
+`tools/t59-globals.py wait10 wait10 wait10 wait10 fwd` for session one;
+`tools/t60-record.py snap` after each of nine moves in session two, each snapshot printing
+the party's cell alongside the pair, with `tools/ish status` showing cycles advancing
+throughout.
+
+### 6.13 The party roster, the character sheet, and the team vote (T60)
+
+Recruiting the starting NPC settles what is a character record and what is not.
+
+**The roster is at `+0x150C`: 8-byte name slots, one per party member.** `ARAMIR` sits in
+the first. Before the recruit the next eight bytes were zero; after it they read
+`BORMINH`. Nothing else in 64 KB of the global area went from zero to a name.
+
+**BORMINH is the NPC two cells from the start**, slot 28 of the name table at `+0x1746`
+(6.11), and his sprite is `bormin.io` (4.15f).
+
+**The character sheet names the attributes.** Aiming RECRUIT at him shows a panel before
+any commitment (`captures/t60-borminh-sheet.png`):
+
+```
+BORMINH
+THIEF
+HUMAIN
+LEVEL        : 1
+STRENGTH     : 7
+CONSTITUTION : 6
+AGILITY      : 8
+INTELLIGENCE : 6
+```
+
+So a character has a name, a **class**, a **race**, a level and four attributes. `THIEF`
+and `HUMAIN` are resident as text at `+0x4FA8` and `+0x4FBA`, in an otherwise empty region
+-- scratch the panel was rendered from, not a record.
+
+**The attribute values are not in the global variable area.** 1, 7, 6, 8, 6 does not occur
+in 64 KB at any stride from 1 to 8, nor does any byte sequence whose values divided by ten
+give them. So character stats live somewhere else, and T60's remaining half is finding
+where -- the roster is a list of names, not of records.
+
+**Recruiting is put to a vote.** Committing the panel does not add the member; it opens a
+second panel reading `TEAM VOTE :`, then one line per existing member, then the outcome
+(`captures/t60-recruited2.png`):
+
+```
+TEAM VOTE :
+
+ARAMIR       : OK
+
+MEMBER RECRUITED
+```
+
+With one member there is one vote. What a member's vote depends on is unknown, and it is
+the first mechanic found here that reads party state rather than world state.
+
+**Evidence:** `tools/t60-record.py`, snapshots either side of the recruit against one
+emulator session booted fresh to the start cell; `+0x1514` is the only zero-to-name
+transition in the diff. The panels are `captures/t60-borminh-sheet.png` and
+`captures/t60-recruited2.png`, and `captures/t60-party2.png` shows both portraits and both
+LIFE bars afterwards. The attribute search is a stride scan over the 64 KB snapshot taken
+while the sheet was on screen.
+
+### 6.14 A portrait opens an inventory, and nothing found closes it
+
+Clicking a character's portrait replaces it with that character's inventory: a slot grid
+with a left and a right hand, and ARAMIR starts with a sword in the left
+(`captures/t60-inventory.png`).
+
+**While it is up the party cannot move.** All four arrow keys are refused, which reads as
+a hung game -- `tools/walkto.py` reports `no route` with every direction learned blocked.
+
+Escape, a second click on the portrait, a right click, and the red square in the panel's
+corner were each tried and none closed it. Recovering cost an emulator restart.
+
+**Evidence:** four move attempts, each read from the position bytes; the four close
+attempts above; `captures/t60-inventory.png`.
+
