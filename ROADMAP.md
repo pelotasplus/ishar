@@ -2651,6 +2651,22 @@ Compose rewrite has to do.
       input, and collect until `BP`-runs stop arriving, rather than driving the party and
       sampling for a fixed time. That removes the partial-redraw problem without giving up
       the only instrument that can see an overdrawn sprite.*
+      *Whole-frame capture built (`tools/t54b-frames.py`) and it works: a frame is now whole
+      or empty, and an empty one correctly reports a refused move. It caught the ladder in
+      use **on a character** -- `bormin.io` at three distances, @2152 16x29, @1424 32x45,
+      @3714 48x31 (FINDINGS 4.15f).
+      **Still not met, and now for a better reason.** The acceptance criterion is a
+      prediction holding at a distance not used to derive it, and the prediction failed.
+      `bormin.io`'s sprites sort by height 7, 12, 15, 19, 29, 31, 35, 39, 45, 68; from 16x29
+      at three cells and 32x45 at two, the rung at one cell should be 32x68. It is 48x31 --
+      wider and shorter -- verified against video memory, so not a mis-capture.
+      So **the ladder is not a monotonic size sequence.** Two readings, neither checked: the
+      sprites may be *parts* of a figure rather than whole ones per range (48x31 covers the
+      upper body of a figure visibly ~60px tall, so something draws the rest), or they may be
+      poses chosen by more than range.
+      Next: settle that first, and it is cheap. Stand adjacent and run `tools/onscreen.py`
+      over every asset, not just `bormin.io` -- if a second sprite is on screen below @3714,
+      the figure is composed of parts and "which rung" is the wrong question.*
 
 - [x] **T53b · Bind the polled chrome positions to their sprites**
       T53 confirmed two sprites; seven polled positions had no sprite attached.
@@ -2678,7 +2694,7 @@ Compose rewrite has to do.
       is the answer and a rewrite can draw the medallion any way it likes.*
       **Done when:** FINDINGS says where the medallion's pixels come from.
 
-- [~] **T56 · Where is the starting NPC's sprite?**
+- [x] **T56 · Where is the starting NPC's sprite?**
       Two cells north of the start a man stands in the viewport, talks when walked into, and
       can be attacked (FINDINGS 4.17). His pixels are in **no asset**: a sweep over every
       sprite of all 98 files at every palette base, verified whole-sprite against video
@@ -2703,6 +2719,16 @@ Compose rewrite has to do.
       16x7 scenery element tiled every 24 pixels.
       To finish: run `tools/t56-writer.py` on a pixel inside the **NPC** rather than a
       tree, then attribute the source at whichever of the three sites fires.*
+      *Met, by a different route (FINDINGS 4.15f). The pixel probe was not needed: capturing
+      **whole frames** instead of fixed windows -- one key, then collect until no stop has
+      arrived for 2.5s -- caught him directly. **The NPC is `bormin.io`**, at three offsets
+      for three distances: @2152 (16x29) at ~3 cells, @1424 (32x45) at ~2, @3714 (48x31)
+      adjacent. The last is confirmed **100% of 779 opaque pixels** against video memory by
+      `tools/onscreen.py`.
+      That also corrects 4.15d's "`bormin.io` is not on screen, 0 of 12 sprites" -- true of
+      the frame measured, where the party stood elsewhere, and wrong as a claim about the
+      asset. The lesson is the one already in this file: a routine that fires is not a
+      routine that fires when you care, and the same goes for a sprite.*
 
 - [ ] **T56b · Does an NPC block its cell?**
       `0x0A` refuses a move at `(15,29)` and permits one at `(11,40)` -- the anomaly behind

@@ -24,6 +24,10 @@ GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
 ASSET_NOTES = {
     "fond.io": "The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- "
                "this is the asset the 3D view is built from (FINDINGS 4.15c).",
+    "bormin.io": "**The starting NPC.** Three of its twelve sprites were caught drawn at "
+                 "three distances -- @2152 16x29, @1424 32x45, @3714 48x31 -- so the sprite "
+                 "changes with range, but not in size order, and a prediction from two "
+                 "distances failed at the third (FINDINGS 4.15f).",
     "main.io": "Also carries the **font**: 16x9 glyph sprites, drawn 7 pixels apart "
                "(FINDINGS 4.15e).",
     "plaine.io": "Outdoor scenery for the plains: the bushes and trees in the viewport, at "
@@ -78,6 +82,13 @@ IDENTIFIED = {
     ("main.io", 23896):  "a font glyph, 16x9 (FINDINGS 4.15e)",
     ("main.io", 24286):  "a font glyph, 16x9 (FINDINGS 4.15e)",
     ("main.io", 24598):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("bormin.io", 2152): "the starting NPC at ~3 cells: 16x29, drawn at (224,72) and "
+                         "(136,72) (FINDINGS 4.15f)",
+    ("bormin.io", 1424): "the starting NPC at ~2 cells: 32x45, drawn at (12,65) "
+                         "(FINDINGS 4.15f)",
+    ("bormin.io", 3714): "the starting NPC at 1 cell: 48x31 at (103,60) -- **100% vs "
+                         "VRAM**, 779 opaque pixels (FINDINGS 4.15f)",
+    ("arbre.io", 18890): "a tree, 48x38, seen drawn at (177,72) (FINDINGS 4.15f)",
     ("arbre.io", 25490): "a tree, 16x27, seen drawn at (247,61) -- one rung of the size "
                          "ladder (FINDINGS 4.15c)",
     ("arbre.io", 25714): "a tree, 16x15, seen drawn at (256,66) -- a shorter rung than "

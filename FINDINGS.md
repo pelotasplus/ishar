@@ -1191,6 +1191,48 @@ carries the font**, one sprite per glyph. And `plaine.io` @32264 is a small scen
 on never-written memory), and `tools/t54b-objects.py` at `seg_0e97:059a` grouping rows into
 objects by `BP` and attributing `DS:SI`.
 
+### 4.15f The NPC is `bormin.io`, and the sprite changes with distance -- but not predictably
+
+**The starting NPC's sprite is `bormin.io`.** Capturing whole viewport frames -- send one
+key, then collect row-step stops until none has arrived for 2.5s, so a frame is whole or it
+is nothing -- and attributing `DS:SI` catches him being drawn:
+
+| party cell | distance to the NPC | sprite | size | drawn at |
+|---|---|---|---|---|
+| (12,28) | ~3 | `bormin.io` @2152 | 16x29 | (224, 72) |
+| (12,29) | ~3 | `bormin.io` @2152 | 16x29 | (136, 72) |
+| (13,30) | ~2 | `bormin.io` @1424 | 32x45 | (12, 65) |
+| (14,29) | 1 | `bormin.io` @3714 | **48x31** | (103, 60) -- **100%** vs VRAM, 779 px |
+
+So the sprite drawn **does** change with distance, on the same object, which is the size
+ladder in use on a character rather than on scenery.
+
+**And the prediction failed.** `bormin.io`'s twelve sprites sort by height 7, 12, 15, 19,
+29, 31, 35, 39, 45, 68 -- so from 16x29 at distance 3 and 32x45 at distance 2, the next rung
+up at distance 1 should have been @5466, **32x68**. It is @3714, **48x31**: wider and
+*shorter*. Verified against video memory, so it is not a mis-capture.
+
+**The ladder is therefore not a monotonic size sequence.** Two readings, neither checked:
+the sprites may be *parts* of a figure rather than whole ones at each range -- 48x31 at
+(103,60) covers the upper body of a figure that is visibly ~60 px tall on screen, so
+something else draws the rest -- or they may be poses, and which one is chosen depends on
+more than range.
+
+**What this settles and what it does not.** T56 is answered: the NPC's pixels are in
+`bormin.io`, three offsets seen, one verified pixel-for-pixel. T54b is not: a prediction
+made from two distances did not hold at a third, which is the acceptance criterion, so
+"distance selects a rung" stays a description rather than a rule.
+
+Two earlier claims this corrects. `bormin.io` was recorded as **not on screen, 0 of 12
+sprites** (4.15d) -- true of that frame, where the party stood elsewhere, and wrong as a
+statement about the asset. And `arbre.io` @18890 (48x38) was caught in the same session,
+alongside @25490 and @25714, so its ladder is in use too.
+
+**Evidence:** `tools/t54b-frames.py` (quiescence-based whole-frame capture at
+`viewport_row_step_masked`, attributing `DS:SI` against every decoded asset); the distance-1
+sprite independently confirmed by `tools/onscreen.py` at 100% of 779 opaque pixels;
+`captures/t54b-adjacent.png` showing the figure at that distance.
+
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
 Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all

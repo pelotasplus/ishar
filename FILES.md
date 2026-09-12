@@ -139,7 +139,8 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 16..2,906 | 2,890 | script bytecode (entry set known, 7.7) (3.16) |
 | 2,906..12,906 | 10,000 | 4 sprites, mode 0x10, 32x25 to 80x128 (3.10) |
 | 12,906..18,890 | 5,984 | **144x83 sprite, mode 0x10** - the big foreground branch, 144x83, drawn at (256,0) clipped (FINDINGS 4.15c) (3.10) |
-| 18,890..25,490 | 6,600 | 8 sprites, mode 0x10, 16x43 to 32x101 (3.10) |
+| 18,890..19,810 | 920 | **48x38 sprite, mode 0x10** - a tree, 48x38, seen drawn at (177,72) (FINDINGS 4.15f) (3.10) |
+| 19,810..25,490 | 5,680 | 7 sprites, mode 0x10, 16x43 to 32x101 (3.10) |
 | 25,490..25,714 | 224 | **16x27 sprite, mode 0x10** - a tree, 16x27, seen drawn at (247,61) -- one rung of the size ladder (FINDINGS 4.15c) (3.10) |
 | 25,714..25,842 | 128 | **16x15 sprite, mode 0x10** - a tree, 16x15, seen drawn at (256,66) -- a shorter rung than @25490 in the SAME frame (FINDINGS 4.15c) (3.10) |
 | 25,842..25,976 | 134 | UNEXPLAINED |
@@ -217,13 +218,19 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 
 4,370 bytes on disk, **7,296 decoded** · art
 
+**The starting NPC.** Three of its twelve sprites were caught drawn at three distances -- @2152 16x29, @1424 32x45, @3714 48x31 -- so the sprite changes with range, but not in size order, and a prediction from two distances failed at the third (FINDINGS 4.15f).
+
 | bytes | len | what |
 |---|---|---|
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,424 | 1,408 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 1,424..7,146 | 5,722 | 12 sprites, mode 0x10, 16x7 to 32x68 (+50 b between) (3.10) |
+| 1,424..2,152 | 728 | **32x45 sprite, mode 0x10** - the starting NPC at ~2 cells: 32x45, drawn at (12,65) (FINDINGS 4.15f) (3.10) |
+| 2,152..2,392 | 240 | **16x29 sprite, mode 0x10** - the starting NPC at ~3 cells: 16x29, drawn at (224,72) and (136,72) (FINDINGS 4.15f) (3.10) |
+| 2,392..3,714 | 1,322 | 4 sprites, mode 0x10, 16x7 to 48x39 (+50 b between) (3.10) |
+| 3,714..4,466 | 752 | **48x31 sprite, mode 0x10** - the starting NPC at 1 cell: 48x31 at (103,60) -- **100% vs VRAM**, 779 opaque pixels (FINDINGS 4.15f) (3.10) |
+| 4,466..7,146 | 2,680 | 5 sprites, mode 0x10, 16x15 to 32x68 (3.10) |
 | 7,146..7,296 | 150 | UNEXPLAINED |
 
 **78.0% named.** **use directly** — 7 sprites
