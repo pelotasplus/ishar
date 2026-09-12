@@ -456,8 +456,8 @@ The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this i
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,366 | 1,350 | script bytecode (entry set known, 7.7) (3.16) |
-| 1,366..2,750 | 1,384 | **64x43 sprite, mode 0x12** - viewport backdrop, drawn via viewport_row_step_opaque; seen at widths 64 and 15, i.e. clipped at the edge (FINDINGS 4.15c) (3.10) |
-| 2,750..5,478 | 2,728 | **64x85 sprite, mode 0x12** - viewport backdrop (FINDINGS 4.15c) (3.10) |
+| 1,366..2,750 | 1,384 | **64x43 sprite, mode 0x12** - the GROUND band: one 64x43 sprite tiled horizontally at 64-pixel intervals across the viewport at y=83, clipped at both edges (FINDINGS 4.15c) (3.10) |
+| 2,750..5,478 | 2,728 | **64x85 sprite, mode 0x12** - the SKY: 64x85 drawn at (96,0) (FINDINGS 4.15c) (3.10) |
 | 5,478..7,142 | 1,664 | **48x69 sprite, mode 0x12** - viewport backdrop (FINDINGS 4.15c) (3.10) |
 | 7,142..10,174 | 3,032 | **96x63 sprite, mode 0x12** - viewport backdrop (FINDINGS 4.15c) (3.10) |
 | 10,174..12,030 | 1,856 | 1 sprites, mode 0x12, 48x77 (3.10) |
@@ -932,6 +932,8 @@ The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this i
 
 11,240 bytes on disk, **26,384 decoded** · art + script · the setup program — loads every asset (7)
 
+Also carries the **font**: 16x9 glyph sprites, drawn 7 pixels apart (FINDINGS 4.15e).
+
 | bytes | len | what |
 |---|---|---|
 | 0..2 | 2 | asset id (3.15) |
@@ -1008,7 +1010,17 @@ The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this i
 | 19,991..21,590 | 1,599 | UNEXPLAINED |
 | 21,590..23,138 | 1,548 | 22 sprites, mode 0x00, 16x2 to 16x9 (3.10) |
 | 23,138..23,272 | 134 | UNEXPLAINED |
-| 23,272..25,760 | 2,488 | 36 sprites, mode 0x00, 16x5 to 16x9 (3.10) |
+| 23,272..23,350 | 78 | **16x9 sprite, mode 0x00** - a font glyph, 16x9, drawn in the panel caption at 7-pixel spacing -- main.io carries the font (FINDINGS 4.15e) (3.10) |
+| 23,350..23,662 | 312 | 4 sprites, mode 0x00, 16x9 (3.10) |
+| 23,662..23,740 | 78 | **16x9 sprite, mode 0x00** - a font glyph, 16x9 (FINDINGS 4.15e) (3.10) |
+| 23,740..23,818 | 78 | **16x9 sprite, mode 0x00** - a font glyph, 16x9 (FINDINGS 4.15e) (3.10) |
+| 23,818..23,896 | 78 | 1 sprites, mode 0x00, 16x9 (3.10) |
+| 23,896..23,974 | 78 | **16x9 sprite, mode 0x00** - a font glyph, 16x9 (FINDINGS 4.15e) (3.10) |
+| 23,974..24,286 | 312 | 4 sprites, mode 0x00, 16x9 (3.10) |
+| 24,286..24,364 | 78 | **16x9 sprite, mode 0x00** - a font glyph, 16x9 (FINDINGS 4.15e) (3.10) |
+| 24,364..24,598 | 234 | 3 sprites, mode 0x00, 16x9 (3.10) |
+| 24,598..24,676 | 78 | **16x9 sprite, mode 0x00** - a font glyph, 16x9 (FINDINGS 4.15e) (3.10) |
+| 24,676..25,760 | 1,084 | 18 sprites, mode 0x00, 16x5 to 16x9 (3.10) |
 | 25,760..25,896 | 136 | **16x16 sprite, mode 0x10** - the mouse cursor, base 160, drawn at (0,0) - 100% vs VRAM; the identical 16x16 sprite is also frise.io @50784 (FINDINGS 4.15d) (3.10) |
 | 25,896..25,974 | 78 | UNEXPLAINED |
 | 25,974..26,380 | 406 | 5 sprites, mode 0x00, 16x9 (+16 b between) (3.10) |
@@ -1436,7 +1448,8 @@ Outdoor scenery for the plains: the bushes and trees in the viewport, at **palet
 | 24,440..24,720 | 280 | **16x34 sprite, mode 0x10** - outdoor scenery, base 16, seen at (82,93) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
 | 24,720..26,120 | 1,400 | **48x58 sprite, mode 0x10** - outdoor scenery, base 16, seen at (98,68) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
 | 26,120..27,736 | 1,616 | **48x67 sprite, mode 0x10** - outdoor scenery, base 16, seen at (146,59) - 100% vs VRAM in the VIEWPORT (FINDINGS 4.15d) (3.10) |
-| 27,736..32,328 | 4,592 | 8 sprites, mode 0x10, 16x7 to 48x50 (3.10) |
+| 27,736..32,264 | 4,528 | 7 sprites, mode 0x10, 32x12 to 48x50 (3.10) |
+| 32,264..32,328 | 64 | **16x7 sprite, mode 0x10** - small scenery, 16x7, tiled every 24 pixels along y=81 (FINDINGS 4.15e) (3.10) |
 | 32,328..32,488 | 160 | UNEXPLAINED |
 
 **98.2% named.** **art usable** (23 sprites); logic to reimplement

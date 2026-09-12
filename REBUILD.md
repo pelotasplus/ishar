@@ -379,21 +379,38 @@ position. No perspective maths.
 A draw can be narrower than its source. Both widths seen so far, 17 px and 32 px, came from
 the same 32-pixel-wide sprite — the narrow one was clipped where it ran off the edge.
 
-### Sky and ground
+### Sky and ground are tiled sprites
 
-Flat colour bands, filled by a separate routine. Not artwork.
+Both come from `fond.io`.
+
+    fond.io @2750   64 x 85   the sky,    drawn at (96, 0)
+    fond.io @1366   64 x 43   the ground, tiled across the viewport at y = 83
+
+The ground is **one sprite repeated every 64 pixels**, clipped at both edges. In the frame
+measured, its run started at x = -17 — that offset is what a rewrite needs to make the
+ground appear to move.
 
 ### Which assets the view is built from
 
     fond.io      the backdrop
     plaine.io    outdoor scenery — the bushes and trees — at palette base 16
-    arbre.io     trees, in a size ladder
+    arbre.io     fifteen graded tree sizes — never yet seen on screen
 
 Confirmed by matching stored sprite bytes against video memory:
 
     plaine.io  @24720  48x58  base 16  seen at ( 98, 68)   100%
     plaine.io  @26120  48x67  base 16  seen at (146, 59)   100%
     plaine.io  @24440  16x34  base 16  seen at ( 82, 93)   100%
+
+### Three routines draw the viewport
+
+    a rectangle fill        sky and ground bands
+    an opaque expander      no transparency test
+    a masked expander       skips nibble 0
+
+All three write the same off-screen buffer. Which one draws a given thing was settled by
+watching writes to a single pixel, with a control breakpoint on memory the program never
+touches — without the control, an idle-loop address swamps the result.
 
 ### Reading a frame
 
@@ -424,6 +441,15 @@ The list of objects to draw and their positions. Coordinates run x 9..272, y 6..
 ---
 
 ## 6. Text
+
+### The font is in main.io
+
+Text is drawn glyph by glyph from 16x9 sprites in `main.io`, at **7-pixel spacing**.
+
+Confirmed offsets: @23272, @23662, @23740, @23896, @24286, @24598 — six of the glyphs that
+spell the region caption.
+
+### The strings
 
     message.io   messaged.io   messagee.io   messagei.io    NPC and event text
     textin.io    textind.io    textine.io    textini.io     UI text

@@ -1047,8 +1047,30 @@ at 15, @5478 at 48 and at 64.
 
 **And which sprites are drawn changes as the party moves.** At `(10,40)` the view is built
 from @5478, @7142, @1366 and @2750; three steps north at `(12,40)` it is almost entirely
-@1366. That is the size-ladder model in action, though it does not yet pin one object to
-one rung -- several are in view at once (T54b).
+@1366.
+
+**Splitting a frame into objects shows what `fond.io` actually is.** `BP` counts the rows
+remaining for the object being drawn, so a run of stops with `BP` decreasing by one is one
+object, and its first row's `DI` gives the origin (`y = DI // 320`, `x = DI % 320`, because
+the blit is 1:1). One frame at `(10,22)`:
+
+| sprite | size | drawn at | rows |
+|---|---|---|---|
+| `fond.io` @1366 | 64x43 | x = **47, 111, 175, 239**, and 256 clipped, all at y=83 | 43 each |
+| `fond.io` @2750 | 64x85 | (96, 0) | 57 |
+
+Those x values are **64 apart**. So the ground is *one* 64x43 sprite **tiled horizontally**,
+its run starting at x = -17, and @2750 is the sky. `fond.io` is the sky and ground bands,
+and they are **tiled sprites, not flat fills** -- FORMATS 3.13d called `viewport_fill_rect`
+the source of "sky and ground bands", which is at best incomplete.
+
+A rewrite therefore needs a horizontal tile offset for the ground: -17 in this frame, and
+it is the obvious candidate for what makes the ground appear to move.
+
+**Not established: the size ladder.** `arbre.io`'s fifteen graded sprites are a fact about
+the *file*; `arbre.io` has **never been observed drawn**, and the scenery seen on screen
+comes from `plaine.io` and `fond.io`. "A tree twice as close is a different sprite" remains
+an inference from the 1:1 blit plus those dimensions, not an observation (T54b).
 
 **A correction to which routine is which.** `seg_0e97:05c0`, named `viewport_row_loop` in
 FORMATS 3.13d, draws the **panel** in every window sampled: 9 of 9 rows from `frise.io` at
@@ -1092,6 +1114,45 @@ sprite chain reaches (T51), or he is drawn through a path that transforms them.
 **Evidence:** `tools/onscreen.py`, longest-opaque-run probe followed by whole-sprite
 verification against `0xA0000`, opaque pixels only; the seven matches above are every hit
 above 95% in that frame.
+
+### 4.15e Three routines write a viewport pixel, and one of them draws the text
+
+Hunting the drawing loops one at a time found the backdrop and then failed twice. Watching
+**writes to one back-buffer pixel** settles it in a single run. The back buffer is at
+`0xE0000` and the blit is 1:1, so screen `(x, y)` is `0xE0000 + y*320 + x`. Watching the
+tree canopy at `(172, 65)`, against a control breakpoint on memory the program never
+touches:
+
+| site | live | control |
+|---|---|---|
+| `seg_0e97:06d5` `viewport_fill_rect` | 6 | **0** |
+| `seg_0e97:0657` the opaque expander (loop at `0644`) | 6 | **0** |
+| `seg_0e97:0597` the **masked** expander (loop at `0568`) | 3 | **0** |
+| `seg_0000:3d64` `wait_loop` | 7 | 3514 |
+
+The control run produced 7,709 stops across 171 sites in half the time, almost all of them
+`wait_loop` -- which is exactly why it is needed. The three `seg_0e97` sites have **zero**
+control hits, so they are real.
+
+**So the viewport is drawn by three routines, not one:** a rectangle fill, an opaque
+expander, and a masked expander. Earlier probes of the masked loop's row step caught only
+panel content, which was the window, not the routine.
+
+**And the masked loop draws the text.** Attributing its source at the row step
+(`seg_0e97:059a`) while the panel caption reads FRAGONIR:
+
+| sprite | size | drawn at |
+|---|---|---|
+| `main.io` @23272, @23662, @23740, @23896, @24286, @24598 | 16x9 each | x = 272, 286, 293, 300, 307, 314, at y=2 |
+| `plaine.io` @32264 | 16x7 | x = 20, 44, 68 at y=81 |
+
+Seven 16x9 sprites in a row at **7-pixel spacing** across the caption area: **`main.io`
+carries the font**, one sprite per glyph. And `plaine.io` @32264 is a small scenery element
+**tiled every 24 pixels** along y=81 -- the same tiling idea as the ground band.
+
+**Evidence:** `tools/t56-writer.py` (MEMORY_WRITE on one back-buffer pixel, with a control
+on never-written memory), and `tools/t54b-objects.py` at `seg_0e97:059a` grouping rows into
+objects by `BP` and attributing `DS:SI`.
 
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 

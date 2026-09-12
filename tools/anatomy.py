@@ -24,6 +24,8 @@ GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
 ASSET_NOTES = {
     "fond.io": "The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- "
                "this is the asset the 3D view is built from (FINDINGS 4.15c).",
+    "main.io": "Also carries the **font**: 16x9 glyph sprites, drawn 7 pixels apart "
+               "(FINDINGS 4.15e).",
     "plaine.io": "Outdoor scenery for the plains: the bushes and trees in the viewport, at "
                  "**palette base 16**. Three sprites matched 100% against video memory "
                  "(FINDINGS 4.15d).",
@@ -59,13 +61,23 @@ IDENTIFIED = {
                           "VIEWPORT (FINDINGS 4.15d)",
     ("plaine.io", 24440): "outdoor scenery, base 16, seen at (82,93) - 100% vs VRAM in the "
                           "VIEWPORT (FINDINGS 4.15d)",
-    ("fond.io", 1366):   "viewport backdrop, drawn via viewport_row_step_opaque; seen at "
-                         "widths 64 and 15, i.e. clipped at the edge (FINDINGS 4.15c)",
-    ("fond.io", 2750):   "viewport backdrop (FINDINGS 4.15c)",
+    ("fond.io", 1366):   "the GROUND band: one 64x43 sprite tiled horizontally at 64-pixel "
+                         "intervals across the viewport at y=83, clipped at both edges "
+                         "(FINDINGS 4.15c)",
+    ("fond.io", 2750):   "the SKY: 64x85 drawn at (96,0) (FINDINGS 4.15c)",
     ("fond.io", 5478):   "viewport backdrop (FINDINGS 4.15c)",
     ("fond.io", 7142):   "viewport backdrop (FINDINGS 4.15c)",
     ("gerdep.io", 8829): "the region-name switch: statement 0x2f with 21 cases, selector "
                          "vm_op_load_byte_global 0x3eac (FORMATS 7.2g)",
+    ("main.io", 23272):  "a font glyph, 16x9, drawn in the panel caption at 7-pixel "
+                         "spacing -- main.io carries the font (FINDINGS 4.15e)",
+    ("main.io", 23662):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("main.io", 23740):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("main.io", 23896):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("main.io", 24286):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("main.io", 24598):  "a font glyph, 16x9 (FINDINGS 4.15e)",
+    ("plaine.io", 32264): "small scenery, 16x7, tiled every 24 pixels along y=81 "
+                          "(FINDINGS 4.15e)",
     ("gerdep.io", 7243): "the region rule: `if (column < 46) && (region == 1)` -- region "
                          "membership is hand-written coordinate tests, not a table "
                          "(FINDINGS 6.7b)",

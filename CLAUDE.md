@@ -749,6 +749,16 @@ spans, `ROADMAP.md` for what was already tried and failed. The existing scar *Ch
 premise in the file, not in your memory of the file* covers premises; this is the same
 mistake applied to questions.
 
+### One GDB connection per emulator, ever
+
+`Rsp()` twice in one script gets `ECONNREFUSED` on the second, and the stub does not
+recover -- the emulator keeps running and answering MCP while every later GDB probe fails,
+so it reads as a broken tool rather than a closed socket. Recovering costs a restart and a
+re-boot, about 90 seconds.
+
+Open one `Rsp` and pass it to whatever needs it. A probe that wants a control breakpoint as
+well as a live one must reuse the same connection for both.
+
 ### Spice86's GDB stub reports IP as a LINEAR address
 
 `registers()["ip"]` is not the segment offset. At a breakpoint on `seg_0000:93a6` with

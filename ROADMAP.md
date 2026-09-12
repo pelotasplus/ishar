@@ -2617,6 +2617,19 @@ Compose rewrite has to do.
       Next: the instances carry each drawable's viewport X/Y (FORMATS 3.17), so correlate a
       row's `DI` -- which gives the screen position directly -- against the instance list,
       and follow a single object across steps instead of aggregating the frame.*
+      *Second pass: objects can now be separated (`tools/t54b-objects.py` -- `BP` counts
+      rows remaining, so a run of decreasing `BP` is one object and its first `DI` is the
+      origin). That produced a finding about the **backdrop** rather than about the ladder:
+      `fond.io` @1366 is the ground band, **one 64x43 sprite tiled every 64 pixels** at
+      y=83 starting at x=-17, and @2750 is the sky at (96,0) (FINDINGS 4.15c).
+      **Pre-flight failure worth keeping:** `arbre.io` has **never been observed drawn**.
+      The size ladder is a fact about the file's sprite dimensions, not about how the game
+      uses them, and the scenery actually seen on screen comes from `plaine.io`. Any work
+      on "which rung at which distance" has to first catch `arbre.io` being drawn at all.
+      Blocked on the same thing as T56: the loop that draws **masked** scenery has not been
+      found. Three of the four row-step sites were tried -- 05f4 and 059a give panel
+      content, 0660 gives the backdrop -- so the next move is not a fourth guess but the
+      back-buffer-write probe in `tools/t56-writer.py`.*
 
 - [x] **T53b · Bind the polled chrome positions to their sprites**
       T53 confirmed two sprites; seven polled positions had no sprite attached.
@@ -2644,7 +2657,7 @@ Compose rewrite has to do.
       is the answer and a rewrite can draw the medallion any way it likes.*
       **Done when:** FINDINGS says where the medallion's pixels come from.
 
-- [ ] **T56 · Where is the starting NPC's sprite?**
+- [~] **T56 · Where is the starting NPC's sprite?**
       Two cells north of the start a man stands in the viewport, talks when walked into, and
       can be attacked (FINDINGS 4.17). His pixels are in **no asset**: a sweep over every
       sprite of all 98 files at every palette base, verified whole-sprite against video
@@ -2658,6 +2671,17 @@ Compose rewrite has to do.
       that found the viewport routines originally.*
       **Done when:** FINDINGS names the asset and offset his pixels come from, or shows
       what transforms them.
+      *Not the NPC yet, but the method now works and found the drawing paths (FINDINGS
+      4.15e). Watching writes to one back-buffer pixel with a control on never-written
+      memory gives **three** real writers of a viewport pixel, all with zero control hits:
+      `seg_0e97:06d5` (fill), `0657` (opaque expander), `0597` (masked expander). The
+      control produced 7,709 stops across 171 sites in half the time, almost all
+      `wait_loop` -- which is why it is needed.
+      Attributing the masked loop's source found **the font**: `main.io` carries 16x9 glyph
+      sprites drawn 7 pixels apart, six of them confirmed. And `plaine.io` @32264 is a
+      16x7 scenery element tiled every 24 pixels.
+      To finish: run `tools/t56-writer.py` on a pixel inside the **NPC** rather than a
+      tree, then attribute the source at whichever of the three sites fires.*
 
 - [ ] **T56b · Does an NPC block its cell?**
       `0x0A` refuses a move at `(15,29)` and permits one at `(11,40)` -- the anomaly behind
