@@ -2836,8 +2836,22 @@ Compose rewrite has to do.
       drawn from different sprites (@25490, @25714, @23962) with several trees in view, so
       nothing says which sprite is which tree. The NPC fails because he walks; the tree
       fails because it cannot be told apart from its neighbours.
-      *Next, and it is the right instrument rather than a third guess: read the **instance
-      list** alongside the row-step capture. An instance persists across frames and carries
-      its own viewport X/Y at `+0x0c`/`+0x0e` from the entity block (FORMATS 3.17), so it
-      gives each drawn sprite a stable identity. Chain: entity at `ss:[0bf6]`+id, pointer at
-      +2, instance in the pool at `ss:[0be8]`, 38 bytes each.*
+      *That instrument was tried and **the premise it rested on is false** (FINDINGS 4.15h).
+      Instances do not hold viewport object positions. Searching all 640 KB of conventional
+      memory for the three origins drawn in one frame -- `(151,61)`, `(167,66)`, `(149,30)`
+      -- as word pairs in either order gives **zero hits**, while a control in the same dump
+      finds `(255,125)` four times including at the pool offset where the record sits. And
+      scanning the pool for the `0x7fff` sentinel yields exactly **two** records: `main.io`'s
+      two rectangles, `(255,125)` and `(319,199)`.
+      FORMATS 3.17's "instances carry viewport object positions" came from the *range* of
+      values in a pool scan (9..272 by 6..94, the viewport rectangle), not from matching a
+      drawn position -- the same mistake as reading the palette group out of word 0. It is
+      corrected there.
+      **So a viewport object's screen position is computed per frame and never stored**; it
+      exists only in `DI` at the row step. Three approaches to identity have now failed: the
+      framebuffer (cannot see occluded distant sprites), tracking an object (the NPC walks,
+      trees are indistinguishable), and the instance list (the numbers are not there).
+      *One idea left, and it needs no new instrument: objects arrive at the row step in an
+      order that is probably back-to-front, so track **the nth object of the frame** across a
+      step with the scene otherwise unchanged. The frame capture is now complete enough for
+      that, which it was not before.*

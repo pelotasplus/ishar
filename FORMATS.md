@@ -2159,7 +2159,13 @@ use during play.
 
 **So panel layout is runtime state, not a constant in the file.** A rewrite cannot read the
 portrait's (0,147) straight out of an asset; it has to model the entity/instance structures
-and whatever initialises their position. That is a sharper answer than 3.17's earlier
+and whatever initialises their position.
+
+**But instances do not hold *viewport* object positions** -- struck below, and the reading
+was drawn from the range of the values rather than from matching a drawn position. Searching
+all 640 KB of memory for three origins drawn in one frame gives zero hits while a control
+finds a known pair four times, so a viewport object's screen position is computed per frame
+and never stored (FINDINGS 4.15h). That is a sharper answer than 3.17's earlier
 "layout is data" -- the *record* is data, but the *drawn position* is a field of a
 runtime instance.
 

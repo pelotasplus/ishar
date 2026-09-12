@@ -1316,10 +1316,32 @@ at a second distance, and one row closer the same tree is drawn from different s
 nothing says which sprite belongs to which tree. The NPC failed for a different reason
 (4.15i: he walks), and the tree fails for this one.
 
-**What would fix it.** Instances carry each drawable's own viewport X/Y at `+0x0c`/`+0x0e`,
-reached from the entity block (FORMATS 3.17), so an instance is an *identity* that persists
-across frames. Reading the instance list alongside the row-step capture would tie each
-drawn sprite to a specific object, and the projection follows. See T54c.
+**The instance list does not fix it, and that is a correction.** The plan was to read each
+drawable's own viewport X/Y from its instance (FORMATS 3.17), giving objects an identity
+that persists across frames. The instances do not hold those numbers.
+
+Searching **all 640 KB** of conventional memory for the three origins drawn in one frame --
+`(151,61)`, `(167,66)`, `(149,30)` -- as word pairs, in either order, gives **zero hits**.
+A control in the same dump finds `(255,125)` four times, one of them at pool offset 138
+exactly where the record sits, so the search works.
+
+**So a viewport object's screen position is computed per frame and never stored.** It exists
+only in `DI` at the row step. FORMATS 3.17 inferred that "instances carry viewport object
+positions" from the *range* of X/Y values found in a pool scan -- 9..272 by 6..94, which is
+the viewport rectangle -- rather than from matching any drawn position. Values falling in a
+plausible range is not evidence about what a field holds; that is the same mistake as the
+palette group read out of word 0 (3.10).
+
+**What the pool actually contains**, scanned for the `0x7fff` bounding-box sentinel: exactly
+**two** records, at offsets 116 and 154, carrying `(255,125)` and `(319,199)`. Those are
+`main.io`'s two rectangle declarations and nothing else -- consistent with the entity block
+being zero beyond +128 (3.17), and with there being no per-object drawable record for the
+viewport at all.
+
+**What is left to try for identity.** Objects arrive at the row step in an order, and the
+order is probably back-to-front. Tracking "the nth object of the frame" across steps, with
+the scene otherwise unchanged, is the remaining idea -- and it needs the frame capture to be
+complete, which it now is. See T54c.
 
 **Evidence:** the two @2152 sightings from `tools/t54b-frames.py` at `(12,28)` and
 `(12,29)`, and the two @24842 sightings at `(13,43)` and `(13,42)`; the anchor discrepancy
