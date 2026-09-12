@@ -2478,11 +2478,9 @@ Compose rewrite has to do.
       assets hold several. `tools/chains.py` walks them all and took FILES.md from 47.9% to
       **61.8%** named. What remains is the files that did not move -- `marchand.io` is still
       3.8%, and its chain really does end with a different record type.
-      `FILES.md` now measures it: **47.9% of the 2,370,078 decoded asset bytes have a named
-      structure**, and the shortfall is concentrated, not spread. By bytes unexplained:
-      `theend.io` 142,707 · `presen.io` 126,719 · `stage.io` 70,643 · `iboishar.io` 67,905 ·
-      `ville.io` 58,623 · `preson.io` 47,548 · `saub.io` 45,236 · `frise.io` 44,512 ·
-      `mcave.io` 42,602 · `marchand.io` 39,344. Ten files are 686 KB of the 1,236 KB.
+      `FILES.md` measures what is left: **61.8% of the 2,370,078 decoded asset bytes have a
+      named structure**, and the shortfall is concentrated, not spread. By bytes unexplained,
+      after multi-chain walking: `theend.io` 142,707 · `stage.io` 70,643 · `iboishar.io` 67,905 · `preson.io` 47,548 · `saub.io` 45,236 · `marchand.io` 39,344 · `frise.io` 35,309 · `ville.io` 26,304 · `scave.io` 24,926 · `samb.io` 21,592.
       **The framing "the sprite chain stops early" is wrong and the check that shows it is
       one command.** `marchand.io`'s chain ends at 7402 with 32,479 bytes left. What sits
       there is `01 04 00 00 0b 00 01 08 1e 00 09 00 16 00 ff 00 7d 00 dd dd 34 34 34 34` --
