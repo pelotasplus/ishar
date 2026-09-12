@@ -915,6 +915,52 @@ follows from the above: a script decides, and it can consult anything.
 reads each with phantoms filtered; the base pointer read in two sessions; the failed
 viewport comparison in `captures/t11g3d/`.
 
+### 4.15b An asset can hold several sprite chains, and the panel is in the second one
+
+Looking for the sprite that draws the right-hand panel found it **at `frise.io` offset
+51456** -- past the end of the chain `tools/ioscan.py` reports, which stops at 42514.
+
+**The sprite.** 32 x 126, mode `0x10`, palette base 208, drawn at screen **(288, 0)** --
+the full-height right edge of a 320-wide frame. Matched against live video memory:
+**97 of its 126 rows are pixel-perfect**, and every mismatched row is somewhere the game
+composites on top of it:
+
+| rows | what covers it |
+|---|---|
+| 2-9 | the region caption -- `FRAGONIR` in this frame |
+| 22-23, 33, 39-40, 50-51 | the compass needle and its N/E/S/W letters |
+| 52-65 | the DISK button |
+
+**The general finding is bigger than the sprite.** `ioscan.py` picks the single offset whose
+chain explains the most of the file and walks only that one. `frise.io` has **five** chains:
+
+```
+14 sprites at 35964..42514     6,550 bytes    <- the only one ioscan reports
+ 3 sprites at 42584..43568       984
+ 5 sprites at 43574..46766     3,192
+12 sprites at 48382..49822     1,440
+12 sprites at 49944..53752     3,808         <- the panel is in here
+```
+
+46 sprites, not 14, and 29.7% of the file instead of 12.2%.
+
+This is not peculiar to `frise.io`. Walking every chain rather than the best one:
+
+| asset | best chain only | every chain |
+|---|---|---|
+| `temple.io` | 29.3% | **93.4%** |
+| `objet.io` | 19.1% | **79.8%** |
+| `mcave.io` | 50.8% | **77.4%** |
+| `ville.io` | 41.8% | **76.2%** |
+| `marchand.io` | 3.8% | 3.8% -- unchanged, so something else is going on there |
+
+So a large part of what `FILES.md` calls unexplained is **sprites nobody walked to**, not an
+unknown format. `tools/chains.py` finds them all.
+
+**Evidence:** the panel sprite verified against live VRAM at `0xA0000` with the game in
+Fragonir, 3,585 of 3,966 opaque pixels correct and every failure inside a compositing band;
+chain enumeration over the assets above.
+
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
 Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all

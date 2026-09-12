@@ -13,6 +13,7 @@ import os, struct, sys
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(HERE, "tools"))
 import ioscan
+import chains as _chains
 from ioscan import decode, extract, geometry
 
 GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
@@ -38,7 +39,10 @@ def spans(name):
            (2, 8, "format signature 16 00 00 17 00 00", "3.15"),
            (8, 16, "unidentified header bytes", "3.15")]
 
-    sprites = extract(d)
+    # Every chain, not just the best-scoring one: frise.io has five and the panel is in
+    # the fifth (FINDINGS 4.15b). ioscan.extract returns only one.
+    sprites = [(o, w, h) for c in _chains.all_chains(d) for o, w, h, _ in c]
+    sprites.sort()
     for off, w, h in sprites:
         w0 = struct.unpack_from("<H", d, off)[0]
         hdr, stride, size = geometry(w0, w, h)
