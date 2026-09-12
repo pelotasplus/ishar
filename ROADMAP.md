@@ -2896,3 +2896,86 @@ Compose rewrite has to do.
       nothing, so expect that outcome and treat a no-op as informative.*
       **Done when:** FINDINGS gives the value-to-direction mapping for at least two
       directions, or says the byte is not the facing.
+
+
+## Understanding the mechanics (M5)
+
+These share one method, and it is worth stating once. **The VM's global variable area is the
+game's state.** The map sits at `+0x0080`, the party's row/column/facing at `+0x137C`, the
+region id at `+0x3EAC` -- and character stats, money, inventory and quest flags have nowhere
+else to live. Three instruments compose into a loop that answers almost any mechanic:
+
+1. **Diff the globals across an action.** Snapshot, do one thing, snapshot, keep the bytes
+   that moved. This found the party position in a single pass (`tools/t11g3-pos2.py`).
+2. **Watch writes to a global and attribute `DS:SI`.** A `MEMORY_WRITE` breakpoint with the
+   stop believed only when the value actually changed; the script PC names the writer. This
+   found `gerdep.io` @7243 (`tools/t11g3f-writer.py`).
+3. **Read that script offline.** The four dispatch tables, the switch encoding and
+   evaluate-then-store are all decoded, so a rule can be read without the emulator
+   (FINDINGS 4.19e).
+
+Find the byte, find its writer, read the rule. Every task below is that loop.
+
+- [ ] **T59 · Map the global variable area**
+      Everything the scripts read and write is in one flat array, and only three fields in
+      it are named. A map of the rest is the foundation for every mechanic below, and it is
+      cheap: most of it comes from diffing.
+      *Method: snapshot the globals, perform one isolated action, snapshot again, record
+      which bytes moved -- for taking a step, opening a menu, selecting a character, closing
+      a panel, and waiting with no input. Bytes that move on everything are timers; bytes
+      that move on exactly one action are that action's state. Then widen: the party record
+      at `+0x137C` is three fields so far, so dump the 64 bytes around it and see where it
+      ends.*
+      **Done when:** FINDINGS carries a table of global offsets with what each holds and the
+      action that revealed it, for at least twelve fields.
+
+- [ ] **T60 · Find the character records**
+      Five party members with names, portraits, a LIFE bar and an ACTION menu that can give
+      them items and money. Their stats are somewhere in the globals, in five copies.
+      *Method: five copies of one structure is a strong signature -- scan the globals for a
+      repeating stride, then confirm by finding the leader's name (`ARAMIR`, visible on
+      screen) as text and looking at what surrounds it. Cross-check by selecting a different
+      character in the panel and diffing.*
+      **Done when:** FINDINGS gives the record's stride and at least four named fields, with
+      one field confirmed by changing it in game and watching it move.
+
+- [ ] **T61 · What the ACTION verbs actually do**
+      Ten verbs are listed (4.17b) and none is traced. RECRUIT and DISMISS build the party;
+      GIVE MONEY implies a currency; PICK LOCK implies a skill check; FIRST AID implies
+      healing.
+      *Method: one verb per run. Arm the writer probe over the character records from T60,
+      invoke the verb, and see which fields move and which script moved them. PICK LOCK is
+      the most informative -- a skill check needs a stat, a difficulty and a die roll, so
+      whatever it reads is the shape of every other check in the game.*
+      **Done when:** FINDINGS describes what at least three verbs change, naming the script
+      and the fields.
+
+- [ ] **T62 · The murder consequence, and what gates the opening area**
+      Attacking a friendly NPC resets the party to its start cell (4.17), and so does walking
+      too far (6.7b) -- the same outcome from two causes, and `vm_op_consequence_event`
+      (`seg_0000:4b8f`) fires at the moment of the demon frame.
+      *Method: break on `vm_op_consequence_event` and read `DS:SI` to name the script and
+      offset, then read that bytecode. The gate is the more useful half: if it is a condition
+      on a global, that global is a quest flag, and quest state stops being a mystery.*
+      **Done when:** FINDINGS names the script and the condition for at least one of the two
+      resets.
+
+- [ ] **T63 · Combat, from one swing**
+      T21 has never been started and is written as though it needs a monster. It does not:
+      attacking the NPC produces a complete attack sequence, and `vm_op_15` (`seg_0000:28a9`)
+      already measured 7,805 calls on an attack against 0 idle.
+      *Method: with the character records mapped (T60), attack and diff. Damage has to land
+      in a field; whatever is read to compute it is the to-hit rule. Then read the script
+      that wrote it. Do not kill the NPC -- the consequence resets the party and ends the
+      measurement.*
+      **Done when:** FINDINGS names the field damage is written to and the script that
+      writes it.
+
+- [ ] **T64 · Does the game keep time?**
+      A day/night cycle, hunger and spell regeneration would all need a clock, and nothing
+      has looked. `encont.io` runs once at startup and then waits for a trigger nothing has
+      produced (4.17b) -- a timer is a candidate.
+      *Method: falls straight out of T59 -- the bytes that move when the party does nothing
+      at all are timers. Sample the globals twice a minute apart with no input, then check
+      whether any of them is what `encont.io` waits on.*
+      **Done when:** FINDINGS says whether a clock exists and what advances it.
