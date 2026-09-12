@@ -122,15 +122,95 @@ RULES = [
      "file the task in ROADMAP.md, or fix the reference"),
 ]
 
+# Sections written before the Evidence discipline existed. Listed rather than tolerated:
+# the gate stays green, the debt stays visible, and T57 works through it. Do NOT add to
+# this -- a new section without evidence is the failure this check is for.
+EVIDENCE_DEBT = {
+    ("FINDINGS.md", "1.2 Combat"), ("FINDINGS.md", "1.3 Magic"),
+    ("FINDINGS.md", "2.2 Mouse"),
+    ("FORMATS.md", "1.1 MZ header (packed)"),
+    ("FORMATS.md", "1.2 Entry stub (image `+0x0003`)"),
+    ("FORMATS.md", "1.3 Compression \u2014 LZEXE-family bit-stream LZ"),
+    ("FORMATS.md", "1.4 Relocation table"),
+    ("FORMATS.md", "3.1 How the game reads one"),
+    ("FORMATS.md", "8.1 The file on disk (730 bytes)"),
+    ("FORMATS.md", "8.2 The 1432 decoded bytes"),
+    ("FORMATS.md", "9.1 The file on disk (7,868 bytes)"),
+    ("FORMATS.md", "9.2 The decoded 11,272 bytes"),
+    ("FORMATS.md", "9.3 Writing a reader"),
+    ("FORMATS.md", "9.6 The spec, validated by an independent implementation"),
+    ("FORMATS.md", "10.2 All four variants share one asset id"),
+    ("FORMATS.md", "10.3 The string encoding"),
+    ("FORMATS.md", "10.5 How much of these files the strings explain: 8-12%"),
+}
+
+
+def sections_without_evidence():
+    """Sections in FINDINGS/FORMATS carrying no Evidence:, Verified by: or Status line.
+
+    This is the check that would have caught the shear: FORMATS 3.13d had a Verified-by
+    line covering how the routines were FOUND, while the sentence interpreting the two
+    numbers was invented -- but a section with no line at all is the easier failure, and it
+    was never measured.
+    """
+    out = []
+    for doc in ("FINDINGS.md", "FORMATS.md"):
+        path = os.path.join(HERE, doc)
+        if not os.path.exists(path):
+            continue
+        head, body, line_no = None, [], 0
+        def flush():
+            if head and (doc, head) not in EVIDENCE_DEBT and not any(
+                    k in "".join(body) for k in
+                    ("Evidence:", "Verified by:", "Status:", "**Status**", "unresolved",
+                     "Not known", "not established", "Not established")):
+                out.append((doc, line_no, head))
+        for n, line in enumerate(open(path), 1):
+            # Only numbered sections carry findings. Prose subsections like "Ground truth"
+            # or "Control flow" belong to the numbered one above them and share its
+            # evidence line.
+            if line.startswith("### ") and re.match(r"### \d+\.\d", line):
+                flush()
+                head, body, line_no = line.strip()[4:], [], n
+            elif line.startswith("### "):
+                flush()
+                head, body, line_no = None, [], n
+            elif head:
+                body.append(line)
+        flush()
+    return out
+
+
+def identified_visible():
+    """IDENTIFIED entries whose text does not appear in FILES.md.
+
+    Adding to IDENTIFIED is necessary and was twice not sufficient: the generator collapsed
+    a sprite chain and then a script region, swallowing the entry both times. Checking the
+    entry exists proved nothing; checking it is VISIBLE is the real test.
+    """
+    files_md = os.path.join(HERE, "FILES.md")
+    if not os.path.exists(files_md):
+        return []
+    text = open(files_md).read()
+    src = open(os.path.join(HERE, "tools", "anatomy.py")).read()
+    block = src.split("IDENTIFIED = {", 1)[1].split("\n}", 1)[0]
+    out = []
+    for m in re.finditer(r'\("([a-z0-9.]+)",\s*(\d+)\):', block):
+        asset, off = m.group(1), int(m.group(2))
+        # FILES.md renders offsets with thousands separators
+        if f"**@{off}**" in text or f"{off:,}.." in text:
+            continue
+        out.append((asset, off))
+    return out
+
+
 # What this script does NOT check, stated so the gate's coverage is visible rather than
 # assumed. Every line here is a place a finding can still go missing silently -- which is
 # how 25 stranded addresses accumulated while an earlier version of this file passed.
 BLIND_SPOTS = [
     "whether a claim is TRUE -- only a measurement does that",
-    "whether a section carries an Evidence: or Verified by: line",
     "whether a struck or superseded claim has reappeared unstruck elsewhere",
     "whether a number in the prose still matches what its tool prints",
-    "whether an IDENTIFIED entry is actually VISIBLE in FILES.md, or collapsed into a span",
     "anything in ROADMAP.md, CLAUDE.md or the skills",
 ]
 
@@ -161,6 +241,27 @@ def main():
             print(f"  fix: {fix}\n")
         else:
             print(f"ok ({len(have)} known) -- {label}")
+    gaps = sections_without_evidence()
+    if gaps:
+        bad = 1
+        print(f"{len(gaps)} sections with no Evidence:, Verified by: or Status line:")
+        for doc, n, head in gaps:
+            print(f"  {doc}:{n}  {head[:72]}")
+        print("  fix: add the line, or say what is not established\n")
+    else:
+        print("ok -- every section carries evidence")
+
+    hidden = identified_visible()
+    if hidden:
+        bad = 1
+        print(f"{len(hidden)} IDENTIFIED entries not visible in FILES.md:")
+        for asset, off in hidden:
+            print(f"  {asset} @{off}")
+        print("  fix: the generator is collapsing the span; "
+              "run python3 tools/anatomy.py --files and check\n")
+    else:
+        print("ok -- every IDENTIFIED entry is visible in FILES.md")
+
     print("\nnot checked by this script:")
     for b in BLIND_SPOTS:
         print(f"  - {b}")

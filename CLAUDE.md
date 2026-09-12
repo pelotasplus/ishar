@@ -67,12 +67,18 @@ fails on any that is stranded:
 | `captures/x.png` | a file on disk |
 | `T42`, `T11g3f` | an entry in `ROADMAP.md` |
 
+It also fails on **a numbered section with no Evidence: / Verified by: / Status line**, and
+on **an `IDENTIFIED` entry that is not visible in `FILES.md`** -- the second because adding
+the entry was twice not enough, the generator having collapsed the span around it. Seventeen
+sections predate the Evidence discipline and sit in `EVIDENCE_DEBT` so the gate stays green
+and the debt stays countable; T57 works through them, and the rule is *never invent the
+line* -- `Status: not verified` is an acceptable answer and a fabricated citation is not.
+
 **It prints what it does not check.** `BLIND_SPOTS` lists them, so the gate's coverage is
-visible instead of assumed -- whether a claim is *true*, whether a section carries an
-**Evidence:** line, whether a struck claim has reappeared unstruck, whether a number still
-matches what its tool prints, and whether an `IDENTIFIED` entry is actually *visible* in
-`FILES.md` rather than collapsed into a span. Every line there is a way a finding can still
-go missing silently. Read it before trusting a green run.
+visible instead of assumed: whether a claim is *true*, whether a struck claim has reappeared
+unstruck, whether a number still matches what its tool prints, and anything in `ROADMAP.md`
+or the skills. Every line there is a way a finding can still go missing silently. Read it
+before trusting a green run.
 
 **The first version checked only the first row**, because it was written in response to one
 failure -- and code addresses then went missing from `ishar.chani` in exactly the same way,

@@ -1677,6 +1677,11 @@ Treating the two as terminal in traversal was also tried and is wrong: coverage 
 **42.8% -> 8.7%**, which is the strongest evidence that control really does continue past
 them.
 
+**Verified by:** the two handlers read from the listing, each discarding `vm_run`'s
+return address; and the yield theory explicitly **not** established -- four observed
+first-sighting offsets were checked against it and none sits one byte after a `0x42`/`0x43`,
+so it is recorded as unresolved rather than as a finding.
+
 ### 7.2d Traversal: validate a target before following it (T39b)
 
 Recursive traversal of `main.io` stalled 56 times on bytes with no opcode entry. Tracing
@@ -1746,6 +1751,11 @@ eight.
 
 **So a script has more than one entry point**, and the loader entry (24) is only the first.
 That is what T37e should be looking for in other assets -- not one offset per asset.
+
+**Verified by:** an in-edge search over the whole decoded file for any static displacement
+landing on the nine unreached statements, and traversal from `(24, 19919)` then covering
+**100%** of the IP-verified live `DS:SI` samples in `.ish/live-offsets.json`, against 73.5%
+from 24 alone.
 
 ### 7.2g Statement `0x2f` is a jump-table switch
 
@@ -2023,6 +2033,11 @@ records, at 62,445 / 77,192 / 78,295, so parts of it are picture-adjacent, and i
 equal-nibble ratio of 51.8% is consistent with 4bpp somewhere inside.
 
 Tracked as **T47**.
+
+**Status:** nothing established beyond the negatives above. **Verified by:** those
+negatives only -- `tools/ioscan.py` finding zero sprites, `tools/fullscreen.py` rendering
+static at every page anchor, and the stride sweep finding no peak (best 0.43 at 256 with
+every neighbour within 0.02).
 
 ### 3.17 Where on-screen positions come from (T40)
 
@@ -2698,6 +2713,10 @@ nibbles with `stosw` and tests nothing, so it cannot produce the result above. T
 another 4bpp expander -- a masked one -- and 3.13 describes a real routine that is not the
 one in use here. That is the scar in `CLAUDE.md` ("a routine you found by reading is not
 the routine in use") landing on this file. Finding it is T36c.
+
+**Verified by:** `buste.io`'s sprite at 6986 compared pixel by pixel against live VRAM at
+its measured origin (0,147) with the party panel on screen -- the comparison in the table
+above, which is what separated keying the nibble from keying the final index.
 
 ### 3.13c The complete transparency table, from the dispatcher (T36c)
 

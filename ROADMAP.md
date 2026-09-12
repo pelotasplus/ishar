@@ -2713,3 +2713,20 @@ Compose rewrite has to do.
       a second data point on what RECRUIT does.*
       **Done when:** FINDINGS says whether occupancy blocks movement independently of the
       cell value.
+
+- [ ] **T57 · Give the 17 pre-Evidence sections an evidence line**
+      `tools/checkdocs.py` now fails any numbered section in FINDINGS or FORMATS with no
+      **Evidence:** / **Verified by:** / **Status** line. Seventeen predate that discipline
+      and are listed in `EVIDENCE_DEBT` in that script so the gate stays green and the debt
+      stays countable: FINDINGS 1.2, 1.3, 2.2 and FORMATS 1.1-1.4, 3.1, 8.1, 8.2, 9.1-9.3,
+      9.6, 10.2, 10.3, 10.5.
+      They are not all the same job. Some are placeholders that should say **Status: nothing
+      established** (FINDINGS 1.2 Combat, 1.3 Magic). Some rest on work that *was* done and
+      never cited -- FORMATS 1.1-1.4 are the unpacked-image layout, whose gate is
+      `tools/verify-unpack.py`. Some may rest on nothing, and saying so is the result.
+      *Method: one section at a time, and **do not invent the line**. If the evidence cannot
+      be named, write `Status: not verified` and, where it matters, file the measurement as
+      its own task. Remove each entry from `EVIDENCE_DEBT` as it is done, so the count only
+      goes down.*
+      **Done when:** `EVIDENCE_DEBT` is empty, or every remaining entry carries a
+      `Status: not verified` line and a task for the measurement.
