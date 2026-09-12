@@ -1338,10 +1338,25 @@ palette group read out of word 0 (3.10).
 being zero beyond +128 (3.17), and with there being no per-object drawable record for the
 viewport at all.
 
-**What is left to try for identity.** Objects arrive at the row step in an order, and the
-order is probably back-to-front. Tracking "the nth object of the frame" across steps, with
-the scene otherwise unchanged, is the remaining idea -- and it needs the frame capture to be
-complete, which it now is. See T54c.
+**Identity by draw order does not work either, and that is the fourth approach.** The idea
+was that the nth object of a frame is the nth object, so ordinal position gives identity
+without needing to recognise the sprite. It requires the draw sequence to be reproducible,
+which it is not: two frames taken at the same cell after the same key gave **11 and 13
+objects with none identical in the same position**, and widening the quiescence window from
+2.5s to 6s changed the counts but not the conclusion.
+
+The cause is the instrument, not the game. A breakpoint at the row step slows the machine so
+far that a redraw interleaves with everything else, so "one key press" does not map onto
+"one frame" -- some presses are refused and redraw nothing, some produce several bursts.
+
+**So object identity is not available**, by sprite (two trees share one), by tracking (the
+NPC walks, trees are indistinguishable), by the instance list (the numbers are not stored)
+or by draw order (not reproducible). Four approaches, four different reasons.
+
+**What a rewrite should do instead.** Take the projection as `pixels per lateral cell =
+264 / distance` from the two measured slopes, and calibrate the per-sprite anchor by eye
+against a screenshot. That is enough to place objects; it is not a derivation, and it is
+recorded as such.
 
 **Evidence:** the two @2152 sightings from `tools/t54b-frames.py` at `(12,28)` and
 `(12,29)`, and the two @24842 sightings at `(13,43)` and `(13,42)`; the anchor discrepancy

@@ -2803,7 +2803,7 @@ Compose rewrite has to do.
       against an NPC. Pick a tree, pin its cell by finding the move it refuses, and measure
       from there -- a tree cannot walk away and its cell is then exactly known.*
 
-- [~] **T54c · How a viewport object's screen position is computed**
+- [!] **T54c · How a viewport object's screen position is computed**
       The viewport blits 1:1 and the row step gives `DI`, which *is* the destination -- so
       screen position is readable directly (FORMATS 3.13d, FINDINGS 4.15c). What is missing
       is the rule: given the party's cell and an object's cell, where does it land?
@@ -2851,7 +2851,18 @@ Compose rewrite has to do.
       exists only in `DI` at the row step. Three approaches to identity have now failed: the
       framebuffer (cannot see occluded distant sprites), tracking an object (the NPC walks,
       trees are indistinguishable), and the instance list (the numbers are not there).
-      *One idea left, and it needs no new instrument: objects arrive at the row step in an
-      order that is probably back-to-front, so track **the nth object of the frame** across a
-      step with the scene otherwise unchanged. The frame capture is now complete enough for
-      that, which it was not before.*
+      *[!] Tried, and it fails: the draw sequence is **not reproducible**. Two frames at the
+      same cell after the same key gave **11 and 13 objects with none identical in the same
+      position**; widening the quiescence window from 2.5s to 6s changed the counts and not
+      the conclusion (`tools/t54c-order.py`). The cause is the instrument -- a breakpoint at
+      the row step slows the machine so far that a redraw interleaves, so one key press does
+      not map onto one frame.
+      **Four approaches, four different reasons, so this stops.** Identity is unavailable by
+      sprite (two trees share one), by tracking (the NPC walks, trees are alike), by the
+      instance list (the numbers are not stored, FINDINGS 4.15h) and by draw order (not
+      reproducible).
+      **The answer a rewrite gets is a calibration, not a derivation**, and REBUILD says so:
+      `pixels per lateral cell = 264 / distance` from the two measured slopes, with the
+      per-sprite anchor calibrated by eye against a screenshot.
+      If anyone wants better, the route is a **cycle-accurate trace** rather than a
+      breakpoint, so that a frame is a frame -- not a fifth variation on the same probe.*

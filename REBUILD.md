@@ -466,6 +466,16 @@ points and the tree's distance was inferred from its own slope.
 each sprite carries an anchor offset nobody has measured — so two frames of the same object
 give you the slope, and one frame does not give you the position.
 
+### How to place objects, given that
+
+Use `pixels per lateral cell = 264 / distance` and calibrate the rest against a screenshot.
+
+That is a working recipe, not a derivation. Four attempts to derive it failed, each for a
+different reason: sprites do not identify an object (two trees share one), objects cannot be
+tracked (NPCs walk, trees are alike), positions are not stored in memory, and the draw order
+is not reproducible under a breakpoint. If you need better than calibration, the route is a
+cycle-accurate trace rather than a breakpoint, so that a frame is a frame.
+
 ### Not known
 
 - Which sprite of the ladder is chosen at which distance, and how position is derived.
