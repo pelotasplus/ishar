@@ -20,6 +20,19 @@ every run and a waypoint can be written down.
 Addresses are seg:off in RUNTIME segments (what Spice86 shows), or a bare
 linear number. tools/addr.py converts to listing addresses.
 """
+import subprocess as _sp, os as _os
+# The pre-commit gate lives in .githooks, but core.hooksPath is LOCAL config and cannot be
+# committed -- a fresh clone silently has no gate at all. This is the most-run tool here,
+# so it is the cheapest place to notice.
+try:
+    _hp = _sp.run(["git", "config", "core.hooksPath"], capture_output=True, text=True,
+                  cwd=_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))).stdout.strip()
+    if _hp != ".githooks":
+        print("WARNING: pre-commit checks are OFF. Enable with:\n"
+              "    git config core.hooksPath .githooks", flush=True)
+except Exception:
+    pass
+
 import json
 import os
 import re

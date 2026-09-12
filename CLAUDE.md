@@ -61,6 +61,17 @@ and a `TOOLS.md` refresh will each refuse the commit. `--no-verify` bypasses it
 deliberately. This is what the top of this file means by *make a tool refuse* -- three
 prose rules in one session failed to change anything.
 
+**Three holes in it, stated so nobody mistakes the gate for complete:**
+
+- `core.hooksPath` is **local config and cannot be committed**, so a fresh clone has no
+  gate and says nothing. `tools/ish` warns when it is unset, because it is the tool most
+  likely to be run first.
+- `--no-verify` bypasses it. Nothing can stop that; it is in the log if it happens.
+- **It fires at commit, which is after "done" has been said.** Every miss in the session
+  that produced it was found between claiming the work was finished and committing it. A
+  gate at the claim, not at the commit, would have caught them earlier -- there is no
+  mechanism for that yet, and it is the biggest remaining gap.
+
 ### Which document gets what
 
 - Measured a behaviour? `FINDINGS.md`.
