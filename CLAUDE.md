@@ -1170,3 +1170,25 @@ build -- reproduce it **from a fresh boot**, which costs 90 seconds. Everything 
 And the tell was available and skipped: `+0x438C` had no reason to be 16 on a game in
 progress and 0 on a fresh one if it were a step counter with five steps to a unit -- an
 hour of walking is far more than 80 steps.
+
+### A negative search proves nothing if the thing could not have been there
+
+`FINDINGS.md` 6.13 reported that a character's attributes are **not** in the VM's global
+variable area: BORMINH's sheet read 1, 7, 6, 8, 6, and those values occurred nowhere in a
+64 KB snapshot at any stride from 1 to 8, raw or divided by ten. The stride search was
+correct and the snapshot was real. A roadmap task (T68) was filed on the strength of it,
+with a method for finding the second store the result implied.
+
+There is no second store. The array is at `+0x1684`, inside the searched window, and it was
+there in that very snapshot -- holding **ARAMIR's** 16, 14, 11, 12. The snapshot was taken
+while BORMINH was still an NPC standing in a field, so his column was zero. The search
+asked whether a character who had not joined the party yet was in the party's data.
+
+The scar `Search for the value as stored, not as captured` covers a transformed value. This
+is the other half: **a search is also a claim about *when* it ran.** Before writing down a
+negative, say which state the machine was in and whether the thing could have been present
+in it -- one sentence, and it would have saved a task and a published falsehood.
+
+The cheap habit that catches it: search for something you already know is there, in the same
+snapshot, as a positive control. ARAMIR's stats were the control and they were sitting four
+bytes away.

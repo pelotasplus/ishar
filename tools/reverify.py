@@ -71,6 +71,24 @@ def m_arbre_sizes():
 
 
 # (label, measure, documented value, where it is written)
+def m_class_index(name="THIEF"):
+    """The index of a class in messagee.io's list -- the number a character's class byte holds.
+
+    FINDINGS 6.15 reads BORMINH's class byte as 4 and his panel as THIEF. That pairing is
+    what makes the class row identifiable, so the list's order is load-bearing.
+    """
+    d = ioscan.decode(open(os.path.join(GAME, "messagee.io"), "rb").read())[0]
+    names = [m.group(1).decode() for m in
+             re.finditer(rb"\x1e\x04([A-Z][A-Z ]{1,14})\x00", d[0x1bf0:0x1d00])]
+    return names.index(name) if name in names else -1
+
+
+def m_class_count():
+    """How many classes messagee.io lists."""
+    d = ioscan.decode(open(os.path.join(GAME, "messagee.io"), "rb").read())[0]
+    return len(re.findall(rb"\x1e\x04[A-Z][A-Z ]{1,14}\x00", d[0x1bf0:0x1d00]))
+
+
 CLAIMS = [
     ("`.io` files that decode",            m_assets_decode,           98,     "FORMATS 3.6"),
     ("assets needing the 24-bit size",     m_u24_over_64k,             9,     "FORMATS 3.0"),
@@ -80,6 +98,8 @@ CLAIMS = [
     ("dead.io equal-nibble %",             lambda: m_equal_nibble("dead.io"),   25.5, "FORMATS 3.19"),
     ("arbre.io distinct sprite sizes",     m_arbre_sizes,             15,     "FINDINGS 4.15c"),
     ("FILES.md named %",                   m_named_percent,         61.8,     "FILES.md header"),
+    ("messagee.io classes listed",         m_class_count,             16,     "FINDINGS 6.15"),
+    ("THIEF's class index",                m_class_index,              4,     "FINDINGS 6.15"),
 ]
 
 # Numbers that must never go DOWN. This is the guard for the failure CLAUDE.md describes

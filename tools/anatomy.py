@@ -43,6 +43,13 @@ ASSET_NOTES = {
 }
 
 IDENTIFIED = {
+    ("messagee.io", 7048): "the race list: 5 records of `1e 04 <NAME> 00`, index 0..4 -- "
+                           "HUMAIN, ELF, DWARF, ORC, LIZARD (FINDINGS 6.15)",
+    ("messagee.io", 7166): "the class list: 16 records of `1e 04 <NAME> 00`, index 0..15 -- "
+                           "PALADIN..DARK KNIGHT; THIEF is 4 (FINDINGS 6.15)",
+    ("message.io", 7404):  "the class list in French, same 16 records, same order "
+                           "(FINDINGS 6.15)",
+    ("message.io", 7280):  "the race list in French, same 5 records (FINDINGS 6.15)",
     ("frise.io", 51456): "the right panel column, drawn at (288,0) - 97/126 rows "
                          "verified vs VRAM (FINDINGS 4.15b)",
     ("buste.io", 6986):  "a character portrait, drawn at (0,147) - 100% vs VRAM "
@@ -220,6 +227,18 @@ def spans(name):
             out.append((16, end,
                         "UNEXPLAINED (reads as script bytecode, never traversed - no entry set)"
                         if looks else "UNEXPLAINED", ""))
+
+    # Any identified offset the passes above did not already emit as its own row. The
+    # script region has done this for its own marks since gerdep.io @7243 disappeared into
+    # "script bytecode"; the same thing then happened to the class list in messagee.io,
+    # which landed inside a run of 61 strings and was folded away with them. Doing it here,
+    # for every kind of span at once, is the version that does not need repeating.
+    named = {st for st, _, lab, _ in out if lab.startswith("**")}
+    for (a, o) in sorted(IDENTIFIED):
+        if a != name.lower() or o in named or not (0 <= o < len(d)):
+            continue
+        nxt = min([e for st, e, _, _ in out if st <= o < e] + [len(d)])
+        out.append((o, min(o + 32, nxt), f"**@{o}** - {IDENTIFIED[(a, o)]}", "7"))
 
     out = [(s, min(e, len(d)), lab, ref) for s, e, lab, ref in out if s < len(d)]
     out.sort()

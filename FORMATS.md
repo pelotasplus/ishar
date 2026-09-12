@@ -1179,6 +1179,7 @@ rewrite reads `cont*.fic` off disk with no transform.
 | `+0x137C` | party row |
 | `+0x137D` | party column |
 | `+0x150C` | the party roster, 8-byte name slots, one per member |
+| `+0x1664`..`+0x16D3` | character attributes, **column-major**: one 8-byte row per attribute, byte N = party slot N (FINDINGS 6.15) |
 | `+0x1746` | the character-name table, 33 entries of 8 bytes |
 | `+0x2D68` | a byte-identical second copy of that table |
 | `+0x3646` | party row, echoed |

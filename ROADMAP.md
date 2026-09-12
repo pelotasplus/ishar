@@ -2939,7 +2939,7 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       are exact fits of `v = +-1*row + b` across eight snapshots over four rows and four
       columns; the party's own row and column fall out of the same test, as the control.
 
-- [~] **T60 · Find the character records**
+- [x] **T60 · Find the character records**
       Five party members with names, portraits, a LIFE bar and an ACTION menu that can give
       them items and money. Their stats are somewhere in the globals, in five copies.
       *Method: T59 did the first half. The leader's name sits at `+0x472E` in the same
@@ -2955,10 +2955,11 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       recruiting BORMINH and watching `+0x1514` go from zeros to his name -- the only
       zero-to-name transition in 64 KB. The sheet names the fields: name, class, race, level,
       strength, constitution, agility, intelligence.
-      **What is left is where the values live.** They are **not** in the global area: 1, 7,
-      6, 8, 6 does not occur in 64 KB at any stride 1..8, raw or divided by ten. The roster
-      is a list of names, not of records, so the records are somewhere else -- follow the
-      code that renders the sheet rather than searching memory again.
+      **Done (6.15).** There is no per-character record: the attributes are **column-major**,
+      one 8-byte row per attribute with one byte per party slot, at `+0x1664`. Six rows are
+      named -- class, level, strength, constitution, agility, intelligence -- with five of
+      them matching BORMINH's panel exactly in the panel's own order, in a column that was
+      zero before he joined.
 
 - [ ] **T61 · What the ACTION verbs actually do**
       Ten verbs are listed (4.17b) and none is traced. RECRUIT and DISMISS build the party;
@@ -3043,7 +3044,7 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       **Done when:** FINDINGS says whether the blob is the instance pool, with the record
       stride if it is.
 
-- [ ] **T68 · Where character records actually live**
+- [x] **T68 · Where character records actually live**
       T60 found the roster and the sheet's field names and could not find a single attribute
       value anywhere in the 64 KB global array (6.13). So there is a second store, and every
       mechanic that touches a character -- combat, FIRST AID, the team vote, levelling --
@@ -3055,6 +3056,10 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       has now failed once.*
       **Done when:** FINDINGS says where a character's attributes are stored and gives the
       record's layout for at least four fields.
+      **Done (6.15), and the task's own premise was false.** It was filed on 6.13's "not in
+      the global area", which came from searching a 64 KB snapshot for BORMINH's values while
+      BORMINH was still an NPC. The array was at `+0x1684` in that snapshot holding ARAMIR's.
+      `tools/t68-stats.py` over all 640 KB found it on the first try.
 
 - [ ] **T69 · What a party member's vote depends on**
       Recruiting is put to a vote of the existing members and each answers OK or not (6.13).
@@ -3075,3 +3080,26 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       after each to detect the moment movement comes back. Do it on a machine that is
       expendable, since the failure mode is a restart.*
       **Done when:** `drive-ishar` carries the gesture that closes it, demonstrated twice.
+
+- [ ] **T71 · The rows in the attribute array that nothing has moved**
+      Six of the fourteen rows at `+0x1664` are named and two more read 100 for both members,
+      which is what a full LIFE bar looks like (6.15). The rest changed when BORMINH joined
+      and mean nothing yet.
+      *Method: each row needs an action that moves exactly it. FIRST AID on a hurt character
+      separates current health from maximum -- one of the two rows reading 100 should drop
+      and come back. Walking into the NPC's attack does the hurting. For the rest, the sheet
+      is the oracle: the panel shows five numbers, so the rows it does not show are things
+      the player never sees, which makes experience, gold and encumbrance the candidates.*
+      **Done when:** FINDINGS names at least three more rows, each with the action that moved
+      it.
+
+- [ ] **T72 · What the other message-asset lists hold**
+      The class and race lists sit in `messagee.io` as `1e 04 <NAME> 00` records (6.15), and
+      the same file holds 99 strings of which only those 21 are now placed. Spell names, item
+      names and the ACTION verbs are all plausibly in there in the same form, and each list
+      found is an index somebody else's byte is pointing into.
+      *Method: offline. Scan every `message*.io` and `textin*.io` for the `1e 04` marker and
+      group the records by their inter-record bytes -- races carry `0a 10 01`, classes carry
+      `16 fe 0a XX 00`, so the trailer distinguishes one list from another.*
+      **Done when:** `IDENTIFIED` carries every `1e 04` list in `messagee.io` with what each
+      one is, and `FILES.md` shows them.

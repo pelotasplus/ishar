@@ -2559,10 +2559,10 @@ So a character has a name, a **class**, a **race**, a level and four attributes.
 and `HUMAIN` are resident as text at `+0x4FA8` and `+0x4FBA`, in an otherwise empty region
 -- scratch the panel was rendered from, not a record.
 
-**The attribute values are not in the global variable area.** 1, 7, 6, 8, 6 does not occur
-in 64 KB at any stride from 1 to 8, nor does any byte sequence whose values divided by ten
-give them. So character stats live somewhere else, and T60's remaining half is finding
-where -- the roster is a list of names, not of records.
+~~**The attribute values are not in the global variable area.**~~ **That was wrong**, and
+6.15 has them: they sit at `+0x1684` and were in the searched window the whole time. The
+search looked for **BORMINH's** numbers in a snapshot taken **before BORMINH joined** --
+his column was still zero, and the array was sitting there holding ARAMIR's.
 
 **Recruiting is put to a vote.** Committing the panel does not add the member; it opens a
 second panel reading `TEAM VOTE :`, then one line per existing member, then the outcome
@@ -2601,3 +2601,74 @@ corner were each tried and none closed it. Recovering cost an emulator restart.
 **Evidence:** four move attempts, each read from the position bytes; the four close
 attempts above; `captures/t60-inventory.png`.
 
+
+### 6.15 Character attributes are a column-major array (T68)
+
+The party's attributes are **one 8-byte row per attribute, one byte per party slot** -- not
+a record per character. Byte 0 is the first member, byte 1 the second, and bytes 5 to 7 are
+a constant `00 01 00` trailer.
+
+Recruiting BORMINH filled column 1 of twelve rows at once, which is what makes the layout
+legible:
+
+| offset | ARAMIR | BORMINH | what |
+|---|---|---|---|
+| `+0x1664` | 1 | 4 | **class index**, `0xFF` in the three empty slots |
+| `+0x166C` | 1 | 1 | |
+| `+0x1674` | 0 | 0 | unchanged by the recruit |
+| `+0x167C` | 1 | 1 | **LEVEL** |
+| `+0x1684` | 16 | 7 | **STRENGTH** |
+| `+0x168C` | 14 | 6 | **CONSTITUTION** |
+| `+0x1694` | 11 | 8 | **AGILITY** |
+| `+0x169C` | 12 | 6 | **INTELLIGENCE** |
+| `+0x16A4` | 16 | 8 | |
+| `+0x16AC` | 0 | 0 | unchanged by the recruit |
+| `+0x16B4` | 100 | 100 | full for both, so a LIFE candidate |
+| `+0x16BC` | 100 | 100 | full for both |
+| `+0x16C4` | 0 | 0 | unchanged by the recruit |
+| `+0x16CC` | 2 | 1 | |
+
+**Five consecutive rows carry the sheet's five numbers in the sheet's own order.** BORMINH's
+panel reads LEVEL 1, STRENGTH 7, CONSTITUTION 6, AGILITY 8, INTELLIGENCE 6 (6.13), and
+`+0x167C` through `+0x169C` read 1, 7, 6, 8, 6 in column 1. Five exact matches in display
+order, in a column that was all zeros before he joined.
+
+So ARAMIR is **STRENGTH 16, CONSTITUTION 14, AGILITY 11, INTELLIGENCE 12** at level 1 --
+read from the array rather than from a panel, which is the first prediction this layout
+makes.
+
+**`0xFF` marks an empty slot, and only in the class row.** `+0x1664` reads `01 04 ff ff ff`:
+two members and three empty seats. Every other row uses 0 for an empty slot, so this row is
+the one to test occupancy on.
+
+**The class index is into a list in the message asset.** `messagee.io` @7166 holds sixteen
+records of `1e 04 <NAME> 00`:
+
+| 0 PALADIN | 4 THIEF | 8 SPY | 12 ASSASSIN |
+|---|---|---|---|
+| 1 WARRIOR | 5 CLERIC | 9 PRIEST | 13 HYPNOTIST |
+| 2 RANGER | 6 WIZARD | 10 MERCENARY | 14 WITCH |
+| 3 BARBARIAN | 7 ARCHER | 11 PRINCESS | 15 DARK KNIGHT |
+
+BORMINH's class byte is **4** and his panel says **THIEF**. ARAMIR's is 1, so he is a
+WARRIOR.
+
+**The races are five records in the same form** at `messagee.io` @7048: HUMAIN, ELF, DWARF,
+ORC, LIZARD. `HUMAIN` is the French spelling and the English file ships it too. Which row
+holds the race is not settled -- both characters are HUMAIN, so it is one of the rows that
+read 0 for both.
+
+Both lists exist once per language, in the same order, at `message.io` @7280 and @7404 for
+French.
+
+**Evidence:** `tools/t68-stats.py` over 640 KB of RAM, one hit for 7, 6, 8, 6 at stride 8
+with LEVEL 1 one stride before, at linear `0x13FD5` = global `+0x1685`; the before/after
+comparison of `tools/t60-record.py`'s snapshots, in which exactly those twelve rows gained
+a column-1 value; `captures/t60-borminh-sheet.png` for the panel the values are matched
+against; and the class list decoded out of `messagee.io`, where THIEF's index is 4.
+
+**And the negative result this replaces was a measurement of the wrong moment.** 6.13 said
+the attributes were not in the global area, from a stride search over 64 KB that found
+nothing. The array was at `+0x1684` in that very snapshot. What the search looked for was
+BORMINH's values, in a snapshot taken while he was still an NPC -- the column that now
+holds them was zero, and the column that was populated held ARAMIR's 16, 14, 11, 12.

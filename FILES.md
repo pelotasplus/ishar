@@ -58,9 +58,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | [`marchand.io`](#marchandio) | 40,888 | art | 4% | **use directly** — 2 sprites |
 | [`mcave.io`](#mcaveio) | 86,544 | art | 78% | cave |
 | [`medus.io`](#medusio) | 15,536 | art | 42% | **use directly** — 13 sprites |
-| [`message.io`](#messageio) | 8,712 | text | 45% | **use directly** — strings (10) |
+| [`message.io`](#messageio) | 8,712 | text | 46% | **use directly** — strings (10) |
 | [`messaged.io`](#messagedio) | 8,600 | text | 45% | **use directly** — strings (10) |
-| [`messagee.io`](#messageeio) | 8,416 | text | 43% | **use directly** — strings (10) |
+| [`messagee.io`](#messageeio) | 8,416 | text | 44% | **use directly** — strings (10) |
 | [`messagei.io`](#messageiio) | 8,600 | text | 45% | **use directly** — strings (10) |
 | [`minotor.io`](#minotorio) | 20,864 | art | 68% | **use directly** — 32 sprites |
 | [`momo.io`](#momoio) | 23,128 | art | 67% | **use directly** — 11 sprites |
@@ -1144,10 +1144,18 @@ Also carries the **font**: 16x9 glyph sprites, drawn 7 pixels apart (FINDINGS 4.
 | 5,184..5,586 | 402 | UNEXPLAINED |
 | 5,586..6,600 | 1,014 | 39 NUL-terminated strings (+370 b between) (10) |
 | 6,600..6,728 | 128 | UNEXPLAINED |
-| 6,728..8,550 | 1,822 | 63 NUL-terminated strings (+860 b between) (10) |
+| 6,728..7,225 | 497 | 12 NUL-terminated strings (+189 b between) (10) |
+| 7,225..7,280 | 55 | UNEXPLAINED |
+| 7,280..7,312 | 32 | **@7280** - the race list in French, same 5 records (FINDINGS 6.15) (7) |
+| 7,312..7,339 | 27 | UNEXPLAINED |
+| 7,339..7,352 | 13 | 1 NUL-terminated strings (10) |
+| 7,352..7,404 | 52 | UNEXPLAINED |
+| 7,404..7,436 | 32 | **@7404** - the class list in French, same 16 records, same order (FINDINGS 6.15) (7) |
+| 7,436..7,439 | 3 | UNEXPLAINED |
+| 7,439..8,550 | 1,111 | 47 NUL-terminated strings (+494 b between) (10) |
 | 8,550..8,712 | 162 | UNEXPLAINED |
 
-**45.5% named.** **use directly** — strings (10)
+**45.9% named.** **use directly** — strings (10)
 
 ### messaged.io
 
@@ -1190,10 +1198,18 @@ Also carries the **font**: 16x9 glyph sprites, drawn 7 pixels apart (FINDINGS 4.
 | 5,055..5,458 | 403 | UNEXPLAINED |
 | 5,458..6,391 | 933 | 38 NUL-terminated strings (+375 b between) (10) |
 | 6,391..6,519 | 128 | UNEXPLAINED |
-| 6,519..8,257 | 1,738 | 61 NUL-terminated strings (+868 b between) (10) |
+| 6,519..6,994 | 475 | 12 NUL-terminated strings (+189 b between) (10) |
+| 6,994..7,048 | 54 | UNEXPLAINED |
+| 7,048..7,080 | 32 | **@7048** - the race list: 5 records of `1e 04 <NAME> 00`, index 0..4 -- HUMAIN, ELF, DWARF, ORC, LIZARD (FINDINGS 6.15) (7) |
+| 7,080..7,107 | 27 | UNEXPLAINED |
+| 7,107..7,114 | 7 | 1 NUL-terminated strings (10) |
+| 7,114..7,166 | 52 | UNEXPLAINED |
+| 7,166..7,198 | 32 | **@7166** - the class list: 16 records of `1e 04 <NAME> 00`, index 0..15 -- PALADIN..DARK KNIGHT; THIEF is 4 (FINDINGS 6.15) (7) |
+| 7,198..7,200 | 2 | UNEXPLAINED |
+| 7,200..8,257 | 1,057 | 45 NUL-terminated strings (+503 b between) (10) |
 | 8,257..8,416 | 159 | UNEXPLAINED |
 
-**43.5% named.** **use directly** — strings (10)
+**43.9% named.** **use directly** — strings (10)
 
 ### messagei.io
 

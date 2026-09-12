@@ -645,9 +645,36 @@ The sheet the game shows for a character names the fields:
     agility
     intelligence
 
-**Where these are stored is not known.** A character whose sheet read 1, 7, 6, 8, 6 has no
-matching byte sequence anywhere in 64 KB of the global array, at any stride from 1 to 8,
-raw or divided by ten. So character records live outside it.
+They are stored **column-major**: one 8-byte row per attribute, and within a row one byte
+per party slot. There is no per-character record to walk -- to read member `n`, take byte
+`n` of each row.
+
+| offset | attribute |
+|---|---|
+| `+0x1664` | class index, `0xFF` for an empty slot |
+| `+0x167C` | level |
+| `+0x1684` | strength |
+| `+0x168C` | constitution |
+| `+0x1694` | agility |
+| `+0x169C` | intelligence |
+| `+0x16B4`, `+0x16BC` | both read 100 for a healthy character |
+
+Bytes 5 to 7 of every row are a constant `00 01 00`.
+
+The rows between these carry values that do not change when a member joins, so they are not
+per-character, or not yet identified. Which row holds the race is not known: both observed
+characters are HUMAIN.
+
+**Classes** are an index into a list of sixteen in the message asset (`messagee.io` @7166,
+`message.io` @7404 for French), each stored as `1e 04 <NAME> 00`:
+
+    0 PALADIN   4 THIEF    8 SPY         12 ASSASSIN
+    1 WARRIOR   5 CLERIC   9 PRIEST      13 HYPNOTIST
+    2 RANGER    6 WIZARD  10 MERCENARY   14 WITCH
+    3 BARBARIAN 7 ARCHER  11 PRINCESS    15 DARK KNIGHT
+
+**Races** are five records in the same form at `messagee.io` @7048: HUMAIN, ELF, DWARF,
+ORC, LIZARD. `HUMAIN` is spelled that way in the English file too.
 
 ### Recruiting
 
