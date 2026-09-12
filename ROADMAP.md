@@ -2353,6 +2353,20 @@ Compose rewrite has to do.
       `0x13`-`0x1b` -- and compare the captures pairwise before trying to name anything.*
       **Done when:** at least three cell values are matched to a named sprite from a scene
       asset, with the two captures that establish each.
+      *The path from the map read to a decision is now readable end to end, offline
+      (FINDINGS 4.19e). `lacustre.io` 1190 reads `global[0x0080 + index]` and **stores it
+      into frame variable 33** -- statement `0x1e` turns out to be evaluate-then-STORE,
+      dispatching the byte after the expression through the store table, which nothing had
+      recorded. At 1410 a `0x2f` switch dispatches on that variable with bias -54, so on
+      **cell values 0x36..0x39** -- exactly the run in `cont1.fic` at column 17, rows 25-33.
+      Arms are shared (`0x37` and `0x38` go to the same place), and the first thing an arm
+      does is test global `+0x137E`, which is the byte after the party's row and column and
+      **reads 2 while ORIENTATION reports East** -- the first handle on the facing the arrow
+      keys do not change.
+      So there is no cell-to-sprite table: a cell value indexes a hand-written switch. Not
+      met -- the arms were not followed as far as a draw. The shape to look for in any scene
+      asset is `26 80 00` followed within a few statements by `2f` on the variable it was
+      stored into.*
       *Not met, and the reason is the finding (FINDINGS 4.19d). **The capture method does not
       work**: the viewport holds many cells at once, so two cells with the same value ahead
       gave completely different pictures. Tracing the consumer instead: a `MEMORY_READ` on a
@@ -2866,3 +2880,19 @@ Compose rewrite has to do.
       per-sprite anchor calibrated by eye against a screenshot.
       If anyone wants better, the route is a **cycle-accurate trace** rather than a
       breakpoint, so that a frame is a frame -- not a fifth variation on the same probe.*
+
+- [ ] **T58 · Is `+0x137E` the party's facing?**
+      The byte after the party's row and column reads **2** while ACTION -> ORIENTATION
+      reports **East** (FINDINGS 4.19e), and a scene-script switch arm tests it for equality
+      with 2. One observation, so the mapping from value to compass point is unknown and
+      even "it is the facing" rests on that single coincidence.
+      This matters more than its size: movement is absolute N/S/E/W and nothing found so far
+      *sets* facing (6.7b), so this byte is the only lead on a field the game plainly has.
+      *Method: read it while changing what the compass shows. ORIENTATION is a readout, not
+      a control, so find what does change facing -- walking into an NPC, entering a
+      building, or a script event -- and sample the byte before and after. Failing that,
+      write a value into it and see whether the compass rose and the viewport follow, which
+      would settle it in one step; the party-position bytes are a copy and writing them did
+      nothing, so expect that outcome and treat a no-op as informative.*
+      **Done when:** FINDINGS gives the value-to-direction mapping for at least two
+      directions, or says the byte is not the facing.

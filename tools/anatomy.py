@@ -112,6 +112,8 @@ IDENTIFIED = {
                          "(FINDINGS 6.7b)",
     ("gerdep.io", 7271): "writes the party's region id (global 0x3eac); caught live with a "
                          "MEMORY_WRITE breakpoint (FINDINGS 6.7b)",
+    ("lacustre.io", 1410): "switches on the map cell value: `2f 12 21 03 ca ff ..`, "
+                           "selector = cell - 54, so cases 0x36..0x39 (FINDINGS 4.19e)",
     ("lacustre.io", 1190): "reads the world map -- 26 80 00, global[0x0080 + index] -- the "
                            "only code path that touches a map cell (FORMATS 7.2h)",
 }

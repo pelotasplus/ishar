@@ -337,9 +337,29 @@ predict it from the map.
 
 The same reset happens if you attack a friendly NPC.
 
+### What a cell value actually does
+
+It is switched on. In `lacustre.io` the scene script reads the cell, stores it in a
+variable, and dispatches:
+
+    read    global[0x0080 + row,col]  ->  frame variable 33
+    switch  on that variable, selector = value - 54, cases 0x36..0x39
+
+Arms are shared — `0x37` and `0x38` go to the same place — and the first thing an arm does
+is test the party's **facing**.
+
+So a cell value has no meaning on its own. It is an index into a jump table written by hand
+in each scene script, and you either port those switches or reimplement what they do.
+
+### The party record is at least three bytes
+
+    grid_end + 0   row
+    grid_end + 1   column
+    grid_end + 2   facing        reads 2 while ORIENTATION reports East
+
 ### Not known
 
-Which sprite a cell value draws. There is no table — a script decides, in bytecode.
+Which sprite a cell value draws — the switch arms were not followed as far as a draw.
 
 For the same reason, whether a cell blocks movement is not a function of its value alone.
 The same value blocks in one place and not another.

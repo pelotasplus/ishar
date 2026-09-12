@@ -1616,6 +1616,76 @@ them is now possible: `tools/vmi.py --listing` renders expressions infix.
 comparisons by their conditional jump (`jz`, `jnz`, `jle`, `jge`, `jl`, `jg`, in opcode
 order); FORMATS 6.1b carries the full 112-row table.
 
+### 4.19e A map cell reaches a decision: read, store, switch
+
+The path from the world map to a decision is now readable end to end, offline, in
+`lacustre.io`'s bytecode.
+
+**1. Read.** At offset 1190:
+
+```
+1e                     evaluate, then store
+  38                     begin an expression sequence
+    12 18                  frame var 24        -- a subscript
+    40                     push
+    12 19                  frame var 25        -- the other subscript
+    26 80 00               global[0x0080 + index]   -- THE MAP CELL
+  3a                     end the sequence
+12 21                  store byte -> frame var 33
+```
+
+**Statement `0x1e` is evaluate-then-store**, which nothing had recorded: after the
+expression it does `lodsb / mov di,ax / jmp cs:[di+029ch]`, dispatching the next byte
+through the store table. Store `0x12` (`vm_store_byte_var`, `seg_0000:71c1`) is
+`mov es:[bp+di], dl`. So the cell value lands in **frame variable 33**.
+
+**2. Switch.** At offset 1410, statement `0x2f` (FORMATS 7.2g):
+
+```
+2f  12 21  03  ca ff  0a 00  32 00  30 00  58 00
+^   ^      ^   ^      ^------ four signed displacements
+|   |      |   bias = -54
+|   |      case count 3, so cases 0..3
+|   frame var 33 -- the cell value
+switch
+```
+
+Selector is `cell - 54`, valid 0..3, so it dispatches on **cell values 0x36..0x39**:
+
+| cell | goes to |
+|---|---|
+| `0x36` | 1428 |
+| `0x37` | 1470 |
+| `0x38` | 1470 -- shares an arm with 0x37 |
+| `0x39` | 1512 |
+
+Those four values are exactly the run in `cont1.fic` at column 17, rows 25-33:
+`0x38, 0x36, 0x37, 0x36, 0x39, 0x36, 0x39, 0x36, 0x39` -- a vertical structure whose cells
+this switch is written to handle.
+
+**3. The arm tests the party's facing.** Case `0x36` at 1428 opens
+`1f 38 1e 7e 13 4a 00 02 ...` -- load global `0x137E`, compare with 2.
+
+**`+0x137E` is the byte immediately after the party's row and column** (`+0x137C`,
+`+0x137D`), so the party's record is at least three fields. Read live it is **2**, and
+ACTION -> ORIENTATION reports **"E : OSGHIROD"** at the same moment -- so 2 is East, on one
+observation. That is the first handle anyone has had on the facing the arrow keys do not
+change (6.7b).
+
+**What this settles.** A cell value is data; what it *means* is a switch arm in the scene
+script, and arms are shared (`0x37` and `0x38` go to the same place). So there is no
+cell-to-sprite table to extract, and a rewrite either ports these switches or reimplements
+the behaviour. It also shows the shape to look for in every scene asset: `26 80 00`
+followed within a few statements by `2f` on the variable it was stored in.
+
+**Not established:** the path from the arm to a *draw*. The arms were not followed past
+their first branch.
+
+**Evidence:** the bytes above, decoded against the statement, expression and store tables
+`tools/vmi.py` reads out of the image; `seg_0000:291b` and `seg_0000:71c1` read from the
+emulator's disassembler; `+0x137E` read live at `es:[ss:[0bf6] + 0x137e]` with the
+ORIENTATION dialogue on screen (`captures/t11g3d-orient.png`).
+
 ### 4.20 The death screen is a file, and eight other assets were being truncated
 
 Chasing which script draws the demon frame ended somewhere else entirely: **no script

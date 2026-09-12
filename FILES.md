@@ -890,7 +890,9 @@ The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this i
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..1,190 | 1,174 | script bytecode (entry set known, 7.7) (3.16) |
 | 1,190..1,222 | 32 | **@1190** - reads the world map -- 26 80 00, global[0x0080 + index] -- the only code path that touches a map cell (FORMATS 7.2h) (7) |
-| 1,222..3,030 | 1,808 | script bytecode (entry set known, 7.7) (3.16) |
+| 1,222..1,410 | 188 | script bytecode (entry set known, 7.7) (3.16) |
+| 1,410..1,442 | 32 | **@1410** - switches on the map cell value: `2f 12 21 03 ca ff ..`, selector = cell - 54, so cases 0x36..0x39 (FINDINGS 4.19e) (7) |
+| 1,442..3,030 | 1,588 | script bytecode (entry set known, 7.7) (3.16) |
 | 3,030..22,276 | 19,246 | 28 sprites, modes 0x00, 0x10, 16x3 to 80x91 (3.10) |
 | 22,276..22,416 | 140 | UNEXPLAINED |
 | 22,416..23,188 | 772 | 1 palette: marker + 256 x RGB (3.9) |

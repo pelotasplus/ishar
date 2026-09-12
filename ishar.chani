@@ -269,6 +269,13 @@ attr[seg_0000:28c4]: type = code
 attr[seg_0000:2915]: type = code; name = vm_op_eval_reset; comment = [[[
     Opcode 0x1e. Resets the evaluation stack pointer (bx = 277ch, the stack base)
     and calls the expression evaluator at 069a9, falling through into 291b.
+
+    **It is evaluate-then-STORE.** After the expression it swaps the two string workspace
+    pointers, resets BX, then `sub ax,ax / lodsb / mov di,ax / jmp cs:[di+029ch]` -- the
+    next byte is a STORE opcode dispatched through the store table. So the encoding is
+    `1e <expression> <store opcode> <operands>`, and that is how a computed value reaches a
+    variable. lacustre.io 1190 is the worked example: the world map read stored into frame
+    variable 33 (FINDINGS 4.19e).
 ]]]
 attr[seg_0000:291b]: type = code
 attr[seg_0000:2937]: type = code; name = vm_stmt_eval; comment = [[[
@@ -1979,5 +1986,18 @@ attr[seg_0000:7801]: type = code; name = asset_header_catalogue; comment = [[[
 
     So the 24-bit size covers the directory too. Only 5 files take this path: main.io and
     four .fic, and those four have an all-zero header and are probably not this format.
+]]]
+attr[seg_0000:71c1]: type = code; name = vm_store_byte_var; comment = [[[
+    Store opcode 0x12 of the byte-scaled table at cs:[029c]:
+
+        lodsb / sub ah,ah / mov di,ax / mov es:[bp+di], dl
+
+    Writes the accumulator's low byte into the frame variable named by its byte operand.
+    Reached from vm_op_eval_reset (statement 0x1e), which dispatches the byte after the
+    expression through the store table.
+
+    This is where the world map's cell value lands: lacustre.io 1190 reads
+    global[0x0080 + index] and stores it into frame variable 33, which is then switched on
+    at 1410 (FINDINGS 4.19e).
 ]]]
 end
