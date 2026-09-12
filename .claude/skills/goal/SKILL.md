@@ -40,6 +40,13 @@ For every premise the brief lists:
 - Record as you go, not at the end. A finding goes into `FINDINGS.md` (with its
   **Evidence:** line) or `FORMATS.md` (with **Status** and **Verified by**) when it is
   established, not when the session ends.
+- **Then ask which generated file it should have changed, and edit that file's input.**
+  Prose never reaches a generated document. An address goes into `ishar.chani`; an asset
+  offset goes into `IDENTIFIED` in `tools/anatomy.py`, which is what puts it in
+  `FILES.md`. A confirmed sprite once sat in two hand-written documents and stayed
+  invisible in the third for exactly this reason.
+- **If a reimplementer would need it, it also goes in `REBUILD.md`** — the answer only,
+  without how it was found.
 - **Any finding that names an address also goes into `ishar.chani`** -- name, type,
   comment -- and `tools/disasm.sh` gets rerun. Prose alone means the next reader
   re-derives it. This is the step that makes the work cumulative and it is the one that
