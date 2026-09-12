@@ -1680,6 +1680,10 @@ actually are is structural: `ss:[0x644c]` is linear `0x13ccc`, and the level gri
 are the first two bytes past the grid, in the same block. That is also why the listing has
 no `ss:[644c]` reference anywhere: the address is allocated, not linked.
 
+**A new game starts at row 11, column 29 of `cont1.fic`** -- region 0, FRAGONIR, on a cell
+whose value is `0x00`, with the NPC of 4.17 a few steps north. Read on two separate cold
+boots, and it is the cell the gate and the murder consequence both return the party to.
+
 **So movement is absolute, not relative.** The arrow keys are north/south/east/west, and
 the party does not turn -- which is why T29f's "six forward steps per turn" ended against a
 hedge, and why the earlier probe that demanded a coordinate change of exactly +-1 after a

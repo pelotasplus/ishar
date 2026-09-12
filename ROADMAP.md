@@ -2519,10 +2519,15 @@ Compose rewrite has to do.
       derive it: positions are not in the file, they are fields of 38-byte runtime instances
       whose panel entries were never found.
       For a rewrite this does not need deriving. The UI is static and never moves.
-      *Method: one clean gameplay screenshot, and for each of `frise.io`'s and `buste.io`'s
-      sprites find its (x, y) by searching the framebuffer for its decoded pixels at the
-      known palette base -- the T36 technique, which matched the panel immediately even
-      though it never matched the viewport. Record the table; do not chase the mechanism.*
+      **Eight positions are already recorded** and this task should not re-measure them:
+      FORMATS 3.17 lists `(0,147)` -- the leftmost portrait, confirmed pixel-for-pixel
+      against VRAM -- plus `(0,139)`, `(24,157)`, `(0,175)`, `(14,199)`, `(31,152)`,
+      `(19,157)`, `(24,152)`, all polled from `ss:[0c2c]`/`[0c2e]` during a live redraw.
+      What is missing is which **sprite** belongs at each of the seven unconfirmed ones.
+      *Method: decode `frise.io`'s and `buste.io`'s sprites, and for each of the seven
+      positions test which sprite's pixels match the framebuffer there at the known palette
+      base -- the T36 technique, which matched the panel immediately even though it never
+      matched the viewport. Then sweep for positions the redraw poll missed.*
       **Done when:** FORMATS carries an (asset, sprite offset, x, y, palette base) table for
       every chrome sprite, and rendering from it reproduces the panel against a captured
       frame.
