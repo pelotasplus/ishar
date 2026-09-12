@@ -1164,9 +1164,22 @@ must be scripted.
 the player, not the grid the game walks on.
 
 **The grid is indexed `row * 90 + col`, and the game keeps it verbatim.** `cont1.fic` is
-resident at linear `0x129d0` during play, matching the file across all 4,860 bytes, and the
-party's cell is `ss:[0x644c]` (row) / `ss:[0x644d]` (col) -- so a rewrite reads `cont*.fic`
-off disk with no transform. See FINDINGS 6.7b.
+resident at linear `0x129d0` during play, matching the file across all 4,860 bytes -- so a
+rewrite reads `cont*.fic` off disk with no transform.
+
+**It is loaded into the VM's global variable area**, whose base is the far pointer at
+`ss:[0bf6]` (`126b:02a0` = `0x12950` in two sessions). Relative to that base:
+
+| global offset | field |
+|---|---|
+| `+0x0080` | the 90x54 grid, 4,860 bytes |
+| `+0x137C` | party row |
+| `+0x137D` | party column |
+| `+0x3EAC` | region id, 0..20 |
+
+So the world state is one flat byte array the scripts index with `vm_op_load_byte_global`
+(expression `0x1e`), and **the only code that reads a map cell is the expression evaluator**
+-- there is no native map renderer. See FINDINGS 6.7b and 4.19d.
 
 **Verified by:** autocorrelation over three files independently agreeing on 90; the
 rendering itself; the neighbour-count test that isolates `0xCE` as an outline in all

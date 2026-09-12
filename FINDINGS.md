@@ -838,6 +838,59 @@ behind that gate.
 **Evidence:** the four attempts above, each polled with `tools/t44-when.py`; the captures
 `t11g3g-door.png`, `t11g3g-picklock.png`, `t11g3g-picked.png`, `t11g3g-orient.png`.
 
+### 4.19d The map is a VM variable, and cell-to-sprite is a program, not a table
+
+T11g3d set out to match cell values to sprites by walking a line and capturing the viewport
+at each cell. **That does not work**: the viewport holds many cells at once, so two cells
+with the same value gave completely different pictures. The label was never isolating the
+thing being labelled.
+
+Tracing the consumer instead answers a better question. Arming a `MEMORY_READ` breakpoint
+on one grid cell and walking the party onto it gives, reproducibly on two cells, **three
+reads, all at `seg_0000:7153`** -- inside the VM expression evaluator's loop
+(`call 069ab / jmp 7150`). No native rendering routine touches the cell at all.
+
+*(A second site, `seg_0000:93b5`, is the AdLib sequencer whose stream pointer wanders
+through that memory and reads a zero; and `seg_0000:3d64` is `wait_loop`, the idle spin
+that any pause reports. Both are filtered. Two runs that produced only `wait_loop` stops
+were discarded rather than counted -- a memory breakpoint has no IP to check against, so
+the known phantom site is the only guard there is.)*
+
+**So the map is a VM global.** Everything lines up on the base pointer `ss:[0bf6]`, which
+reads `126b:02a0` = linear `0x12950` in two separate sessions:
+
+| | global offset | |
+|---|---|---|
+| the map grid | **+0x0080** | 4,860 bytes, `cont*.fic` verbatim |
+| party row | **+0x137C** | immediately after the grid -- which is what 6.7b's "grid_end" adjacency actually is |
+| party column | **+0x137D** | |
+| region id | **+0x3EAC** | 0..20 into the 21 names (4.19b) |
+
+That reframes the "grid_end" coincidence: the row and column are not *next to* the grid by
+luck, they are the next fields of one structure in the script variable area. And it gives a
+rewrite the honest shape of the thing -- the world state is **one flat byte array the
+scripts index**, not an engine structure with an API.
+
+**The consequence for a rewrite is the finding.** There is no cell-value-to-sprite table to
+extract, because the decision is made in bytecode. A cell value means whatever the scene
+script does with it, so the choices are to port that bytecode or to reimplement the
+behaviour by observation. That also explains 6.7b's "the walked path crosses eight distinct
+walkable values in eighteen cells" and why `plaine.io`/`arbre.io` run only when the view
+changes (T44) -- those are the programs doing the drawing.
+
+**Not established: which script.** The three genuine reads attributed to `gerdep.io`,
+`lacustre.io` and `samb.io`, one sample each -- enough to say scripts read the map, not
+enough to name one. `gerdep` reads as *gestion deplacement* and is the busiest script in the
+game, which makes it the likely mover, but that is etymology plus a call count, not evidence.
+
+**A walkability correction.** `0x0A` refused a move at `(14,29)` (4.19b) and permitted one at
+`(11,40)` in this session. **So blocking is not a function of the cell value alone** -- which
+follows from the above: a script decides, and it can consult anything.
+
+**Evidence:** `tools/t11g3d-reader.py` and `t11g3d-who.py`, two watched cells, three genuine
+reads each with phantoms filtered; the base pointer read in two sessions; the failed
+viewport comparison in `captures/t11g3d/`.
+
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
 Three approaches to deriving the portrait's origin (0, 147) rather than measuring it, all

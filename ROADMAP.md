@@ -2342,7 +2342,7 @@ Compose rewrite has to do.
       **Done when:** FINDINGS says whether the offset holds across two levels, and if it
       does, what else the bytes after the grid hold.
 
-- [ ] **T11g3d · Tie a map cell value to the sprite it draws**
+- [~] **T11g3d · Tie a map cell value to the sprite it draws**
       Twelve walkable values turned up in 38 cells and `cont1` scatters ~50 low values over
       ~1,275 cells, ~25 each -- the shape of per-cell scenery markers over a base of `0x00`
       (FINDINGS 6.7b). No value is tied to a specific sprite, so a rewrite can walk the world
@@ -2353,6 +2353,24 @@ Compose rewrite has to do.
       `0x13`-`0x1b` -- and compare the captures pairwise before trying to name anything.*
       **Done when:** at least three cell values are matched to a named sprite from a scene
       asset, with the two captures that establish each.
+      *Not met, and the reason is the finding (FINDINGS 4.19d). **The capture method does not
+      work**: the viewport holds many cells at once, so two cells with the same value ahead
+      gave completely different pictures. Tracing the consumer instead: a `MEMORY_READ` on a
+      grid cell fires, reproducibly on two cells, **three times at `seg_0000:7153` -- inside
+      the VM expression evaluator**, and nowhere else. No native routine reads the map.
+      **So there is no cell-to-sprite table to extract; the mapping is bytecode.** A rewrite
+      must port the scene scripts or reimplement their behaviour by observation.
+      What that bought: the map is a VM global. Against the base at `ss:[0bf6]` (`0x12950`,
+      the same in two sessions) the grid is `+0x0080`, party row/col `+0x137C`/`+0x137D` and
+      the region id `+0x3EAC` -- so 6.7b's "the position bytes sit at grid_end" is not luck,
+      they are the next fields of one structure. FORMATS 3.12 carries the layout.
+      Also corrected: `0x0A` blocked a move at `(14,29)` and allowed one at `(11,40)`, so
+      **blocking is not a function of the cell value alone** -- which follows, since a script
+      decides and can consult anything.
+      Left: which script. Three genuine reads attributed to `gerdep.io`, `lacustre.io` and
+      `samb.io`, one sample each -- enough to say scripts read the map, not enough to name
+      one. Next: widen that to dozens of samples, then read the reading script's bytecode
+      around its map access with `tools/vmi.py --listing`.*
 
 - [~] **T11g3e · How does the party change region?**
       The six grids are self-contained -- no edge continues into another, each closed by its
