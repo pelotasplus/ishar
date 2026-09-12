@@ -16,6 +16,11 @@ import ioscan
 from ioscan import decode, extract, geometry
 
 GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
+try:
+    import vmi
+    vmi_stmt = set(vmi.STMT)
+except Exception:
+    vmi_stmt = set()
 # assets with a known entry set, i.e. bytecode that has actually been traversed
 try:
     import json
@@ -83,10 +88,14 @@ def spans(name):
         if name.lower() in SCRIPTED:
             out.append((16, end, "script bytecode (entry set known, 7.7)", "3.16"))
         else:
-            # Do NOT call this script just because it sits where script usually sits.
-            # Counting it as accounted-for put theend.io at 100% while nobody could read
-            # a byte of it.
-            out.append((16, end, "UNEXPLAINED", ""))
+            # Say what it looks like, but do NOT count it as accounted for: calling this
+            # script just because it sits where script usually sits put theend.io at 100%
+            # while nobody could read a byte of it. The tell is a statement opcode in the
+            # first two bytes -- 0x1f/0x29/0x14/0x0a are the common openings (FORMATS 7.2b).
+            looks = d[16] in (0x1f, 0x29, 0x14, 0x0a, 0x00) and d[17] in vmi_stmt
+            out.append((16, end,
+                        "UNEXPLAINED (reads as script bytecode, never traversed - no entry set)"
+                        if looks else "UNEXPLAINED", ""))
 
     out = [(s, min(e, len(d)), lab, ref) for s, e, lab, ref in out if s < len(d)]
     out.sort()
@@ -113,7 +122,7 @@ def report(name):
     for s, e, lab, ref in sp:
         tag = f"  [{ref}]" if ref else "  <-- not accounted for"
         print(f"  {s:8}..{e:<8} {e-s:8,}  {lab}{tag}")
-    known = sum(e - s for s, e, lab, _ in sp if lab != "UNEXPLAINED")
+    known = sum(e - s for s, e, lab, _ in sp if not lab.startswith("UNEXPLAINED"))
     print(f"  accounted for: {known:,} / {len(d):,} = {known*100.0/len(d):.1f}%")
 
 
@@ -138,7 +147,7 @@ def compact(sp, gap=96):
         k = kindof(sp[i][2])
         if k is None:
             s0, e0, lab, ref = sp[i]
-            while (out and out[-1][2] == "UNEXPLAINED" and lab == "UNEXPLAINED"
+            while (out and out[-1][2].startswith("UNEXPLAINED") and lab.startswith("UNEXPLAINED")
                    and out[-1][1] == s0):
                 s0 = out.pop()[0]
             out.append((s0, e0, lab, ref))
@@ -156,7 +165,7 @@ def compact(sp, gap=96):
                 elif sp[j][2].startswith("palette marker"):
                     n += 1
                 j += 1
-            elif (sp[j][2] == "UNEXPLAINED" and sp[j][1] - sp[j][0] < gap
+            elif (sp[j][2].startswith("UNEXPLAINED") and sp[j][1] - sp[j][0] < gap
                   and j + 1 < len(sp) and kindof(sp[j + 1][2]) == k):
                 holes += sp[j][1] - sp[j][0]
                 j += 1
@@ -200,7 +209,7 @@ def write_files_md():
             raw, d, sp = spans(n)
         except Exception:
             continue
-        known = sum(e - s for s, e, lab, _ in sp if lab != "UNEXPLAINED")
+        known = sum(e - s for s, e, lab, _ in sp if not lab.startswith("UNEXPLAINED"))
         tk += known; tt += len(d)
         kind, what, use = desc.get(n, ("?", "", ""))
         index.append(f"| [`{n}`](#{n.replace('.', '')}) | {len(d):,} | {kind} | "
@@ -243,7 +252,7 @@ def main():
             except Exception as e:
                 print(f"  {n:14} decode failed ({e})")
                 continue
-            known = sum(e - s for s, e, lab, _ in sp if lab != "UNEXPLAINED")
+            known = sum(e - s for s, e, lab, _ in sp if not lab.startswith("UNEXPLAINED"))
             rows.append((known * 100.0 / len(d), n, known, len(d)))
         rows.sort()
         for pct, n, known, tot in rows:

@@ -657,6 +657,37 @@ The same pass is worth running the other way round. The expression dispatcher at
 expression opcode goes through -- had **no annotation at all** after four sessions of VM
 work, because it was never the subject of a finding, only the road to one.
 
+### A label is not a comment when something keys on it
+
+`tools/anatomy.py` counts a byte as understood when its span's label is not `"UNEXPLAINED"`.
+Making one label more informative -- `"UNEXPLAINED (reads as script bytecode, never
+traversed)"` -- moved the corpus figure from 47.9% to **56.6%** without a single new byte
+being understood, because the new string is not equal to the old one. It looked like
+progress and was published as a headline for about a minute.
+
+Two habits:
+
+- **When a string is load-bearing, make the test structural** -- `startswith`, an enum, a
+  separate boolean field -- never equality against prose that someone will want to improve.
+- **A number that moves when you did not change the measurement is the alarm.** This is the
+  same shape as coverage sliding after an edit that only adds information, and as a headline
+  rising while a component of it collapsed. Both are already in this file. Ask what the
+  number would have been under the old code before believing a jump.
+
+### Read the section before reaching for the emulator
+
+Asked where the UI chrome's positions are defined, I started arming a breakpoint. FORMATS
+3.17 is titled *Where on-screen positions come from*, already carries the whole chain
+(declaration -> entity -> instance -> `+0x0c`/`+0x0e`), already says the panel's position is
+runtime state rather than anything on disk, and already lists eight positions polled from a
+live redraw including the portrait's `(0,147)`.
+
+`CLAUDE.md`'s own table says where things go. Use it as an index before instrumenting:
+`FINDINGS.md` for mechanics, `FORMATS.md` for byte layouts, `FILES.md` for one asset's
+spans, `ROADMAP.md` for what was already tried and failed. The existing scar *Check the
+premise in the file, not in your memory of the file* covers premises; this is the same
+mistake applied to questions.
+
 ### Spice86's GDB stub reports IP as a LINEAR address
 
 `registers()["ip"]` is not the segment offset. At a breakpoint on `seg_0000:93a6` with

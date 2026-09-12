@@ -149,7 +149,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..120 | 104 | UNEXPLAINED |
+| 16..120 | 104 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 120..127 | 7 | 1 NUL-terminated strings (10) |
 | 127..1,194 | 1,067 | UNEXPLAINED |
 | 1,194..1,966 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -168,7 +168,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,302 | 1,286 | UNEXPLAINED |
+| 16..1,302 | 1,286 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,302..9,366 | 8,064 | 5 sprites, mode 0x10 (3.10) |
 | 9,366..11,417 | 2,051 | UNEXPLAINED |
 | 11,417..11,424 | 7 | 1 NUL-terminated strings (10) |
@@ -185,7 +185,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..747 | 731 | UNEXPLAINED |
+| 16..747 | 731 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 747..755 | 8 | 1 NUL-terminated strings (10) |
 | 755..1,978 | 1,223 | UNEXPLAINED |
 | 1,978..9,362 | 7,384 | 14 sprites, mode 0x10 (3.10) |
@@ -206,7 +206,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,774 | 1,758 | UNEXPLAINED |
+| 16..1,774 | 1,758 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,774..2,094 | 320 | 1 NUL-terminated strings (10) |
 
 **16.0% named.** not classified
@@ -220,7 +220,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,501 | 1,485 | UNEXPLAINED |
+| 16..1,501 | 1,485 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,501..1,540 | 39 | 3 NUL-terminated strings (+18 b between) (10) |
 | 1,540..1,914 | 374 | UNEXPLAINED |
 | 1,914..1,984 | 70 | 3 NUL-terminated strings (+42 b between) (10) |
@@ -239,7 +239,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,146 | 2,130 | UNEXPLAINED |
+| 16..2,146 | 2,130 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,146..46,058 | 43,912 | 33 sprites, mode 0x10 (3.10) |
 | 46,058..46,064 | 6 | UNEXPLAINED |
 
@@ -254,7 +254,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,972 | 2,956 | UNEXPLAINED |
+| 16..2,972 | 2,956 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,972..2,981 | 9 | 1 NUL-terminated strings (10) |
 | 2,981..4,410 | 1,429 | UNEXPLAINED |
 | 4,410..16,402 | 11,992 | 14 sprites, mode 0x10 (3.10) |
@@ -303,7 +303,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,026 | 2,010 | UNEXPLAINED |
+| 16..2,026 | 2,010 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,026..10,074 | 8,048 | 18 sprites, mode 0x10 (3.10) |
 | 10,074..10,544 | 470 | UNEXPLAINED |
 
@@ -318,7 +318,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,488 | 1,472 | UNEXPLAINED |
+| 16..1,488 | 1,472 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,488..8,032 | 6,544 | 9 sprites, modes 0x10, 0x14 (3.10) |
 | 8,032..9,240 | 1,208 | UNEXPLAINED |
 
@@ -333,7 +333,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,192 | 1,176 | UNEXPLAINED |
+| 16..1,192 | 1,176 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,192..1,964 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 1,964..1,972 | 8 | unread (3.18) |
 | 1,972..65,972 | 64,000 | 320x200 VGA page, 8bpp indices (3.18) |
@@ -350,7 +350,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,506 | 1,490 | UNEXPLAINED |
+| 16..1,506 | 1,490 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,506..6,362 | 4,856 | 18 sprites, modes 0x10, 0x14 (+128 b between) (3.10) |
 | 6,362..6,482 | 120 | UNEXPLAINED |
 | 6,482..9,250 | 2,768 | 1 sprites, mode 0x10 (3.10) |
@@ -382,7 +382,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,718 | 1,702 | UNEXPLAINED |
+| 16..1,718 | 1,702 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,718..16,062 | 14,344 | 13 sprites, mode 0x10 (3.10) |
 | 16,062..16,296 | 234 | UNEXPLAINED |
 
@@ -397,7 +397,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..300 | 284 | UNEXPLAINED |
+| 16..300 | 284 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 300..307 | 7 | 1 NUL-terminated strings (10) |
 | 307..1,454 | 1,147 | UNEXPLAINED |
 | 1,454..11,686 | 10,232 | 16 sprites, mode 0x10 (3.10) |
@@ -414,7 +414,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..220 | 204 | UNEXPLAINED |
+| 16..220 | 204 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 220..227 | 7 | 1 NUL-terminated strings (10) |
 | 227..1,342 | 1,115 | UNEXPLAINED |
 | 1,342..5,270 | 3,928 | 7 sprites, modes 0x10, 0x14 (+80 b between) (3.10) |
@@ -446,7 +446,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,724 | 2,708 | UNEXPLAINED |
+| 16..2,724 | 2,708 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,724..12,748 | 10,024 | 8 sprites, mode 0x10 (3.10) |
 | 12,748..12,864 | 116 | UNEXPLAINED |
 
@@ -461,7 +461,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,306 | 1,290 | UNEXPLAINED |
+| 16..1,306 | 1,290 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,306..2,078 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 2,078..5,216 | 3,138 | UNEXPLAINED |
 
@@ -476,7 +476,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..5,708 | 5,692 | UNEXPLAINED |
+| 16..5,708 | 5,692 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 5,708..6,480 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 6,480..15,344 | 8,864 | UNEXPLAINED |
 
@@ -508,7 +508,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,546 | 2,530 | UNEXPLAINED |
+| 16..2,546 | 2,530 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,546..5,934 | 3,388 | 10 sprites, modes 0x00, 0x10, 0x14 (+64 b between) (3.10) |
 | 5,934..6,128 | 194 | UNEXPLAINED |
 
@@ -523,7 +523,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..3,546 | 3,530 | UNEXPLAINED |
+| 16..3,546 | 3,530 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 3,546..43,986 | 40,440 | 33 sprites, mode 0x10 (3.10) |
 | 43,986..44,780 | 794 | UNEXPLAINED |
 | 44,780..45,874 | 1,094 | 34 NUL-terminated strings (+830 b between) (10) |
@@ -548,7 +548,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,436 | 1,420 | UNEXPLAINED |
+| 16..1,436 | 1,420 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,436..3,884 | 2,448 | 4 sprites, mode 0x10 (+56 b between) (3.10) |
 | 3,884..4,012 | 128 | UNEXPLAINED |
 | 4,012..7,388 | 3,376 | 5 sprites, mode 0x10 (3.10) |
@@ -610,7 +610,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,320 | 1,304 | UNEXPLAINED |
+| 16..1,320 | 1,304 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,320..16,240 | 14,920 | 3 sprites, mode 0x12 (3.10) |
 | 16,240..17,012 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 17,012..17,056 | 44 | UNEXPLAINED |
@@ -626,7 +626,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,348 | 1,332 | UNEXPLAINED |
+| 16..1,348 | 1,332 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,348..2,120 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 2,120..3,456 | 1,336 | UNEXPLAINED |
 | 3,456..4,768 | 1,312 | 2 sprites, mode 0x10 (3.10) |
@@ -643,7 +643,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,152 | 1,136 | UNEXPLAINED |
+| 16..1,152 | 1,136 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,152..1,257 | 105 | 2 NUL-terminated strings (+88 b between) (10) |
 | 1,257..2,403 | 1,146 | UNEXPLAINED |
 | 2,403..2,414 | 11 | 1 NUL-terminated strings (10) |
@@ -662,7 +662,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,620 | 1,604 | UNEXPLAINED |
+| 16..1,620 | 1,604 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,620..16,428 | 14,808 | 22 sprites, modes 0x10, 0x14 (3.10) |
 | 16,428..16,856 | 428 | UNEXPLAINED |
 
@@ -713,7 +713,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,558 | 1,542 | UNEXPLAINED |
+| 16..1,558 | 1,542 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,558..6,958 | 5,400 | 8 sprites, mode 0x10 (3.10) |
 | 6,958..9,688 | 2,730 | UNEXPLAINED |
 
@@ -728,7 +728,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..752 | 736 | UNEXPLAINED |
+| 16..752 | 736 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 752..768 | 16 | 1 NUL-terminated strings (10) |
 | 768..4,053 | 3,285 | UNEXPLAINED |
 | 4,053..4,064 | 11 | 1 NUL-terminated strings (10) |
@@ -749,7 +749,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,732 | 2,716 | UNEXPLAINED |
+| 16..2,732 | 2,716 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,732..15,388 | 12,656 | 12 sprites, mode 0x10 (3.10) |
 | 15,388..15,752 | 364 | UNEXPLAINED |
 
@@ -764,7 +764,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..884 | 868 | UNEXPLAINED |
+| 16..884 | 868 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 884..891 | 7 | 1 NUL-terminated strings (10) |
 | 891..1,173 | 282 | UNEXPLAINED |
 | 1,173..1,180 | 7 | 1 NUL-terminated strings (10) |
@@ -799,7 +799,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,758 | 1,742 | UNEXPLAINED |
+| 16..1,758 | 1,742 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,758..6,274 | 4,516 | 6 sprites, mode 0x00 (3.10) |
 | 6,274..6,576 | 302 | UNEXPLAINED |
 
@@ -814,7 +814,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..201 | 185 | UNEXPLAINED |
+| 16..201 | 185 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 201..208 | 7 | 1 NUL-terminated strings (10) |
 | 208..798 | 590 | UNEXPLAINED |
 | 798..805 | 7 | 1 NUL-terminated strings (10) |
@@ -876,7 +876,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,460 | 1,444 | UNEXPLAINED |
+| 16..1,460 | 1,444 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,460..13,612 | 12,152 | 16 sprites, mode 0x10 (+64 b between) (3.10) |
 | 13,612..14,700 | 1,088 | UNEXPLAINED |
 | 14,700..15,472 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -893,7 +893,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..11,640 | 11,624 | UNEXPLAINED |
+| 16..11,640 | 11,624 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 11,640..14,080 | 2,440 | 7 sprites, modes 0x10, 0x14 (3.10) |
 | 14,080..14,240 | 160 | UNEXPLAINED |
 | 14,240..21,016 | 6,776 | 11 sprites, modes 0x10, 0x14 (3.10) |
@@ -943,7 +943,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..698 | 682 | UNEXPLAINED |
+| 16..698 | 682 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 698..705 | 7 | 1 NUL-terminated strings (10) |
 | 705..1,856 | 1,151 | UNEXPLAINED |
 | 1,856..20,168 | 18,312 | 4 sprites, modes 0x10, 0x14 (3.10) |
@@ -963,7 +963,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,576 | 1,560 | UNEXPLAINED |
+| 16..1,576 | 1,560 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,576..11,400 | 9,824 | 16 sprites, mode 0x10 (+80 b between) (3.10) |
 | 11,400..11,456 | 56 | UNEXPLAINED |
 | 11,456..12,228 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -980,7 +980,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,221 | 1,205 | UNEXPLAINED |
+| 16..1,221 | 1,205 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,221..1,241 | 20 | 2 NUL-terminated strings (+3 b between) (10) |
 | 1,241..1,440 | 199 | UNEXPLAINED |
 | 1,440..1,667 | 227 | 6 NUL-terminated strings (+166 b between) (10) |
@@ -1063,7 +1063,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..21,368 | 21,352 | UNEXPLAINED |
+| 16..21,368 | 21,352 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 
 **0.1% named.** not classified
 
@@ -1076,7 +1076,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..266 | 250 | UNEXPLAINED |
+| 16..266 | 250 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 266..273 | 7 | 1 NUL-terminated strings (10) |
 | 273..721 | 448 | UNEXPLAINED |
 | 721..728 | 7 | 1 NUL-terminated strings (10) |
@@ -1101,7 +1101,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..16,985 | 16,969 | UNEXPLAINED |
+| 16..16,985 | 16,969 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 16,985..16,993 | 8 | 1 NUL-terminated strings (10) |
 | 16,993..17,464 | 471 | UNEXPLAINED |
 | 17,464..17,505 | 41 | 3 NUL-terminated strings (+16 b between) (10) |
@@ -1202,7 +1202,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,568 | 1,552 | UNEXPLAINED |
+| 16..1,568 | 1,552 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,568..7,928 | 6,360 | 13 sprites, mode 0x10 (+64 b between) (3.10) |
 | 7,928..7,969 | 41 | UNEXPLAINED |
 | 7,969..7,976 | 7 | 1 NUL-terminated strings (10) |
@@ -1219,7 +1219,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..876 | 860 | UNEXPLAINED |
+| 16..876 | 860 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 876..4,338 | 3,462 | 87 NUL-terminated strings (+1,417 b between) (10) |
 | 4,338..4,446 | 108 | UNEXPLAINED |
 | 4,446..4,703 | 257 | 6 NUL-terminated strings (+52 b between) (10) |
@@ -1242,7 +1242,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..876 | 860 | UNEXPLAINED |
+| 16..876 | 860 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 876..4,325 | 3,449 | 86 NUL-terminated strings (+1,422 b between) (10) |
 | 4,325..4,434 | 109 | UNEXPLAINED |
 | 4,434..4,686 | 252 | 6 NUL-terminated strings (+52 b between) (10) |
@@ -1265,7 +1265,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..866 | 850 | UNEXPLAINED |
+| 16..866 | 850 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 866..4,254 | 3,388 | 85 NUL-terminated strings (+1,424 b between) (10) |
 | 4,254..4,362 | 108 | UNEXPLAINED |
 | 4,362..4,604 | 242 | 6 NUL-terminated strings (+52 b between) (10) |
@@ -1288,7 +1288,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..876 | 860 | UNEXPLAINED |
+| 16..876 | 860 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 876..4,289 | 3,413 | 86 NUL-terminated strings (+1,408 b between) (10) |
 | 4,289..4,398 | 109 | UNEXPLAINED |
 | 4,398..4,641 | 243 | 6 NUL-terminated strings (+52 b between) (10) |
@@ -1313,7 +1313,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..332 | 316 | UNEXPLAINED |
+| 16..332 | 316 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 332..339 | 7 | 1 NUL-terminated strings (10) |
 | 339..1,708 | 1,369 | UNEXPLAINED |
 | 1,708..15,348 | 13,640 | 32 sprites, modes 0x10, 0x14 (3.10) |
@@ -1332,7 +1332,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..279 | 263 | UNEXPLAINED |
+| 16..279 | 263 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 279..287 | 8 | 1 NUL-terminated strings (10) |
 | 287..1,418 | 1,131 | UNEXPLAINED |
 | 1,418..10,354 | 8,936 | 9 sprites, mode 0x10 (3.10) |
@@ -1362,7 +1362,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,016 | 2,000 | UNEXPLAINED |
+| 16..2,016 | 2,000 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 
 **0.8% named.** not classified
 
@@ -1375,7 +1375,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..599 | 583 | UNEXPLAINED |
+| 16..599 | 583 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 599..607 | 8 | 1 NUL-terminated strings (10) |
 | 607..1,778 | 1,171 | UNEXPLAINED |
 | 1,778..2,458 | 680 | 3 sprites, mode 0x10 (3.10) |
@@ -1402,7 +1402,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..455 | 439 | UNEXPLAINED |
+| 16..455 | 439 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 455..463 | 8 | 1 NUL-terminated strings (10) |
 | 463..1,714 | 1,251 | UNEXPLAINED |
 | 1,714..4,162 | 2,448 | 4 sprites, mode 0x10 (+56 b between) (3.10) |
@@ -1423,7 +1423,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,771 | 2,755 | UNEXPLAINED |
+| 16..2,771 | 2,755 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,771..2,881 | 110 | 2 NUL-terminated strings (+93 b between) (10) |
 | 2,881..5,463 | 2,582 | UNEXPLAINED |
 | 5,463..5,474 | 11 | 1 NUL-terminated strings (10) |
@@ -1494,7 +1494,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..413 | 397 | UNEXPLAINED |
+| 16..413 | 397 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 413..421 | 8 | 1 NUL-terminated strings (10) |
 | 421..1,580 | 1,159 | UNEXPLAINED |
 | 1,580..3,524 | 1,944 | 5 sprites, mode 0x10 (+72 b between) (3.10) |
@@ -1515,7 +1515,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..299 | 283 | UNEXPLAINED |
+| 16..299 | 283 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 299..355 | 56 | 2 NUL-terminated strings (+42 b between) (10) |
 | 355..475 | 120 | UNEXPLAINED |
 | 475..483 | 8 | 1 NUL-terminated strings (10) |
@@ -1536,7 +1536,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..285 | 269 | UNEXPLAINED |
+| 16..285 | 269 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 285..293 | 8 | 1 NUL-terminated strings (10) |
 | 293..1,412 | 1,119 | UNEXPLAINED |
 | 1,412..9,588 | 8,176 | 7 sprites, modes 0x10, 0x14 (+128 b between) (3.10) |
@@ -1572,7 +1572,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,922 | 2,906 | UNEXPLAINED |
+| 16..2,922 | 2,906 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,922..4,626 | 1,704 | 4 sprites, mode 0x10 (3.10) |
 | 4,626..5,384 | 758 | UNEXPLAINED |
 
@@ -1614,7 +1614,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,400 | 1,384 | UNEXPLAINED |
+| 16..1,400 | 1,384 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,400..9,536 | 8,136 | 9 sprites, modes 0x10, 0x14 (+64 b between) (3.10) |
 | 9,536..14,352 | 4,816 | UNEXPLAINED |
 
@@ -1629,7 +1629,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..92 | 76 | UNEXPLAINED |
+| 16..92 | 76 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 92..99 | 7 | 1 NUL-terminated strings (10) |
 | 99..4,408 | 4,309 | UNEXPLAINED |
 | 4,408..5,180 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -1704,7 +1704,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..12,382 | 12,366 | UNEXPLAINED |
+| 16..12,382 | 12,366 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 12,382..13,154 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 13,154..13,309 | 155 | UNEXPLAINED |
 | 13,309..14,081 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -1725,7 +1725,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..231 | 215 | UNEXPLAINED |
+| 16..231 | 215 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 231..242 | 11 | 1 NUL-terminated strings (10) |
 | 242..398 | 156 | UNEXPLAINED |
 | 398..22,172 | 21,774 | 9 sprites, mode 0x00 (3.10) |
@@ -1742,7 +1742,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..5,004 | 4,988 | UNEXPLAINED |
+| 16..5,004 | 4,988 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 5,004..7,339 | 2,335 | 73 NUL-terminated strings (+725 b between) (10) |
 | 7,339..7,416 | 77 | UNEXPLAINED |
 | 7,416..27,976 | 20,560 | 24 sprites, mode 0x00 (3.10) |
@@ -1825,7 +1825,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..15,922 | 15,906 | UNEXPLAINED |
+| 16..15,922 | 15,906 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 15,922..16,694 | 772 | 1 palette: marker + 256 x RGB (3.9) |
 | 16,694..46,024 | 29,330 | UNEXPLAINED |
 
@@ -1840,7 +1840,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..76 | 60 | UNEXPLAINED |
+| 16..76 | 60 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 76..402 | 326 | 12 NUL-terminated strings (+242 b between) (10) |
 | 402..12,789 | 12,387 | UNEXPLAINED |
 | 12,789..12,883 | 94 | 1 NUL-terminated strings (10) |
@@ -1861,7 +1861,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..4,118 | 4,102 | UNEXPLAINED |
+| 16..4,118 | 4,102 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 4,118..4,125 | 7 | 1 NUL-terminated strings (10) |
 | 4,125..7,449 | 3,324 | UNEXPLAINED |
 | 7,449..8,221 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -1882,7 +1882,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..290 | 274 | UNEXPLAINED |
+| 16..290 | 274 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 290..297 | 7 | 1 NUL-terminated strings (10) |
 | 297..1,428 | 1,131 | UNEXPLAINED |
 | 1,428..8,212 | 6,784 | 11 sprites, mode 0x10 (+80 b between) (3.10) |
@@ -1899,7 +1899,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..772 | 756 | UNEXPLAINED |
+| 16..772 | 756 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 772..779 | 7 | 1 NUL-terminated strings (10) |
 | 779..2,006 | 1,227 | UNEXPLAINED |
 | 2,006..6,804 | 4,798 | 11 sprites, modes 0x00, 0x10 (3.10) |
@@ -1920,7 +1920,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..165 | 149 | UNEXPLAINED |
+| 16..165 | 149 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 165..302 | 137 | 6 NUL-terminated strings (+86 b between) (10) |
 | 302..472 | 170 | UNEXPLAINED |
 | 472..1,506 | 1,034 | 29 NUL-terminated strings (+402 b between) (10) |
@@ -1947,7 +1947,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..165 | 149 | UNEXPLAINED |
+| 16..165 | 149 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 165..302 | 137 | 6 NUL-terminated strings (+86 b between) (10) |
 | 302..472 | 170 | UNEXPLAINED |
 | 472..1,416 | 944 | 29 NUL-terminated strings (+402 b between) (10) |
@@ -1974,7 +1974,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..165 | 149 | UNEXPLAINED |
+| 16..165 | 149 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 165..302 | 137 | 6 NUL-terminated strings (+86 b between) (10) |
 | 302..472 | 170 | UNEXPLAINED |
 | 472..1,326 | 854 | 29 NUL-terminated strings (+402 b between) (10) |
@@ -2001,7 +2001,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..165 | 149 | UNEXPLAINED |
+| 16..165 | 149 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 165..302 | 137 | 6 NUL-terminated strings (+86 b between) (10) |
 | 302..472 | 170 | UNEXPLAINED |
 | 472..1,415 | 943 | 29 NUL-terminated strings (+402 b between) (10) |
@@ -2043,7 +2043,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..354 | 338 | UNEXPLAINED |
+| 16..354 | 338 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 354..361 | 7 | 1 NUL-terminated strings (10) |
 | 361..1,476 | 1,115 | UNEXPLAINED |
 | 1,476..9,804 | 8,328 | 10 sprites, mode 0x10 (3.10) |
@@ -2060,7 +2060,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,322 | 1,306 | UNEXPLAINED |
+| 16..1,322 | 1,306 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,322..4,586 | 3,264 | 4 sprites, mode 0x10 (3.10) |
 | 4,586..4,712 | 126 | UNEXPLAINED |
 
@@ -2075,7 +2075,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..341 | 325 | UNEXPLAINED |
+| 16..341 | 325 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 341..348 | 7 | 1 NUL-terminated strings (10) |
 | 348..635 | 287 | UNEXPLAINED |
 | 635..642 | 7 | 1 NUL-terminated strings (10) |
@@ -2108,7 +2108,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,664 | 2,648 | UNEXPLAINED |
+| 16..2,664 | 2,648 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 2,664..5,128 | 2,464 | 11 sprites, mode 0x10 (+72 b between) (3.10) |
 | 5,128..5,425 | 297 | UNEXPLAINED |
 | 5,425..5,869 | 444 | 14 NUL-terminated strings (+320 b between) (10) |
@@ -2131,7 +2131,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..2,016 | 2,000 | UNEXPLAINED |
+| 16..2,016 | 2,000 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 
 **0.8% named.** not classified
 
@@ -2144,7 +2144,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..14,291 | 14,275 | UNEXPLAINED |
+| 16..14,291 | 14,275 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 14,291..14,417 | 126 | 1 NUL-terminated strings (10) |
 | 14,417..21,212 | 6,795 | UNEXPLAINED |
 | 21,212..21,446 | 234 | 3 NUL-terminated strings (+75 b between) (10) |
@@ -2177,7 +2177,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..324 | 308 | UNEXPLAINED |
+| 16..324 | 308 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 324..1,406 | 1,082 | 21 NUL-terminated strings (+271 b between) (10) |
 | 1,406..1,595 | 189 | UNEXPLAINED |
 | 1,595..7,125 | 5,530 | 109 NUL-terminated strings (+1,251 b between) (10) |
@@ -2200,7 +2200,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..324 | 308 | UNEXPLAINED |
+| 16..324 | 308 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 324..1,410 | 1,086 | 21 NUL-terminated strings (+271 b between) (10) |
 | 1,410..1,599 | 189 | UNEXPLAINED |
 | 1,599..7,010 | 5,411 | 109 NUL-terminated strings (+1,251 b between) (10) |
@@ -2225,7 +2225,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..324 | 308 | UNEXPLAINED |
+| 16..324 | 308 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 324..1,418 | 1,094 | 21 NUL-terminated strings (+271 b between) (10) |
 | 1,418..1,606 | 188 | UNEXPLAINED |
 | 1,606..6,995 | 5,389 | 109 NUL-terminated strings (+1,251 b between) (10) |
@@ -2248,7 +2248,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..324 | 308 | UNEXPLAINED |
+| 16..324 | 308 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 324..1,351 | 1,027 | 21 NUL-terminated strings (+271 b between) (10) |
 | 1,351..1,539 | 188 | UNEXPLAINED |
 | 1,539..6,884 | 5,345 | 110 NUL-terminated strings (+1,259 b between) (10) |
@@ -2271,7 +2271,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..153 | 137 | UNEXPLAINED |
+| 16..153 | 137 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 153..164 | 11 | 1 NUL-terminated strings (10) |
 | 164..400 | 236 | UNEXPLAINED |
 | 400..457 | 57 | 2 NUL-terminated strings (+39 b between) (10) |
@@ -2308,7 +2308,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..3,176 | 3,160 | UNEXPLAINED |
+| 16..3,176 | 3,160 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 3,176..21,110 | 17,934 | 21 sprites, modes 0x00, 0x10 (+40 b between) (3.10) |
 | 21,110..21,846 | 736 | UNEXPLAINED |
 | 21,846..22,618 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -2327,7 +2327,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..15,578 | 15,562 | UNEXPLAINED |
+| 16..15,578 | 15,562 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 15,578..52,498 | 36,920 | 55 sprites, mode 0x10 (+328 b between) (3.10) |
 | 52,498..53,236 | 738 | UNEXPLAINED |
 | 53,236..54,008 | 772 | 1 palette: marker + 256 x RGB (3.9) |
@@ -2466,7 +2466,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,442 | 1,426 | UNEXPLAINED |
+| 16..1,442 | 1,426 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,442..4,210 | 2,768 | 4 sprites, mode 0x10 (3.10) |
 | 4,210..4,330 | 120 | UNEXPLAINED |
 | 4,330..6,980 | 2,650 | 8 sprites, modes 0x00, 0x10 (3.10) |
@@ -2483,7 +2483,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,844 | 1,828 | UNEXPLAINED |
+| 16..1,844 | 1,828 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,844..8,124 | 6,280 | 13 sprites, mode 0x10 (3.10) |
 | 8,124..9,816 | 1,692 | UNEXPLAINED |
 
@@ -2498,7 +2498,7 @@ Section numbers in the `what` column point at FORMATS.md.
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..1,950 | 1,934 | UNEXPLAINED |
+| 16..1,950 | 1,934 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
 | 1,950..7,686 | 5,736 | 21 sprites, mode 0x10 (3.10) |
 | 7,686..8,021 | 335 | UNEXPLAINED |
 | 8,021..8,793 | 772 | 1 palette: marker + 256 x RGB (3.9) |
