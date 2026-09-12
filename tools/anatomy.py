@@ -17,6 +17,16 @@ import chains as _chains
 from ioscan import decode, extract, geometry
 
 GAME = os.path.join(HERE, "ishar_legend_of_the_fortress_DOSGamer.com")
+
+# Sprites identified against the running game. Keyed (asset, payload offset). Add to this
+# as they are confirmed -- a sprite named here is broken out of its chain in FILES.md
+# instead of disappearing into "N sprites", which is what made it invisible the first time.
+IDENTIFIED = {
+    ("frise.io", 51456): "the right panel column, drawn at (288,0) - 97/126 rows "
+                         "verified vs VRAM (FINDINGS 4.15b)",
+    ("buste.io", 6986):  "the leftmost portrait, drawn at (0,147) - verified vs VRAM "
+                         "(FORMATS 3.13b)",
+}
 try:
     import vmi
     vmi_stmt = set(vmi.STMT)
@@ -46,8 +56,13 @@ def spans(name):
     for off, w, h in sprites:
         w0 = struct.unpack_from("<H", d, off)[0]
         hdr, stride, size = geometry(w0, w, h)
-        out.append((off, off + hdr, f"sprite header, mode {w0 & 0xff:#04x}, {w}x{h}", "3.10"))
-        out.append((off + hdr, off + size, f"sprite pixels ({stride} bytes/row)", "3.10"))
+        known = IDENTIFIED.get((name.lower(), off))
+        if known:
+            out.append((off, off + size,
+                        f"**{w}x{h} sprite, mode {w0 & 0xff:#04x}** - {known}", "3.10"))
+        else:
+            out.append((off, off + hdr, f"sprite header, mode {w0 & 0xff:#04x}, {w}x{h}", "3.10"))
+            out.append((off + hdr, off + size, f"sprite pixels ({stride} bytes/row)", "3.10"))
 
     # Scan for the marker directly. ioscan.palettes() adds a white/black group test that
     # a full-page asset's palette does not pass, and it returns nothing for dead.io.
@@ -138,6 +153,8 @@ def compact(sp, gap=96):
     this file readable. Gaps of `gap` bytes or more stay visible on their own.
     """
     def kindof(lab):
+        if lab.startswith("**"):
+            return None                      # identified: keep it on its own row
         if lab.startswith(("sprite header", "sprite pixels")):
             return "sprites"
         if lab.startswith("string ("):

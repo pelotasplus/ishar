@@ -232,7 +232,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
 | 16..2,146 | 2,130 | UNEXPLAINED (reads as script bytecode, never traversed - no entry set) |
-| 2,146..46,058 | 43,912 | 33 sprites, mode 0x10 (3.10) |
+| 2,146..6,986 | 4,840 | 4 sprites, mode 0x10 (3.10) |
+| 6,986..8,146 | 1,160 | **64x36 sprite, mode 0x10** - the leftmost portrait, drawn at (0,147) - verified vs VRAM (FORMATS 3.13b) (3.10) |
+| 8,146..46,058 | 37,912 | 28 sprites, mode 0x10 (3.10) |
 | 46,058..46,064 | 6 | UNEXPLAINED |
 
 **95.4% named.** **use directly** — 33 sprites
@@ -544,7 +546,9 @@ Section numbers in the `what` column point at FORMATS.md.
 | 46,766..48,382 | 1,616 | UNEXPLAINED |
 | 48,382..49,822 | 1,440 | 12 sprites, mode 0x10 (3.10) |
 | 49,822..49,944 | 122 | UNEXPLAINED |
-| 49,944..53,752 | 3,808 | 12 sprites, modes 0x10, 0x14 (3.10) |
+| 49,944..51,456 | 1,512 | 9 sprites, modes 0x10, 0x14 (3.10) |
+| 51,456..53,480 | 2,024 | **32x126 sprite, mode 0x10** - the right panel column, drawn at (288,0) - 97/126 rows verified vs VRAM (FINDINGS 4.15b) (3.10) |
+| 53,480..53,752 | 272 | 2 sprites, mode 0x10 (3.10) |
 | 53,752..53,808 | 56 | UNEXPLAINED |
 
 **34.4% named.** **art usable** (14 sprites); logic to reimplement
