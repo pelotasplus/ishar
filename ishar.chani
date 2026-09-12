@@ -2000,4 +2000,49 @@ attr[seg_0000:71c1]: type = code; name = vm_store_byte_var; comment = [[[
     global[0x0080 + index] and stores it into frame variable 33, which is then switched on
     at 1410 (FINDINGS 4.19e).
 ]]]
+
+attr[seg_0000:336f]: type = code; name = vm_stmt_49; comment = [[[
+    Statement 0x49, the payload a scene script's map-cell switch runs (FINDINGS 4.19f).
+
+    Clears ss:[0c15], stores es:[bp-3] into ss:[0c12], then evaluates FOUR expressions:
+    three into ss:[0c02], ss:[0c04], ss:[0c06] and a fourth, via loc_seg_0000_0699e, into
+    ss:[0c0e]. Falls into the shared tail at 337d and on to 3415.
+
+    In lacustre.io the four operands are wordvar20, wordvar16, wordvar22 and
+    CONST + bytevar32, where CONST is the ONLY thing that differs between the switch arms:
+    0x1d for cell value 0x36, 0x23 for 0x37, 0x38 and 0x39.
+
+    Fires 5 times in 40s of walking (tools/bphits.py 0x336f), so it runs in the phase the
+    question is about, not only at startup.
+]]]
+
+attr[seg_0000:337d]: type = code; name = vm_stmt_xyz_common; comment = [[[
+    The tail shared by statements 0x49, 0xa7, 0xa9 and 0xab -- four `call
+    loc_seg_0000_069a6` into ss:[0c02], ss:[0c04], ss:[0c06] and ss:[0c0e], then
+    `jmp loc_seg_0000_03415`. Statements 0xa6, 0xa8 and 0xaa share a sibling tail at 334d.
+    ss:[0c15] is 0 for 0x49 and 0xa6/0xa7, 1 for 0xa8..0xab, so it is a mode flag over one
+    family of eight.
+
+    A breakpoint here catches the whole family, not 0x49 alone -- which is why the operand
+    values sampled at 33a0 cannot be attributed to a single statement.
+]]]
+
+attr[seg_0000:39fd]: type = code; name = script_table_lookup_x4; comment = [[[
+    Resolves the index in DX to a table entry: `lds bx, es:[bp-14h]` then
+    `add bx,[bx+0eh]` / `add bx,[bx]` to reach the running asset's own directory, then
+    `add bx,dx` four times -- base + 4*index -- and reads CX and AX from [bx] and [bx+2].
+
+    So statement 0x49's fourth operand is an INDEX into a table of 4-byte entries inside
+    the asset, and the cell value chooses which entry through the constant in its switch
+    arm (FINDINGS 4.19f).
+]]]
+
+attr[seg_0000:3415]: type = code; name = vm_stmt_xyz_dispatch; comment = [[[
+    Where the 0x49 family lands. Clears ss:[0c13], calls script_table_lookup_x4, reads the
+    byte the entry points at and branches on its sign: 0xfe goes to 59a8, anything else to
+    34b7, which calls ui_menu_draw_loop among others.
+
+    This is as far as the map-cell path has been followed statically (FINDINGS 4.19f).
+]]]
+
 end

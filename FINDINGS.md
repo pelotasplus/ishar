@@ -2444,7 +2444,7 @@ move on an `idle`, against roughly 1,300 on a single step.
 | `+0x0080` | the 90x54 map grid, 4,860 bytes | 6.7b |
 | `+0x137C` | party row | changes by one on Up/Down, eight samples |
 | `+0x137D` | party column | changes by one on Left/Right, eight samples |
-| `+0x137E` | **not the facing** | constant at 2 across six moves in two axes |
+| `+0x137E` | a direction, **not written by movement** | constant at 2 across six moves in two axes; scene scripts test it against 2 and 4 (4.19f) |
 | `+0x150C` | **the party roster: 8-byte name slots, one per member** | `+0x1514` went from zeros to `BORMINH` when he joined (6.13) |
 | `+0x1746` | **the character-name table: 33 entries of 8 bytes** | the names read as text |
 | `+0x2D68` | a second, byte-identical copy of that table | compared, 256 bytes equal |
@@ -2842,3 +2842,91 @@ over the assets that happened to decode.
 `2590 + 28 * 8`; the two `u16` arrays read directly out of the file; entity 0's `(15,29)`
 against the walked observations in 4.15i, which were taken from the party's position bytes
 rather than from the screen.
+
+### 4.19f Following the switch arm: what a map cell actually selects (T75)
+
+4.19e got as far as the switch. Each of its arms is now decoded, and they differ in exactly
+one byte.
+
+**Every arm ends in the same jump.** `0a <disp16>`, relative to the byte after the operand:
+`0a ff 00` at 1424, `0a d5 00` at 1466 and `0a ab 00` at 1508 all land on **1682**. Three
+different displacements reaching one address is what fixes the jump encoding.
+
+**The arms test the party's direction first.**
+
+```
+1f 38                     evaluate a sequence
+   1e 7e 13   4a   00 02      global[0x137E] == 2
+   40
+   1e 7e 13   4a   00 04      global[0x137E] == 4
+   44                         |
+   36 3a
+14 10 00                  if zero, jump past the payload
+```
+
+Expression `0x4a` is `==` and `0x44` is `|` (FORMATS 6.1), so the test is *direction is 2 or
+4* -- two of four compass values. Cell `0x36` and cells `0x37`/`0x38` both gate on it; cell
+`0x39` runs its payload unconditionally and tests direction afterwards.
+
+This is the other half of the `+0x137E` question. 6.11 measured that **movement never writes
+it**, which ruled out the reading that arrow keys turn the party. A scene script comparing it
+against 2 and 4 is the first evidence from the other side that it *is* a direction. Both
+facts hold together: the party's heading changes by something other than walking.
+
+**The payload is statement `0x49`, and the arms differ only in a constant.**
+
+```
+49                        statement 0x49
+   14 14                     word variable 20
+   14 10                     word variable 16
+   14 16                     word variable 22
+   38 00 1d 56 12 20 3a      ( 0x1D + byte variable 32 )
+```
+
+| cell value | constant |
+|---|---|
+| `0x36` | **0x1D** |
+| `0x37`, `0x38` | **0x23** |
+| `0x39` | **0x23** |
+
+Everything else in the three payloads is byte-identical. **So the map cell's whole effect,
+in this scene, is to choose a number.**
+
+**That number is an index into a table inside the asset.** `vm_stmt_49` at `seg_0000:336f`
+evaluates the four operands into `ss:[0c02]`, `ss:[0c04]`, `ss:[0c06]` and `ss:[0c0e]`, then
+falls through to the tail at `337d` and on to `3415`, which calls `script_table_lookup_x4`
+at `seg_0000:39fd`:
+
+```
+lds bx, es:[bp-14h]     the running asset
+add bx, [bx+0eh]        its directory
+add bx, [bx]
+add bx, dx  (x4)        base + 4 * index
+mov cx, [bx] / mov ax, [bx+2]
+```
+
+Four-byte entries, indexed by the number the cell chose. `3415` then reads the byte that
+entry points at and branches on its sign -- `0xfe` goes one way, anything else to `34b7`,
+which calls `ui_menu_draw_loop` among others.
+
+**`0x49` is one of a family of eight.** Statements `0x49`, `0xa7`, `0xa9` and `0xab` share
+the tail at `337d`; `0xa6`, `0xa8` and `0xaa` share a sibling at `334d`. `ss:[0c15]` is 0 for
+the first group and 1 for the second, so it is a mode flag over one family.
+
+**Live, while walking:** `seg_0000:336f` fires 5 times in 40 seconds of stepping back and
+forth. Sampled at `33a0`, after all four operands are evaluated, `ss:[0c02]` is a signed
+value ranging -200..288 while `ss:[0c04]` holds one of a few constants (594, 495) across a
+run of consecutive hits and `ss:[0c06]` is small and negative. That is the shape of a
+coordinate triple with a fixed depth per group, which is what the statement looks like from
+the code as well.
+
+**Stated as unfinished:** the sampled values cannot be attributed to `0x49` alone, because
+`33a0` is the tail four statements share. Separating them needs a breakpoint at each entry
+rather than at the join, and the last step -- from `34b7` to a routine that writes pixels --
+has not been walked.
+
+**Evidence:** the bytes above read out of decoded `lacustre.io` at 1410..1540, with the three
+jump displacements independently resolving to 1682; the handlers read from
+`ishar-listing.txt` and annotated in `ishar.chani` as `vm_stmt_49`, `vm_stmt_xyz_common`,
+`script_table_lookup_x4` and `vm_stmt_xyz_dispatch`; `tools/bphits.py 0x336f 40` for the hit
+count and `tools/t75-drawcall.py` for the operand samples, both taken with the party walking.

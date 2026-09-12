@@ -3125,3 +3125,31 @@ Find the byte, find its writer, read the rule. Every task below is that loop.
       **Done when:** a single search helper reads both forms, and the negatives recorded in
       FINDINGS have been re-run through it.
 
+- [~] **T75 · Follow the map cell's switch arm to the draw**
+      4.19e stopped at the switch. The arms are now decoded (4.19f): each ends in statement
+      `0x49` with four operands, and the arms differ in **one constant** -- `0x1D` for cell
+      `0x36`, `0x23` for `0x37`/`0x38`/`0x39` -- which indexes a table of 4-byte entries in
+      the running asset. `seg_0000:336f`, `337d`, `39fd` and `3415` are annotated.
+      **Two steps left.** The operand samples were taken at `33a0`, the tail four statements
+      share, so they belong to the family rather than to `0x49`; and `34b7` has not been
+      walked as far as a routine that writes pixels.
+      *Method: break at each family entry (`336f`, `33c4`, `33dc`, `33ec`) rather than at the
+      join, so the samples separate. Then follow `34b7` -> `35cf` / `3626` / `3a4a` and see
+      which reaches `seg_0e97`'s expanders, the three routines already known to draw the
+      viewport (FORMATS 3.13d).*
+      **Done when:** FINDINGS shows one cell value reaching a routine that writes to
+      `0xA0000`, with the sprite it draws named.
+
+- [ ] **T76 · What turns the party**
+      `+0x137E` is not written by movement (6.11) and scene scripts compare it against 2 and
+      4 (4.19f), so it is a direction that something other than walking sets. Every arm in
+      the map-cell switch gates on it, which means the viewport cannot be reproduced without
+      it.
+      *Method: it is read at a known address, so watch writes rather than hunting: a
+      `MEMORY_WRITE` breakpoint on `globals + 0x137E`, guarded by reading the byte back and
+      confirming it changed, then `DS:SI` names the script -- the `gerdep.io` @7243 method
+      from T11g3f. Drive the game through anything that could turn the party while it is
+      armed.*
+      **Done when:** FINDINGS says what writes `+0x137E` and gives the value for at least two
+      compass directions.
+

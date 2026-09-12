@@ -376,12 +376,33 @@ The third byte was taken for the facing because ORIENTATION reported East while 
 It stays 2 through six moves in two axes, so whatever it is, movement does not write it.
 Where the facing lives is not known.
 
+### What a cell value does, as far as it is followed
+
+The switch arm's whole payload is statement `0x49` with four operands, and the arms differ
+in **one constant**:
+
+    49  <wordvar> <wordvar> <wordvar>  ( CONST + <bytevar> )
+
+    cell 0x36          -> CONST = 0x1D
+    cell 0x37, 0x38    -> CONST = 0x23
+    cell 0x39          -> CONST = 0x23
+
+The fourth operand is an index into a table of 4-byte entries inside the running asset,
+reached as `asset + [asset+0x0e]`, then `+ 4 * index`. The other three operands are stored
+alongside it and behave like a coordinate triple.
+
+Each arm first tests `global[0x137E] == 2 | global[0x137E] == 4` -- the party's direction --
+and skips the payload when it fails. Cell `0x39` runs its payload unconditionally.
+
 ### Not known
 
-Which sprite a cell value draws — the switch arms were not followed as far as a draw.
+The last step, from the table entry to a routine that writes pixels, has not been walked, so
+**which sprite a cell value draws is still open**.
 
-For the same reason, whether a cell blocks movement is not a function of its value alone.
-The same value blocks in one place and not another.
+What sets `+0x137E` is also unknown, and every arm above depends on it.
+
+Whether a cell blocks movement is not a function of its value alone: the same value blocks
+in one place and not another.
 
 
 ---

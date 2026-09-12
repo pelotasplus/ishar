@@ -1198,6 +1198,12 @@ rewrite reads `cont*.fic` off disk with no transform.
 | `+0x470C`..`+0x473D` | the open dialog's rendered content -- a cell, a name and a region name, none of them a record (FINDINGS 6.11) |
 | `+0x5C00`..`+0x7C00` | rewritten wholesale on every redraw |
 
+A cell value's effect is a switch arm in the scene script, and the arm's payload is
+statement `0x49` carrying three values and an **index into a 4-byte table inside the asset**
+(`asset + [asset+0x0e] + 4*index`). The arms of one switch differ only in the constant that
+index is built from -- `0x1D` versus `0x23` in `lacustre.io` -- and each is gated on the
+party's direction at `+0x137E`. See FINDINGS 4.19f.
+
 So the world state is one flat byte array the scripts index with `vm_op_load_byte_global`
 (expression `0x1e`), and **the only code that reads a map cell is the expression evaluator**
 -- there is no native map renderer. See FINDINGS 6.7b and 4.19d.
