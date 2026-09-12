@@ -13,7 +13,7 @@ first line of that tool's own docstring, so it cannot drift from the tool.
 | `tools/anatomy.py` | Byte-by-byte map of one asset, every span labelled with the FORMATS section for it. |
 | `tools/bphits.py` | Minimal breakpoint probe: arm one execution breakpoint, count hits, print. |
 | `tools/chains.py` | Find ALL sprite chains in an asset, not just the best-scoring one. |
-| `tools/checkdocs.py` | Does every asset offset named in the prose reach FILES.md? |
+| `tools/checkdocs.py` | Every identifier named in the prose must exist where it is supposed to live. |
 | `tools/cover.py` | Coverage of the listing: how much of the code segments decoded as instructions |
 | `tools/disasm.sh` | !/usr/bin/env bash |
 | `tools/fullscreen.py` | Render an asset's full-screen 320x200 pages. |

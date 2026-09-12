@@ -1,45 +1,125 @@
 #!/usr/bin/env python3
-"""Does every asset offset named in the prose reach FILES.md?
+"""Every identifier named in the prose must exist where it is supposed to live.
 
-FILES.md is generated, so a finding written into FINDINGS.md or FORMATS.md does not appear
-there unless IDENTIFIED in tools/anatomy.py is edited too. That was forgotten three times
-in one session, each time noticed by the user rather than by anything here.
+The prose documents are written by hand; the durable artefacts are not. A finding that
+names something and never reaches its artefact is invisible to the next reader, and every
+such failure here has been silent -- no error, no warning, no number moving.
 
-This greps the prose for `name.io` @NNNN / "name.io offset NNNN" and reports any that
-IDENTIFIED does not carry. Exit code 1 if there are any, so it can gate a commit.
+The first version of this script checked one kind of reference, because it was written in
+response to one failure. Code addresses then went missing from `ishar.chani` the same way.
+So RULES is a table: adding a kind of reference is one entry, not a new script.
+
+    tools/checkdocs.py            report, exit 1 if anything is stranded
 """
 import os, re, sys
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(HERE, "tools"))
+DOCS = ("FINDINGS.md", "FORMATS.md", "REBUILD.md")
 
-PAT = re.compile(r"`?([a-z0-9]+\.io)`?\s*(?:@|offset\s+)(\d{3,6})")
 
 def identified():
+    """(asset, offset) pairs in IDENTIFIED in tools/anatomy.py."""
     src = open(os.path.join(HERE, "tools", "anatomy.py")).read()
     block = src.split("IDENTIFIED = {", 1)[1].split("\n}", 1)[0]
-    return {(m.group(1), int(m.group(2)))
+    return {(m.group(1).lower(), int(m.group(2)))
             for m in re.finditer(r'\("([a-z0-9.]+)",\s*(\d+)\)', block)}
 
+
+# Addresses named in prose that deliberately have no annotation, with the reason. A gate
+# that cannot be satisfied gets bypassed, so anything genuinely unannotatable belongs here
+# rather than in a permanent failure.
+ALLOW = {
+    "seg_0000:0022": "the four spare `ret` bytes below the dispatch tables, not a routine",
+    "seg_0000:038b": "quoted as a mislabelling; the real routine is seg_0e97:038b",
+    "seg_13d7:03a6": "chani panics on code seeds here (CLAUDE.md); dropped-seed list",
+    "seg_13d7:0402": "chani panics on code seeds here",
+    "seg_13d7:048a": "chani panics on code seeds here",
+    "seg_13d7:0574": "chani panics on code seeds here",
+    "seg_13d7:05fc": "chani panics on code seeds here",
+    "seg_13d7:066a": "chani panics on code seeds here",
+    "seg_13d7:0b8e": "chani panics on code seeds here",
+    "seg_13d7:0b90": "chani panics on code seeds here",
+}
+
+
+def annotated(reach=96):
+    """Addresses an annotation covers.
+
+    A reference usually points *inside* a named routine -- seg_0e97:0597 is in the loop
+    annotated at 0568 -- so demanding its own attr[] would be wrong and would make the gate
+    unsatisfiable. An address counts as covered when an annotation in the same segment sits
+    within `reach` bytes before it.
+    """
+    attrs = {}
+    for m in re.finditer(r"^attr\[(seg_[0-9a-f]{4}):([0-9a-f]{4})\]",
+                         open(os.path.join(HERE, "ishar.chani")).read(), re.M):
+        attrs.setdefault(m.group(1), set()).add(int(m.group(2), 16))
+
+    class Covered:
+        def __contains__(self, addr):
+            if addr in ALLOW:
+                return True
+            seg, _, off = addr.partition(":")
+            off = int(off, 16)
+            near = [a for a in attrs.get(seg, ()) if 0 <= off - a <= reach]
+            return bool(near)
+        def __len__(self):
+            return sum(len(v) for v in attrs.values())
+    return Covered()
+
+
+def tools_listed():
+    return {m.group(1) for m in
+            re.finditer(r"`tools/([A-Za-z0-9_.-]+)`",
+                        open(os.path.join(HERE, "TOOLS.md")).read())}
+
+
+# (label, pattern, key from match, set of things that exist, how to fix)
+RULES = [
+    ("asset offset -> IDENTIFIED in tools/anatomy.py",
+     re.compile(r"`?([a-z0-9]+\.io)`?\s*(?:@|offset\s+)(\d{3,6})"),
+     lambda m: (m.group(1).lower(), int(m.group(2))),
+     identified,
+     "add it to IDENTIFIED, then: python3 tools/anatomy.py --files"),
+
+    ("code address -> attr[] in ishar.chani",
+     re.compile(r"`(seg_[0-9a-f]{4}:[0-9a-f]{4})`"),
+     lambda m: m.group(1),
+     annotated,
+     "annotate it in ishar.chani, then: tools/disasm.sh"),
+
+    ("tool -> TOOLS.md",
+     re.compile(r"`tools/([A-Za-z0-9_][A-Za-z0-9_.-]*\.(?:py|sh))`"),
+     lambda m: m.group(1),
+     tools_listed,
+     "give it a docstring, then: python3 tools/toolsindex.py"),
+]
+
+
 def main():
-    known = identified()
-    missing = {}
-    for doc in ("FINDINGS.md", "FORMATS.md", "REBUILD.md"):
-        path = os.path.join(HERE, doc)
-        if not os.path.exists(path):
-            continue
-        for n, line in enumerate(open(path), 1):
-            for m in PAT.finditer(line):
-                key = (m.group(1).lower(), int(m.group(2)))
-                if key not in known:
-                    missing.setdefault(key, []).append(f"{doc}:{n}")
-    if not missing:
-        print(f"ok: every asset offset in the prose is in IDENTIFIED ({len(known)} entries)")
-        return 0
-    print(f"{len(missing)} asset offsets named in prose but missing from "
-          f"IDENTIFIED in tools/anatomy.py:")
-    for (asset, off), where in sorted(missing.items()):
-        print(f"  {asset} @{off}   {', '.join(where[:3])}")
-    print("\nAdd them, then: python3 tools/anatomy.py --files")
-    return 1
+    bad = 0
+    for label, pat, key, existing, fix in RULES:
+        have = existing()
+        missing = {}
+        for doc in DOCS:
+            path = os.path.join(HERE, doc)
+            if not os.path.exists(path):
+                continue
+            for n, line in enumerate(open(path), 1):
+                if line.lstrip().startswith("~~"):     # struck text, deliberately stale
+                    continue
+                for m in pat.finditer(line):
+                    k = key(m)
+                    if k not in have:
+                        missing.setdefault(k, []).append(f"{doc}:{n}")
+        if missing:
+            bad = 1
+            print(f"{len(missing)} stranded -- {label}:")
+            for k, where in sorted(missing.items(), key=lambda kv: str(kv[0])):
+                print(f"  {k}   {', '.join(where[:3])}")
+            print(f"  fix: {fix}\n")
+        else:
+            print(f"ok ({len(have)} known) -- {label}")
+    return bad
+
 
 sys.exit(main())

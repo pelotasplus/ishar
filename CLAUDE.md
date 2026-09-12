@@ -53,11 +53,28 @@ rule above was written, each time caught by the user rather than by anything her
 a check now:
 
 ```
-python3 tools/checkdocs.py     # every asset offset in the prose is in IDENTIFIED?
+python3 tools/checkdocs.py     # is everything the prose names actually recorded?
 ```
 
-It greps `FINDINGS.md`, `FORMATS.md` and `REBUILD.md` for `name.io @NNNN` and fails on any
-that `IDENTIFIED` does not carry. On its first run it found two more nobody had noticed.
+It greps `FINDINGS.md`, `FORMATS.md` and `REBUILD.md` for every kind of identifier and
+fails on any that is stranded:
+
+| named in prose | must exist in |
+|---|---|
+| `name.io @NNNN` | `IDENTIFIED` in `tools/anatomy.py`, which is what puts it in `FILES.md` |
+| `seg_xxxx:yyyy` | an `attr[]` in `ishar.chani` covering it |
+| `tools/x.py` | `TOOLS.md` |
+
+**The first version checked only the first row**, because it was written in response to one
+failure -- and code addresses then went missing from `ishar.chani` in exactly the same way,
+25 of them, accumulated across the whole project with nothing measuring it. `RULES` is a
+table now: adding a kind of reference is one entry, not a new script.
+
+Two details that make it satisfiable rather than bypassed. An address counts as covered
+when an annotation sits within 96 bytes *before* it, because a reference usually points
+inside a named routine (`seg_0e97:0597` is in the loop annotated at `0568`). And `ALLOW`
+carries the addresses that deliberately have none, each with its reason -- the spare `ret`
+bytes, an address quoted as a mislabelling, the `seg_13d7` seeds chani panics on.
 Run it before committing, alongside the `uniq -d` check for `ishar.chani`.
 
 **All three are now a pre-commit hook** (`.githooks/pre-commit`, enabled with
@@ -758,6 +775,23 @@ re-boot, about 90 seconds.
 
 Open one `Rsp` and pass it to whatever needs it. A probe that wants a control breakpoint as
 well as a live one must reuse the same connection for both.
+
+### A gate written for one failure only catches that failure
+
+`checkdocs.py` was built the moment a finding named an asset offset and never reached
+`FILES.md`. It checked exactly that. Within the hour a finding named a **code address** and
+never reached `ishar.chani` -- the same failure, one artefact over, and the gate was silent
+because nobody had told it about that artefact. Running the generalised version found **25**
+stranded addresses going back across the whole project.
+
+This is the third time in one session the same move was made: a prose rule scoped to one
+example, then a gate scoped to one example. The scar *a property proved for one asset is not
+a property of the format* is about the game's data; it applies at least as much to the
+process.
+
+So when writing a check, spend the extra minute on the table rather than the case: what
+*kinds* of thing does the prose name, and where does each have to live? `RULES` in
+`checkdocs.py` is that table, and adding a row is one entry.
 
 ### Spice86's GDB stub reports IP as a LINEAR address
 

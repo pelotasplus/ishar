@@ -1966,4 +1966,18 @@ attr[seg_0e97:059a]: type = code; name = viewport_row_step_masked; comment = [[[
     one object and its first DI is the origin. That is how the trees, the scenery and the
     font were identified (FINDINGS 4.15e).
 ]]]
+attr[seg_0000:7801]: type = code; name = asset_header_catalogue; comment = [[[
+    The catalogue-path asset header read -- the counterpart to asset_header_direct (793a),
+    reached when hdr_is_catalogue is zero and a 16-byte directory follows the header.
+
+    Identical shape to the direct path, and it subtracts **22** rather than 6:
+
+        mov ax, ss:[2482]   // low byte is the size's HIGH byte (FORMATS 3.0)
+        mov cx, ss:[2480]   // the size's low word
+        and ah, 0feh        // the decoder mode
+        sub cx, 16h         // 22 = 6-byte header + 16-byte directory
+
+    So the 24-bit size covers the directory too. Only 5 files take this path: main.io and
+    four .fic, and those four have an all-zero header and are probably not this format.
+]]]
 end
