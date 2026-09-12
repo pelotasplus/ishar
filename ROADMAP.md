@@ -2478,13 +2478,20 @@ Compose rewrite has to do.
       `theend.io` 142,707 · `presen.io` 126,719 · `stage.io` 70,643 · `iboishar.io` 67,905 ·
       `ville.io` 58,623 · `preson.io` 47,548 · `saub.io` 45,236 · `frise.io` 44,512 ·
       `mcave.io` 42,602 · `marchand.io` 39,344. Ten files are 686 KB of the 1,236 KB.
-      Two shapes account for most of it: assets whose sprite chain stops early (`ville.io`
-      finds 55 sprites and names 42% of the file; `marchand.io` finds 2 and names 3.8%), and
-      the five-file `s*` cluster that may be audio.
-      *Method: for a chain that stops, walk it from the last good sprite and see what the
-      next header would have to be -- `tools/ioscan.py`'s `rec()` rejects on width, height
-      and the flag nibble, and which test fires says what the format actually allows.
-      `tools/anatomy.py <asset>` shows exactly where it stops.*
+      **The framing "the sprite chain stops early" is wrong and the check that shows it is
+      one command.** `marchand.io`'s chain ends at 7402 with 32,479 bytes left. What sits
+      there is `01 04 00 00 0b 00 01 08 1e 00 09 00 16 00 ff 00 7d 00 dd dd 34 34 34 34` --
+      a would-be mode byte of `0x01`, which is **odd**, and every expression-table opcode and
+      every sprite mode in this format is even. Loosening `rec()` would be chasing the wrong
+      thing: this is not a rejected sprite header, it is **a different record type**.
+      So the real question is: what is the second structure in an asset, after the sprite
+      chain? Ten files hold 686 KB of the 1,236 KB unexplained, and if they share one
+      structure it is the single biggest win left in the corpus.
+      *Method: collect the bytes at the point every chain stops, across all ten, and look for
+      a common shape before theorising about any one of them -- `tools/anatomy.py <asset>`
+      prints the stop offset. Then trace the consumer (`find-consumer`): break on a read of
+      that offset while the asset is on screen and see which routine walks it. Reading the
+      bytes has already failed once here; the machine has not been asked.*
       **Done when:** `tools/anatomy.py --all` reports over 65% of bytes named, or FINDINGS
       says why a named region is not reachable for the files that resist.
 
