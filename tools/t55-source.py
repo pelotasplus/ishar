@@ -37,10 +37,14 @@ def main():
     g = Rsp(st["gdb"])
     drv = os.path.join(os.environ.get("CLAUDE_JOB_DIR", "/tmp"), "tmp", "t55drv.sh")
     os.makedirs(os.path.dirname(drv), exist_ok=True)
-    open(drv, "w").write("#!/bin/sh\ncd %s\nfor k in Up Up Down Down; do\n"
-                         " tools/ish keys $k >/dev/null 2>&1\n sleep 1.2\ndone\n" % HERE)
-    os.chmod(drv, 0o755)
-    subprocess.Popen([drv])
+    ext = os.environ.get("T55_DRIVER")
+    if ext:
+        subprocess.Popen([ext])
+    else:
+        open(drv, "w").write("#!/bin/sh\ncd %s\nfor k in Up Up Down Down; do\n"
+                             " tools/ish keys $k >/dev/null 2>&1\n sleep 1.2\ndone\n" % HERE)
+        os.chmod(drv, 0o755)
+        subprocess.Popen([drv])
     objs, t0 = [], time.time()
     while time.time() - t0 < secs and len(objs) < 400:
         g.cont()

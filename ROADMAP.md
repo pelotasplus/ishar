@@ -2635,3 +2635,29 @@ Compose rewrite has to do.
       from even if they are built at runtime. If they are generated rather than stored, that
       is the answer and a rewrite can draw the medallion any way it likes.*
       **Done when:** FINDINGS says where the medallion's pixels come from.
+
+- [ ] **T56 · Where is the starting NPC's sprite?**
+      Two cells north of the start a man stands in the viewport, talks when walked into, and
+      can be attacked (FINDINGS 4.17). His pixels are in **no asset**: a sweep over every
+      sprite of all 98 files at every palette base, verified whole-sprite against video
+      memory, finds seven other things in that frame at 100% and not him (4.15d).
+      `bormin.io` -- whose name reads like a character -- is not on screen either, 0 of 12.
+      *Method: he is drawn by something. The row-step breakpoints that identified `fond.io`
+      and `frise.io` (T55) never caught him, so find the path first: break on writes to the
+      back buffer inside his bounding box -- roughly x 115..150, y 55..110 with the party
+      two cells south -- with a control breakpoint on never-written memory to subtract
+      phantom stops, and read the routine and `DS:SI` at each hit. That is the technique
+      that found the viewport routines originally.*
+      **Done when:** FINDINGS names the asset and offset his pixels come from, or shows
+      what transforms them.
+
+- [ ] **T56b · Does an NPC block its cell?**
+      `0x0A` refuses a move at `(15,29)` and permits one at `(11,40)` -- the anomaly behind
+      "blocking is not a function of the cell value" (FINDINGS 6.7b). The starting NPC
+      stands about where `(15,29)` is, which would explain it: the cell is walkable and the
+      *occupant* blocks.
+      *Method: kill or recruit the NPC -- ACTION offers both -- and retry the move onto
+      `(15,29)`. If it succeeds afterwards, the block was the NPC. Cheap, and it also gives
+      a second data point on what RECRUIT does.*
+      **Done when:** FINDINGS says whether occupancy blocks movement independently of the
+      cell value.

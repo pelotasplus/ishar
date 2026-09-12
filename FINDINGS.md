@@ -579,8 +579,13 @@ recoloured by group, which is what the `word3` base is for (3.13c). Portraits co
 against VRAM is at payload offset 6986, mode `0x10`, 64x36, `word3 = 0x00d0` -> base 208,
 drawn at screen (0, 147) (3.13b).
 
-**The viewport is the exception and it is not a blit.** No asset matches it at either
-depth, over 1,517 probe runs in T36 and 72 more here. It is composed by its own routines
+~~**The viewport is the exception and it is not a blit.** No asset matches it at either
+depth, over 1,517 probe runs in T36 and 72 more here.~~ **Half struck.** The viewport *is*
+a blit -- 1:1, established in 4.15c -- and its sprites **do** appear verbatim in video
+memory. Three `plaine.io` sprites were matched at **100%** of their opaque pixels in one
+frame (4.15d). What defeated the earlier search was the search, not the format: it looked
+for whole assets and for contiguous runs across masked sprites, where the background shows
+through the holes. It is composed by its own routines
 (`viewport_row_loop`, `viewport_expand_4bpp`, `viewport_fill_rect` -- FORMATS 3.13d) which
 walk source and destination with independent per-row steps, sampled live at 15 and 321. A
 destination step of 321 on a 320-wide buffer shears every row one pixel sideways; that is
@@ -1021,6 +1026,38 @@ the back buffer does not establish which one serves the viewport.
 `DI` at 30 stops (`tools/t54-rowloop.py`), where `dst - DX = 320` every time; sprite
 dimensions from `tools/chains.py` over `arbre.io`; source attribution at `seg_0e97:0660`
 over 198 and 182 rows in two windows (`tools/t55-source.py`).
+
+### 4.15d Reading a frame: which sprite is on screen, and where
+
+Because the blit is 1:1 (4.15c), a sprite on screen matches its stored bytes exactly. Probe
+each sprite's longest **opaque run** against video memory, then verify the whole sprite.
+`tools/onscreen.py` does this across all 98 assets. One frame, standing two cells south of
+the starting NPC:
+
+| asset | sprite | size | base | at | match |
+|---|---|---|---|---|---|
+| `plaine.io` | @24720 | 48x58 | 16 | (98, 68) | **100%** |
+| `plaine.io` | @26120 | 48x67 | 16 | (146, 59) | **100%** |
+| `plaine.io` | @24440 | 16x34 | 16 | (82, 93) | **100%** |
+| `buste.io` | @6986 | 64x36 | 208 | (0, 147) | **100%** |
+| `gerdep.io` | @11718 | 32x23 | 208 | (273, 101) | **100%** |
+| `frise.io` | @50784 | 16x16 | 160 | (0, 0) | **100%** |
+| `main.io` | @25760 | 16x16 | 160 | (0, 0) | **100%** |
+
+So the outdoor scenery -- the bushes -- is `plaine.io` at **palette base 16**, and the
+mouse cursor at (0,0) is a 16x16 sprite carried identically in `frise.io` and `main.io`.
+
+**The NPC is not in any asset.** The same sweep, over every sprite of all 98 files at every
+palette base, does not find the man standing in the middle of that frame -- while finding
+seven other things in it at 100%. Nor is `bormin.io` on screen: 0 of its 12 sprites,
+despite the name reading like a character. Tracked as T56.
+
+Two plausible reasons, neither checked: his pixels may live in the ~38% of asset bytes no
+sprite chain reaches (T51), or he is drawn through a path that transforms them.
+
+**Evidence:** `tools/onscreen.py`, longest-opaque-run probe followed by whole-sprite
+verification against `0xA0000`, opaque pixels only; the seven matches above are every hit
+above 95% in that frame.
 
 ### 4.18 Why screen positions are hard to find, and what is ruled out (T40)
 
