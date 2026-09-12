@@ -773,7 +773,41 @@ scraping the caption.
 **It is not the cell value.** Walking a row eastwards the region flips FRAGONIR -> ANGARAHN
 between **column 45 and column 46**, at row 11 and again at row 12, and the cells on both
 sides are `0x00`. Two identical adjacent cells in different regions rules the grid out as
-the source. What writes `0x3EAC` from the party's coordinates is still unknown (T11g3f).
+the source.
+
+**A script writes it, and the rule is hand-written conditions.** A `MEMORY_WRITE`
+breakpoint on the region byte catches the change at cell `(10,46)` going east and `(10,45)`
+going west, with `IP` inside `vm_run`'s fetch loop -- so the writer is bytecode, and `DS:SI`
+names it: **`gerdep.io` around offset 7243**. Read with the operator table (6.1b) it says
+exactly what the boundary measurement said:
+
+```
+1f 38              eval( sequence(
+  1e 7d 13           global[0x137d]      the party's column
+  52 00 2e           < 46
+  40                 push
+  1e ac 3e           global[0x3eac]      the region id
+  4a 00 01           == 1
+  42                 &
+3a  /  14 ..       )) then jump_if_zero
+```
+
+`if (column < 46) && (region == 1)`. The next test along is narrower still:
+
+```
+(row == 25) && (column == 60) && (region == 1)
+```
+
+-- a single named cell, not an area.
+
+**So there is no formula and no lookup table.** Region membership is a list of explicit
+coordinate comparisons in `gerdep.io`'s bytecode, mixing half-plane tests with single-cell
+ones. A rewrite either ports those conditions or re-derives an equivalent set by walking.
+
+**Evidence:** `tools/t11g3f-writer.py` -- a MEMORY_WRITE breakpoint on the region byte,
+believed only at stops where the value actually changed, with `DS:SI` attributed to an
+asset; the boundary independently measured at rows 10, 11 and 12 **before** the bytecode was
+read, which is the prediction this rule has to match and does.
 
 **`ss:[0x0902]` is a shared string workspace, not a region variable.** It holds the region
 name at rest, which makes it a cheap readout, but during a scene load it carries

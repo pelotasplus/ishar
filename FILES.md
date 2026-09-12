@@ -646,7 +646,12 @@ The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this i
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..8,884 | 8,868 | script bytecode (entry set known, 7.7) (3.16) |
+| 16..7,243 | 7,227 | script bytecode (entry set known, 7.7) (3.16) |
+| 7,243..7,271 | 28 | **@7243** - the region rule: `if (column < 46) && (region == 1)` -- region membership is hand-written coordinate tests, not a table (FINDINGS 6.7b) (7) |
+| 7,271..7,303 | 32 | **@7271** - writes the party's region id (global 0x3eac); caught live with a MEMORY_WRITE breakpoint (FINDINGS 6.7b) (7) |
+| 7,303..8,829 | 1,526 | script bytecode (entry set known, 7.7) (3.16) |
+| 8,829..8,861 | 32 | **@8829** - the region-name switch: statement 0x2f with 21 cases, selector vm_op_load_byte_global 0x3eac (FORMATS 7.2g) (7) |
+| 8,861..8,884 | 23 | script bytecode (entry set known, 7.7) (3.16) |
 | 8,884..9,230 | 346 | 21 NUL-terminated strings (+160 b between) (10) |
 | 9,230..10,566 | 1,336 | UNEXPLAINED |
 | 10,566..10,854 | 288 | 4 sprites, mode 0x10, 16x8 (3.10) |
@@ -867,7 +872,9 @@ The viewport's backdrop. Drawn by the opaque expander at seg_0e97:0644 -- this i
 | 0..2 | 2 | asset id (3.15) |
 | 2..8 | 6 | format signature 16 00 00 17 00 00 (3.15) |
 | 8..16 | 8 | unidentified header bytes (3.15) |
-| 16..3,030 | 3,014 | script bytecode (entry set known, 7.7) (3.16) |
+| 16..1,190 | 1,174 | script bytecode (entry set known, 7.7) (3.16) |
+| 1,190..1,222 | 32 | **@1190** - reads the world map -- 26 80 00, global[0x0080 + index] -- the only code path that touches a map cell (FORMATS 7.2h) (7) |
+| 1,222..3,030 | 1,808 | script bytecode (entry set known, 7.7) (3.16) |
 | 3,030..22,276 | 19,246 | 28 sprites, modes 0x00, 0x10, 16x3 to 80x91 (3.10) |
 | 22,276..22,416 | 140 | UNEXPLAINED |
 | 22,416..23,188 | 772 | 1 palette: marker + 256 x RGB (3.9) |

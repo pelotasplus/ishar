@@ -42,6 +42,12 @@ collapsed to "12 sprites" and swallowed the one thing anybody had established.
 
 When a finding lands, ask which *inputs* it changes, not which documents mention it.
 
+**And check the generated file actually shows it.** Adding to `IDENTIFIED` is necessary and
+was twice not sufficient: the generator collapsed a sprite chain into "12 sprites" and a
+script region into "script bytecode", swallowing the named entry both times. `checkdocs.py`
+only proves the entry exists, not that it is visible. Open the asset's section in
+`FILES.md` and look.
+
 **And do not rely on asking.** This was forgotten three times in one session *after* the
 rule above was written, each time caught by the user rather than by anything here. So it is
 a check now:

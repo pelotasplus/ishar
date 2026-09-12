@@ -66,6 +66,11 @@ IDENTIFIED = {
     ("fond.io", 7142):   "viewport backdrop (FINDINGS 4.15c)",
     ("gerdep.io", 8829): "the region-name switch: statement 0x2f with 21 cases, selector "
                          "vm_op_load_byte_global 0x3eac (FORMATS 7.2g)",
+    ("gerdep.io", 7243): "the region rule: `if (column < 46) && (region == 1)` -- region "
+                         "membership is hand-written coordinate tests, not a table "
+                         "(FINDINGS 6.7b)",
+    ("gerdep.io", 7271): "writes the party's region id (global 0x3eac); caught live with a "
+                         "MEMORY_WRITE breakpoint (FINDINGS 6.7b)",
     ("lacustre.io", 1190): "reads the world map -- 26 80 00, global[0x0080 + index] -- the "
                            "only code path that touches a map cell (FORMATS 7.2h)",
 }
@@ -147,7 +152,22 @@ def spans(name):
     end = min(after) if after else len(d)
     if end > 16:
         if name.lower() in SCRIPTED:
-            out.append((16, end, "script bytecode (entry set known, 7.7)", "3.16"))
+            # Break out any identified offset that falls inside the script region --
+            # otherwise a named finding vanishes into "script bytecode", which is exactly
+            # how the region rule at gerdep.io 7243 stayed invisible after being recorded
+            # in three hand-written documents.
+            marks = sorted(o for (a, o) in IDENTIFIED if a == name.lower() and 16 <= o < end)
+            at = 16
+            for m in marks:
+                if m > at:
+                    out.append((at, m, "script bytecode (entry set known, 7.7)", "3.16"))
+                # a script statement has no length here, so give it a nominal span
+                nxt = min([x for x in marks if x > m] + [end])
+                out.append((m, min(m + 32, nxt), f"**@{m}** - {IDENTIFIED[(name.lower(), m)]}",
+                            "7"))
+                at = min(m + 32, nxt)
+            if at < end:
+                out.append((at, end, "script bytecode (entry set known, 7.7)", "3.16"))
         else:
             # Say what it looks like, but do NOT count it as accounted for: calling this
             # script just because it sits where script usually sits put theend.io at 100%

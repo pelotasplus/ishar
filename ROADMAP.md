@@ -2410,7 +2410,7 @@ Compose rewrite has to do.
       **Done when:** FINDINGS says what triggers a region change and which grid replaces
       which, with the second grid located in memory.
 
-- [~] **T11g3f · What selects the region?**
+- [x] **T11g3f · What selects the region?**
       Twenty-one named regions live inside six grids and the panel caption tracks the party
       (FINDINGS 4.19b), but nothing yet says how a cell maps to a region. It is not the cell
       value: the party stands on `0x00` in both FRAGONIR and ANGARAHN. The name string lands
@@ -2434,6 +2434,14 @@ Compose rewrite has to do.
       gated: three attempts to leave the opening area each reset the party to its start cell.
       Cheapest next lead: **ACTION -> ORIENTATION reports the region in the facing direction**
       (`E : LOTHARIA` from ANGARAHN), so region adjacency can be read without walking there.*
+      *Met. A `MEMORY_WRITE` breakpoint on the region byte catches the change at `(10,46)`
+      east and `(10,45)` west, with `IP` inside `vm_run`'s fetch loop -- so **a script writes
+      it** -- and `DS:SI` names **`gerdep.io` @7243**. Decoded with the operator table it is
+      `if (column < 46) && (region == 1)`, which is precisely the boundary measured at rows
+      10, 11 and 12 before the bytecode was read. The next condition along is
+      `(row == 25) && (column == 60) && (region == 1)` -- one cell, not an area.
+      **So there is no formula and no table**: region membership is a list of hand-written
+      coordinate comparisons in bytecode (FINDINGS 6.7b).*
 
 - [!] **T11g3g · Get inside a building**
       Rare high cell values are individual buildings -- `0xF0` and `0xEB` at the village in

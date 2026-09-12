@@ -308,6 +308,19 @@ FRAGONIR, ANGARAHN, OSGHIROD, and so on through ISHAR and L'OCEAN.
 
 Six grid files. Twenty-one regions.
 
+The current region is a byte the game keeps in its script variable area, and the ACTION
+menu's ORIENTATION verb reports the region lying in the direction the party faces.
+
+### Trap: region membership is code, not data
+
+There is no table mapping a cell to a region. `gerdep.io`'s bytecode holds a list of
+explicit conditions on the party's row and column:
+
+    if (column < 46) && (region == 1)            a half-plane
+    if (row == 25) && (column == 60) && ...      a single cell
+
+So you either port those conditions or walk the map and record where the name changes.
+
 ### Trap: the world is gated
 
 Walk far enough from the start and the game reloads the scene and puts the party back at
@@ -326,7 +339,6 @@ Which sprite a cell value draws. There is no table — a script decides, in byte
 For the same reason, whether a cell blocks movement is not a function of its value alone.
 The same value blocks in one place and not another.
 
-How a coordinate maps to a region.
 
 ---
 
