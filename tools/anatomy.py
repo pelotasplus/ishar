@@ -91,6 +91,10 @@ IDENTIFIED = {
                          "VRAM**, 779 opaque pixels (FINDINGS 4.15f)",
     ("bormin.io", 2770): "the starting NPC's LOWER half when adjacent: 48x39 at (104,91), "
                          "stacked under @3714 -- 92.8% vs VRAM (FINDINGS 4.15g)",
+    ("arbre.io", 24842): "a tree, 32x40; the object the lateral slope was measured on -- "
+                         "x=153 from party (13,43), x=191 from (13,42), so 38 px per "
+                         "lateral cell (FINDINGS 4.15h)",
+    ("arbre.io", 23962): "a tree, 16x65, seen drawn at (149,30) (FINDINGS 4.15h)",
     ("arbre.io", 18890): "a tree, 48x38, seen drawn at (177,72) (FINDINGS 4.15f)",
     ("arbre.io", 25490): "a tree, 16x27, seen drawn at (247,61) -- one rung of the size "
                          "ladder (FINDINGS 4.15c)",

@@ -140,7 +140,10 @@ The 15 sprites are a **size ladder**, not 15 different trees: the viewport blits
 | 2,906..12,906 | 10,000 | 4 sprites, mode 0x10, 32x25 to 80x128 (3.10) |
 | 12,906..18,890 | 5,984 | **144x83 sprite, mode 0x10** - the big foreground branch, 144x83, drawn at (256,0) clipped (FINDINGS 4.15c) (3.10) |
 | 18,890..19,810 | 920 | **48x38 sprite, mode 0x10** - a tree, 48x38, seen drawn at (177,72) (FINDINGS 4.15f) (3.10) |
-| 19,810..25,490 | 5,680 | 7 sprites, mode 0x10, 16x43 to 32x101 (3.10) |
+| 19,810..23,962 | 4,152 | 4 sprites, mode 0x10, 16x47 to 32x101 (3.10) |
+| 23,962..24,490 | 528 | **16x65 sprite, mode 0x10** - a tree, 16x65, seen drawn at (149,30) (FINDINGS 4.15h) (3.10) |
+| 24,490..24,842 | 352 | 1 sprites, mode 0x10, 16x43 (3.10) |
+| 24,842..25,490 | 648 | **32x40 sprite, mode 0x10** - a tree, 32x40; the object the lateral slope was measured on -- x=153 from party (13,43), x=191 from (13,42), so 38 px per lateral cell (FINDINGS 4.15h) (3.10) |
 | 25,490..25,714 | 224 | **16x27 sprite, mode 0x10** - a tree, 16x27, seen drawn at (247,61) -- one rung of the size ladder (FINDINGS 4.15c) (3.10) |
 | 25,714..25,842 | 128 | **16x15 sprite, mode 0x10** - a tree, 16x15, seen drawn at (256,66) -- a shorter rung than @25490 in the SAME frame (FINDINGS 4.15c) (3.10) |
 | 25,842..25,976 | 134 | UNEXPLAINED |

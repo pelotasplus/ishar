@@ -1295,10 +1295,37 @@ So T54c wants a fixed object whose cell can be established -- a tree that blocks
 which identifies its cell exactly -- measured by the breakpoint route at several lateral
 offsets per distance.
 
+**A second slope, from a fixed object.** A tree -- `arbre.io` @24842, 32x40 -- was caught at
+screen x **153** with the party at `(13,43)` and at **191** at `(13,42)`: one cell west, 38
+pixels east, **same sprite and same y (51)**, which is what makes it trustworthy.
+
+| object | distance | pixels per lateral cell |
+|---|---|---|
+| the NPC, `@2152` at y=72 | 3 cells | **88** |
+| a tree, `@24842` at y=51 | unknown, farther | **38** |
+
+**And the two are consistent with an inverse law.** 88 at three cells implies a constant of
+264, which puts the tree at 264/38 = **6.9 cells** -- and the tree *is* farther away, and
+higher on screen (y=51 against 72), both of which agree. Suggestive, not established: the
+tree's distance was derived from the slope, so using it to confirm the law would be
+circular.
+
+**The blocker is object identity, not measurement.** Testing the law needs the *same* object
+at a second distance, and one row closer the same tree is drawn from different sprites
+(`@25490` 16x27, `@25714` 16x15, `@23962` 16x65) while several trees are in view -- so
+nothing says which sprite belongs to which tree. The NPC failed for a different reason
+(4.15i: he walks), and the tree fails for this one.
+
+**What would fix it.** Instances carry each drawable's own viewport X/Y at `+0x0c`/`+0x0e`,
+reached from the entity block (FORMATS 3.17), so an instance is an *identity* that persists
+across frames. Reading the instance list alongside the row-step capture would tie each
+drawn sprite to a specific object, and the projection follows. See T54c.
+
 **Evidence:** the two @2152 sightings from `tools/t54b-frames.py` at `(12,28)` and
-`(12,29)`; the anchor discrepancy from the four sightings tabulated in 4.15f; three failed
-attempts at more lateral points with `tools/t54c-slope.py`, which found nothing because the
-framebuffer cannot see an occluded distant sprite.
+`(12,29)`, and the two @24842 sightings at `(13,43)` and `(13,42)`; the anchor discrepancy
+from the four sightings tabulated in 4.15f; three failed attempts at more lateral points
+with `tools/t54c-slope.py`, which found nothing because the framebuffer cannot see an
+occluded distant sprite.
 
 ### 4.15i NPCs walk around, and an occupant blocks a cell
 

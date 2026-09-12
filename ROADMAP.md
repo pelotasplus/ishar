@@ -2826,3 +2826,18 @@ Compose rewrite has to do.
       which identifies its cell exactly -- and measure with `tools/t54b-frames.py` at
       several lateral offsets for each of two distances. The anchor cancels in the
       differences, so the slope per distance is what comes out, and that is the projection.*
+      *Tried, and a second slope came out of it: a tree (`arbre.io` @24842, 32x40) moved
+      **38 pixels per lateral cell**, from x=153 at `(13,43)` to x=191 at `(13,42)`, same
+      sprite and same y. With the NPC's 88 at three cells that fits
+      `pixels per cell = 264 / distance` and puts the tree at 6.9 cells -- and it *is*
+      farther and higher on screen. Suggestive only: the tree's distance came from its own
+      slope, so confirming the law that way would be circular (FINDINGS 4.15h).
+      **The blocker is object identity, not measurement.** One row closer the same tree is
+      drawn from different sprites (@25490, @25714, @23962) with several trees in view, so
+      nothing says which sprite is which tree. The NPC fails because he walks; the tree
+      fails because it cannot be told apart from its neighbours.
+      *Next, and it is the right instrument rather than a third guess: read the **instance
+      list** alongside the row-step capture. An instance persists across frames and carries
+      its own viewport X/Y at `+0x0c`/`+0x0e` from the entity block (FORMATS 3.17), so it
+      gives each drawn sprite a stable identity. Chain: entity at `ss:[0bf6]`+id, pointer at
+      +2, instance in the pool at `ss:[0be8]`, 38 bytes each.*

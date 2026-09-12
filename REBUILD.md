@@ -451,6 +451,21 @@ only individual sprites.
 
 The list of objects to draw and their positions. Coordinates run x 9..272, y 6..94.
 
+### Horizontal placement, as far as it is measured
+
+An object slides sideways as the party moves laterally, by an amount that depends on its
+distance:
+
+    3 cells away    88 pixels per lateral cell    (measured on the NPC)
+    ~7 cells away   38 pixels per lateral cell    (measured on a tree)
+
+Consistent with `pixels per cell = 264 / distance`, though that constant rests on two
+points and the tree's distance was inferred from its own slope.
+
+**Absolute position needs one more thing.** A sprite's origin is not the object's centre —
+each sprite carries an anchor offset nobody has measured — so two frames of the same object
+give you the slope, and one frame does not give you the position.
+
 ### Not known
 
 - Which sprite of the ladder is chosen at which distance, and how position is derived.
