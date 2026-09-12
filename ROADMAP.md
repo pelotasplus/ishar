@@ -2471,3 +2471,34 @@ Compose rewrite has to do.
       draw should appear within a few statements.*
       **Done when:** FINDINGS shows, for one cell value, the bytecode path from the map read
       to the draw, and says what is drawn.
+
+- [ ] **T51 · Close the largest unexplained asset regions**
+      `FILES.md` now measures it: **47.9% of the 2,370,078 decoded asset bytes have a named
+      structure**, and the shortfall is concentrated, not spread. By bytes unexplained:
+      `theend.io` 142,707 · `presen.io` 126,719 · `stage.io` 70,643 · `iboishar.io` 67,905 ·
+      `ville.io` 58,623 · `preson.io` 47,548 · `saub.io` 45,236 · `frise.io` 44,512 ·
+      `mcave.io` 42,602 · `marchand.io` 39,344. Ten files are 686 KB of the 1,236 KB.
+      Two shapes account for most of it: assets whose sprite chain stops early (`ville.io`
+      finds 55 sprites and names 42% of the file; `marchand.io` finds 2 and names 3.8%), and
+      the five-file `s*` cluster that may be audio.
+      *Method: for a chain that stops, walk it from the last good sprite and see what the
+      next header would have to be -- `tools/ioscan.py`'s `rec()` rejects on width, height
+      and the flag nibble, and which test fires says what the format actually allows.
+      `tools/anatomy.py <asset>` shows exactly where it stops.*
+      **Done when:** `tools/anatomy.py --all` reports over 65% of bytes named, or FINDINGS
+      says why a named region is not reachable for the files that resist.
+
+- [ ] **T52 · Is the `s*` cluster the game's audio?**
+      `samb.io`, `saub.io`, `scave.io`, `scomb.io` and `preson.io` are five of the thirteen
+      unclassified assets and 155 KB between them. Ishar's filenames are French
+      abbreviations -- `souris` mouse, `frise` frieze, `gerdep` *gestion deplacement*,
+      `affobj` *affichage objet*, `encont` *rencontre* -- and on that reading `s` is *son*:
+      *son ambiance*, *son cave*, *son combat*, *presentation son*. Nothing about the game's
+      audio has ever been looked at.
+      *Method: the etymology is a lead, not evidence. Arm a breakpoint on the AdLib writer
+      (`adlib_sequencer`, `seg_0000:93a6`, which writes OPL registers via port 0x389) and
+      see which buffer `cs:[91a2]` points into when music plays, then find that buffer's
+      source. `samb.io` already has an entry set and runs during play, so it is script, not
+      a raw bank -- which the hypothesis has to account for.*
+      **Done when:** FINDINGS says what at least one `s*` asset holds, with the evidence
+      being a traced consumer rather than the filename.

@@ -138,6 +138,9 @@ with a French number row, and this is the byte that selected them.
 
 ## 3. `.io` / `.fic` — the asset container
 
+**Looking for one file?** `FILES.md` has every asset's byte map on one page, generated from
+the bytes by `tools/anatomy.py --files`. This section explains the structures it names.
+
 **Status:** unknown
 
 108 files, 730 B to 76 KB. All share an 11-byte signature at offset 2:
