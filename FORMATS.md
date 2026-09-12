@@ -2664,7 +2664,11 @@ buffer gives the name actually requested.
 
 ### 3.13 Transparency belongs to one mode, not to the format (T11m2)
 
-**4bpp sprites are opaque.** `expand_4bpp` (`seg_0e97:0ad1`) splits each byte and writes
+~~**4bpp sprites are opaque.**~~ **Struck -- read 3.13c before this section.** That is true
+of `expand_4bpp` and false of the format: `sprite_mode_dispatch` never sends modes `0x00`
+or `0x10` here, and both key nibble 0. What follows is the reasoning as it stood.
+
+`expand_4bpp` (`seg_0e97:0ad1`) splits each byte and writes
 both nibbles with `stosw`, with no test for zero:
 
 ```

@@ -2622,10 +2622,11 @@ Compose rewrite has to do.
       origin). That produced a finding about the **backdrop** rather than about the ladder:
       `fond.io` @1366 is the ground band, **one 64x43 sprite tiled every 64 pixels** at
       y=83 starting at x=-17, and @2750 is the sky at (96,0) (FINDINGS 4.15c).
-      **Pre-flight failure worth keeping:** `arbre.io` has **never been observed drawn**.
-      The size ladder is a fact about the file's sprite dimensions, not about how the game
-      uses them, and the scenery actually seen on screen comes from `plaine.io`. Any work
-      on "which rung at which distance" has to first catch `arbre.io` being drawn at all.
+      **Pre-flight failure worth keeping, and then reversed in the same session:** the
+      pre-flight recorded that `arbre.io` had **never been observed drawn** -- true of every
+      probe tried up to that point, and the size ladder was therefore a fact about the
+      file's sprite dimensions rather than about how the game uses them. Two probes later it
+      *was* caught drawn, at `(13,28)`, so that note is superseded by the paragraph below.
       Unblocked, and the pre-flight note above is now wrong: **`arbre.io` IS drawn.** The
       masked expander (loop at `0568`, row step `059a`) draws everything transparent --
       `main.io`'s font glyphs, `plaine.io`'s scenery and `arbre.io`'s trees -- and one frame

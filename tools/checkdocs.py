@@ -204,14 +204,93 @@ def identified_visible():
     return out
 
 
+# Claims this project measured, then disproved. Each was believed, written down, and acted
+# on; several were then read back out of the docs and repeated. A retracted claim is only
+# retracted if it stops appearing as a claim, so this fails if one shows up on a line that
+# is not marking it as wrong.
+STRUCK = {
+    "intro is minutes long": "the intro is ~3 screens; the frozen frame was a fault",
+    "one pixel sideways": "cs:[002e] is 320 + pixels drawn, not a shear (T54)",
+    "crash is the sound driver": "the next --audio none run faulted too",
+    "group = word0 >> 8": "the palette group is in word 3 (T11r)",
+    "4bpp sprites are opaque": "modes 0x00 and 0x10 key nibble 0 (3.13c)",
+    "never raises IRQ12": "the mouse device was wired to the GUI; fixed in T29c3",
+    "does not use the mouse": "it installs an INT 33h handler at startup",
+    "too small for the demon frame": "dead.io is 65,984 bytes, not 448 (T48)",
+    "vm_op_attack_swing": "renamed vm_op_15; it occurs 8x in affobj.io",
+    "Dragonia": "the starting region is FRAGONIR",
+    "never been observed drawn": "arbre.io was caught drawn at (13,28)",
+    "no asset matches": "viewport sprites do appear verbatim; three matched at 100%",
+}
+
+# A line that is marking a claim as wrong, rather than making it.
+RETRACTING = ("~~", "struck", "Struck", "superseded", "Superseded", "was wrong",
+              "correct", "Correct", "Historical", "retract", "no longer",
+              "previously", "used to", "disprove", "wrongly", "mislabell", "not true",
+              "STRUCK", "made `", "look \"", "written up here as", "believed",
+              "misreading", "half struck", "turned out", "renam", "Renam", "at first")
+
+
+def struck_claims_reappearing(window=12):
+    """A retraction is usually a paragraph or a heading away from the claim it retracts.
+
+    Checking line by line produced eleven false positives out of twelve -- "Superseded
+    reasoning follows" sits above the passage, not inside every line of it. So a claim is
+    treated as retracted when a marker appears within `window` lines either side.
+    """
+    out = []
+    for doc in DOCS + ("ROADMAP.md",):
+        path = os.path.join(HERE, doc)
+        if not os.path.exists(path):
+            continue
+        lines = open(path).read().split("\n")
+        for i, line in enumerate(lines):
+            near = "".join(lines[max(0, i - window):i + window])
+            if any(w in near for w in RETRACTING):
+                continue
+            for phrase, why in STRUCK.items():
+                if phrase in line:
+                    out.append((doc, i + 1, phrase, why))
+    return out
+
+
+def evidence_names_something_real():
+    """An Evidence/Verified-by line should cite a tool or a capture that exists.
+
+    This is the nearest a script gets to checking whether a claim is true: not the claim,
+    but whether anyone could re-check it. A citation naming a tool that does not exist is
+    the shape a fabricated one takes.
+    """
+    tools = {f for f in os.listdir(os.path.join(HERE, "tools"))}
+    caps = captures_on_disk()
+    out = []
+    for doc in DOCS:
+        path = os.path.join(HERE, doc)
+        if not os.path.exists(path):
+            continue
+        for n, line in enumerate(open(path), 1):
+            if not re.search(r"\*\*(Evidence:|Verified by:)\*\*", line):
+                continue
+            for m in re.finditer(r"`tools/([A-Za-z0-9_.-]+)`", line):
+                if m.group(1) not in tools:
+                    out.append((doc, n, f"tools/{m.group(1)}"))
+            for m in re.finditer(r"`(captures/[A-Za-z0-9_./-]+)`", line):
+                ref = m.group(1)
+                if ref.endswith("/"):          # a directory is a fair citation
+                    if os.path.isdir(os.path.join(HERE, ref)):
+                        continue
+                elif ref in caps:
+                    continue
+                out.append((doc, n, ref))
+    return out
+
+
 # What this script does NOT check, stated so the gate's coverage is visible rather than
 # assumed. Every line here is a place a finding can still go missing silently -- which is
 # how 25 stranded addresses accumulated while an earlier version of this file passed.
 BLIND_SPOTS = [
-    "whether a claim is TRUE -- only a measurement does that",
-    "whether a struck or superseded claim has reappeared unstruck elsewhere",
-    "whether a number in the prose still matches what its tool prints",
-    "anything in ROADMAP.md, CLAUDE.md or the skills",
+    "whether a claim is TRUE -- checked only as far as `tools/reverify.py` reaches",
+    "anything in CLAUDE.md or the skills",
 ]
 
 
@@ -261,6 +340,26 @@ def main():
               "run python3 tools/anatomy.py --files and check\n")
     else:
         print("ok -- every IDENTIFIED entry is visible in FILES.md")
+
+    back = struck_claims_reappearing()
+    if back:
+        bad = 1
+        print(f"{len(back)} disproved claims stated as fact again:")
+        for doc, n, phrase, why in back:
+            print(f"  {doc}:{n}  \"{phrase}\" -- {why}")
+        print("  fix: strike it, or say it was believed and why it was wrong\n")
+    else:
+        print(f"ok ({len(STRUCK)} tracked) -- no disproved claim restated as fact")
+
+    fake = evidence_names_something_real()
+    if fake:
+        bad = 1
+        print(f"{len(fake)} Evidence lines citing something that does not exist:")
+        for doc, n, what in fake:
+            print(f"  {doc}:{n}  {what}")
+        print("  fix: cite what actually exists, or say the evidence is not recorded\n")
+    else:
+        print("ok -- every Evidence line cites a tool or capture that exists")
 
     print("\nnot checked by this script:")
     for b in BLIND_SPOTS:

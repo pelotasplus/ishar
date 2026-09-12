@@ -39,4 +39,12 @@ if git diff --cached --name-only | grep -q '^tools/'; then
   fi
 fi
 
+# 4. A documented number that no longer matches its measurement, or one that went down.
+if git diff --cached --name-only | grep -qE '^(FINDINGS|FORMATS|REBUILD|FILES)\.md$|^ishar\.chani$|^tools/'; then
+  if ! python3 tools/reverify.py; then
+    echo "pre-commit: a measured number does not match the documents."
+    fail=1
+  fi
+fi
+
 exit $fail

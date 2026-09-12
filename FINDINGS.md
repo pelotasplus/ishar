@@ -566,7 +566,7 @@ to a decoded asset (8bpp directly, 4bpp by subtracting a candidate base and repa
 
 | screen region | drawn from | depth / palette base |
 |---|---|---|
-| the 3D viewport | **no asset matches** | — |
+| the 3D viewport | `fond.io`, `plaine.io`, `arbre.io` — **no asset matched at the time**, which was the search and not the format (4.15d) | 4bpp, base 16 for `plaine.io` |
 | right-hand panel (compass, dial, DISK) | `frise.io` | 4bpp, base 208 (group 13) |
 | ACTION / ATTACK bar | `frise.io` | 4bpp, base 192 (group 12) and 176 (group 11) |
 | LIFE bars | `frise.io` | 4bpp, base 192 |

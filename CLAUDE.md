@@ -74,11 +74,27 @@ sections predate the Evidence discipline and sit in `EVIDENCE_DEBT` so the gate 
 and the debt stays countable; T57 works through them, and the rule is *never invent the
 line* -- `Status: not verified` is an acceptable answer and a fabricated citation is not.
 
-**It prints what it does not check.** `BLIND_SPOTS` lists them, so the gate's coverage is
-visible instead of assumed: whether a claim is *true*, whether a struck claim has reappeared
-unstruck, whether a number still matches what its tool prints, and anything in `ROADMAP.md`
-or the skills. Every line there is a way a finding can still go missing silently. Read it
-before trusting a green run.
+It also fails on **a disproved claim restated as fact** -- `STRUCK` carries twelve of them
+with the reason each was wrong, and a claim counts as retracted only if a marker appears
+within a dozen lines of it. On its first run that found four self-contradictions, including
+a FINDINGS table row still saying "no asset matches" the viewport under a paragraph that
+struck exactly that, and a ROADMAP entry asserting `arbre.io` had never been drawn twelve
+lines above the note saying it had. And on **an Evidence line citing a tool or capture that
+does not exist**, which is the shape a fabricated citation takes.
+
+```
+python3 tools/reverify.py      # do the documented numbers still measure the same?
+```
+
+`CLAIMS` re-measures what the documents assert -- 98 assets decoding, the nine needing the
+24-bit size, equal-nibble ratios, `arbre.io`'s fifteen sizes -- and `RATCHET` fails on any
+number that goes **down**, which is the guard for the regex that once ate 149 annotations
+and surfaced only as coverage sliding two tasks later. Offline, so the pre-commit hook runs
+it. It cannot judge prose; it can retake a measurement, and a number that changes when the
+measurement did not is the alarm.
+
+**`BLIND_SPOTS` prints what is still not checked**, so the gate's coverage is visible
+instead of assumed. That list is the to-do.
 
 **The first version checked only the first row**, because it was written in response to one
 failure -- and code addresses then went missing from `ishar.chani` in exactly the same way,
