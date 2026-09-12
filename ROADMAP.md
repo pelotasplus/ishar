@@ -2535,7 +2535,7 @@ Compose rewrite has to do.
       every chrome sprite, and rendering from it reproduces the panel against a captured
       frame.
 
-- [ ] **T54 · The viewport projection: what sets the two per-row steps**
+- [!] **T54 · The viewport projection: what sets the two per-row steps**
       `viewport_row_loop` advances source and destination by two independent per-row deltas
       read from `cs:[002c]` and `cs:[002e]` -- sampled live at 15 and 321 while walking in
       Fragonir (FORMATS 3.13d). A destination step of 321 on a 320-wide buffer shears every
@@ -2549,6 +2549,21 @@ Compose rewrite has to do.
       two words and read it.*
       **Done when:** FORMATS gives the two steps as a function of distance, and a predicted
       pair matches a polled one at a distance not used to derive it.
+      *[!] **Premise dead, and the correction is worth more than the task was.** The two
+      words are not a projection. An execution breakpoint at `seg_0e97:05f4` -- the row tail
+      both viewport loops share -- gives `dst - DX = 320` on **30 of 30** stops, with `DI`
+      advancing exactly 320 per row and `SI` exactly the source stride. So `cs:[002e]` is
+      `320 + pixels drawn`, cancelling the inner loop's walk, and `cs:[002c]` is
+      `source stride - ceil(pixels/2)`. **The blit is 1:1; nothing scales or shears.**
+      FORMATS 3.13d's reading -- 321 on a 320-wide buffer as a one-pixel shear, "which is
+      where the perspective comes from" -- is struck. The sampled values were right; the
+      interpretation was wrong. Also: they are CS-relative inside `seg_0e97`, so the segment
+      is `load + 0x0e97`; read in the load segment they give 34 and 9982, which looks
+      plausible and is wrong.
+      A pre-flight note for whoever reads this: 3.13d's **Verified by** line covered how the
+      routines were *found*, not how the two values were *interpreted*. The number was
+      measured and the sentence around it was not.
+      Superseded by T54b -- there is no projection to find.*
 
 - [ ] **T55 · Which asset does a viewport object come from?**
       Instances carry a viewport object's X/Y (FORMATS 3.17) and the scene scripts read the
@@ -2561,3 +2576,17 @@ Compose rewrite has to do.
       lone tree and the same source should recur at growing sizes.*
       **Done when:** FINDINGS names the asset and sprite offset behind one identified
       viewport object, with the source pointer that establishes it.
+
+- [ ] **T54b · Which sprite of the ladder is drawn at which distance?**
+      The viewport blits 1:1 (T54), so an object's apparent size is the size of the sprite
+      chosen. `arbre.io` holds fifteen sprites graded 16x15 through 144x83 -- a ladder, not
+      fifteen different trees. What picks a rung is the real projection, and it is far less
+      work for a rewrite than perspective maths would have been.
+      *Method: break at `viewport_row_step` (`seg_0e97:05f4`) and record `DX` (pixels per
+      row), `BP` (rows) and `SI` for every object in a frame -- that identifies the sprite
+      being drawn by its dimensions. Walk one step toward a lone tree in Fragonir and see
+      which rung replaces which. The party's cell is readable (`tools/region.py`), so the
+      distance is known; tabulate rung against distance. `tools/t54-rowloop.py` already
+      collects the registers.*
+      **Done when:** FINDINGS gives the sprite chosen at each distance for one object, and
+      a prediction matches at a distance not used to derive it.

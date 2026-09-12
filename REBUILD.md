@@ -320,38 +320,58 @@ How a coordinate maps to a region.
 
 This is the least understood part of the game.
 
-### It is not a blit
+### The renderer does not scale
 
-The viewport has its own drawing routines. They walk the source sprite and the destination
-buffer with two **independent** per-row steps.
+The viewport has its own drawing routines, separate from the ones that draw the UI. They
+copy a sprite into the frame buffer one row at a time.
 
-Sampled from the running game: source advances 15 bytes per row, destination advances 321.
+Measured live: the destination pointer advances **exactly 320 per row** and the source
+pointer **exactly one source row**. The copy is 1:1. Nothing is stretched, squashed or
+sheared.
 
-A destination step of 321 on a 320-wide buffer shifts every row one pixel sideways. That
-shear is where the perspective comes from. The source step controls how fast the sprite is
-consumed, which is where the size change comes from.
+Two of the routines' per-row constants look like they might encode a projection. They do
+not — one is `320 + pixels drawn` and the other is `source stride − bytes consumed`. Both
+are simply "move to the next row".
 
-### What follows from that
+### So where does distance come from?
 
-Viewport pixels are sheared and row-skipped, so **they never appear verbatim in any file**.
+From **which sprite is drawn**, not from how it is drawn.
 
-Matching the framebuffer against asset bytes finds nothing here — 1,517 runs, no hit —
-while the same method matches the UI panel immediately.
+`arbre.io` holds fifteen sprites in a graded ladder of sizes:
 
-### What else is solid
+    16x15   16x27   16x43   16x47   16x65
+    32x25   32x40   32x62   32x71   32x101
+    48x38   64x67   64x72   80x128  144x83
 
-Sky and ground are flat colour bands, not artwork.
+A tree twice as close is a different, larger sprite — not the same sprite scaled up.
 
-The list of objects to draw, and their positions, is readable at runtime. Their coordinates
-run x 9..272, y 6..94.
+For a rewrite this is far less work than a projection: pick the sprite, blit it 1:1 at its
+position. No perspective maths.
+
+### Objects are clipped at the viewport edge
+
+A draw can be narrower than its source. Both widths seen so far, 17 px and 32 px, came from
+the same 32-pixel-wide sprite — the narrow one was clipped where it ran off the edge.
+
+### Sky and ground
+
+Flat colour bands, filled by a separate routine. Not artwork.
+
+### What is readable at runtime
+
+The list of objects to draw and their positions. Coordinates run x 9..272, y 6..94.
 
 ### Not known
 
-Three things, and all three block a working viewport:
-
-- What computes the two per-row steps from an object's distance.
+- Which sprite of the ladder is chosen at which distance, and how position is derived.
 - Which asset a given viewport object's pixels come from.
-- Which sprite a map cell selects, which is bytecode rather than data.
+- Which sprite a map cell selects — that is bytecode, not data.
+
+### Trap: viewport pixels are not in the framebuffer verbatim
+
+Matching the framebuffer against asset bytes finds nothing in the viewport — 1,517 runs, no
+hit — while the same method matches the UI panel immediately. Objects overlap and clip each
+other, so a whole sprite is rarely on screen intact.
 
 ---
 

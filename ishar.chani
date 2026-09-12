@@ -1893,4 +1893,28 @@ attr[seg_0000:93a6]: type = code; name = adlib_sequencer; comment = [[[
     real one is vm_expr_load_global_indexed. Filter seg_0000:93b5 alongside wait_loop at
     seg_0000:3d64 when watching map memory.
 ]]]
+attr[seg_0e97:05f4]: type = code; name = viewport_row_step; comment = [[[
+    The tail both viewport row loops share -- the mirrored one at 05c0 and the plain one
+    at 0568 reach the identical four instructions:
+
+        add si, cs:[002c]   // source advance per row
+        add di, cs:[002e]   // destination advance per row
+        mov cx, dx          // restore the pixel count for the next row
+        dec bp / jne        // BP rows remaining
+
+    **These are row advances, not a scale and not a shear.** DX is the pixels per row and
+    the inner loop has already moved DI by +-DX, so cs:[002e] cancels it:
+
+        cs:[002e] = 320 + DX      measured: dst - DX = 320 on 30 of 30 stops
+        cs:[002c] = source row stride - ceil(DX/2)
+
+    Read live, DI advances **exactly 320 per row** and SI exactly the source stride. The
+    blit is 1:1. FORMATS 3.13d previously read cs:[002e] = 321 on a 320-wide buffer as a
+    one-pixel-per-row shear and called it the source of the perspective; it is not, and 321
+    simply pairs with a one-pixel-wide column. Corrected in FORMATS 3.13d.
+
+    Note the segment: these are CS-relative inside seg_0e97, so the runtime segment is
+    load + 0x0e97. Read in the load segment the same words give 34 and 9982, which looks
+    plausible and is wrong.
+]]]
 end

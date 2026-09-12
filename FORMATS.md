@@ -2726,17 +2726,41 @@ So there are now **five** 4bpp expanders in the game, not one: the panel's maske
 (`0b63`), the panel's opaque (`0ad1`), and these three. All use the same nibble order and
 `base + nibble`; they differ in direction and in whether zero is skipped.
 
-**The "scale" is not a resample.** `viewport_row_loop` ends with
+**The two per-row deltas are row advances, and nothing more.** `viewport_row_loop` ends
+with the four instructions both loops share (`viewport_row_step`, `seg_0e97:05f4`):
 
 ```
 add si, cs:[002c]        ; source advance per row
 add di, cs:[002e]        ; destination advance per row
+mov cx, dx               ; restore the pixel count
+dec bp / jne             ; BP rows remaining
 ```
 
-Two independent per-row deltas. Sampled live while walking in Fragonir: `cs:[002c] = 15`,
-`cs:[002e] = 321`. A destination step of **321 on a 320-wide buffer shifts every row one
-pixel sideways** -- a shear, which is where the perspective comes from; the source step
-chooses how fast the sprite is consumed, which is where the size change comes from.
+`DX` is the pixels per row and the inner loop has already walked `DI` by that much, so the
+destination delta cancels it:
+
+| | measured |
+|---|---|
+| `cs:[002e]` | `320 + DX` -- **`dst - DX = 320` on 30 of 30 stops** |
+| `cs:[002c]` | source row stride - `ceil(DX/2)` |
+| `DI` per row | **exactly 320** |
+| `SI` per row | **exactly the source stride** |
+
+So the blit is **1:1**. ~~A destination step of 321 on a 320-wide buffer shifts every row one
+pixel sideways -- a shear, which is where the perspective comes from.~~ **Struck.** 321
+pairs with a one-pixel-wide column and 337 with a 17-pixel one; both give a net advance of
+exactly 320. The sampled values were right and the reading of them was wrong.
+
+**Read them in the right segment.** They are CS-relative inside `seg_0e97`, so the runtime
+segment is `load + 0x0e97`. Read in the load segment the same words give 34 and 9982 --
+plausible-looking and wrong.
+
+**Where the perspective actually comes from is not this loop.** Two widths were seen, 17 px
+and 32 px, both with a **source stride of 16 bytes** -- the same 32-pixel sprite drawn full
+or clipped at the viewport edge. Since nothing here scales, an object's apparent size has to
+come from *which sprite is chosen*: `arbre.io` holds 15 sprites graded 16x15, 16x27, 16x43,
+16x47, 16x65, 32x25, 32x40, 32x62, 32x71, 32x101, 48x38, 64x67, 64x72, 80x128, 144x83.
+That is a size ladder, not fifteen different trees. Tracked as T54b.
 
 This is why T36's framebuffer search found **no** asset matching the viewport at either
 depth over 1,517 probe runs while the UI panel matched immediately: viewport pixels are
@@ -2744,7 +2768,9 @@ sheared and row-skipped, so they cannot appear verbatim anywhere.
 
 **Verified by:** MEMORY_WRITE breakpoints on `0xE0000 + y*320 + x` with a control
 breakpoint on never-written memory to subtract the phantom stops; instruction text read
-from the emulator, which had executed the region the listing still had as `db`.
+from the emulator, which had executed the region the listing still had as `db`; and, for
+the row-step correction, an execution breakpoint at `seg_0e97:05f4` reading `CX`, `DX`,
+`BP`, `SI` and `DI` at 30 stops across a walk (`tools/t54-rowloop.py`).
 
 ### 3.14 `presti.io` -- unresolved
 
