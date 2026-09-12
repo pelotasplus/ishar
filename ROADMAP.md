@@ -2473,6 +2473,11 @@ Compose rewrite has to do.
       to the draw, and says what is drawn.
 
 - [ ] **T51 · Close the largest unexplained asset regions**
+      **Largely answered by T53 (FINDINGS 4.15b).** Most of this was sprites nobody walked
+      to, not an unknown format: `tools/ioscan.py` walks only the highest-scoring chain and
+      assets hold several. `tools/chains.py` walks them all and took FILES.md from 47.9% to
+      **61.8%** named. What remains is the files that did not move -- `marchand.io` is still
+      3.8%, and its chain really does end with a different record type.
       `FILES.md` now measures it: **47.9% of the 2,370,078 decoded asset bytes have a named
       structure**, and the shortfall is concentrated, not spread. By bytes unexplained:
       `theend.io` 142,707 · `presen.io` 126,719 · `stage.io` 70,643 · `iboishar.io` 67,905 ·
