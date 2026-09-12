@@ -628,6 +628,31 @@ Two separate lessons, and the second is the one that cost the time:
 position after every step, learning blocked cells as it goes. Thirty steps take half a
 minute and the game stays honest.
 
+### Annotating an address that already has an annotation is silent
+
+Adding `attr[seg_0000:6c2e]` when one already existed produced no warning, no parse error
+and no coverage change. Both entries sat in the file; the listing rendered one of them. Two
+of today's annotations did this, and a third pair had been sitting there from an earlier
+session -- `mouse_event_handler` twice, each carrying facts the other lacked, and **both
+asserting that Spice86 never raises IRQ12 so the pointer cannot be driven**. T29c3 had
+disproved that and FINDINGS had been corrected; the database had not.
+
+`grep -c '^attr\['` catches a deletion and does not catch this. The check that does:
+
+```
+grep -o '^attr\[[^]]*\]' ishar.chani | sort | uniq -d
+```
+
+Run it after any batch of annotations. Expect hits -- most are an unnamed `type = code`
+seed from `tools/symbols.py` paired with a named entry, which is the normal shape here. The
+ones that matter are two *named* entries at one address; that is a merge waiting to happen,
+and the older half is where a superseded claim hides.
+
+The same pass is worth running the other way round. The expression dispatcher at
+`seg_0000:69ab` -- `jmp cs:[di+1f2h]`, the most-called routine in the VM and the thing every
+expression opcode goes through -- had **no annotation at all** after four sessions of VM
+work, because it was never the subject of a finding, only the road to one.
+
 ### Spice86's GDB stub reports IP as a LINEAR address
 
 `registers()["ip"]` is not the segment offset. At a breakpoint on `seg_0000:93a6` with

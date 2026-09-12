@@ -581,9 +581,6 @@ attr[seg_0000:6a9a]: type = code; name = vm_op_load_word_idx_b; comment = [[[
     Indexed word read with a byte operand, via vm_index_word.
 ]]]
 attr[seg_0000:6aa6]: type = code
-attr[seg_0000:6acd]: type = code; name = vm_op_load_byte_global; comment = [[[
-    DX = byte at es:[ss:[0bf6] + imm16] -- a second base register, so the VM has two variable areas: the frame at BP and this one.
-]]]
 attr[seg_0000:6adc]: type = code
 attr[seg_0000:6ae8]: type = code
 attr[seg_0000:6b0b]: type = code
@@ -597,9 +594,6 @@ attr[seg_0000:6b89]: type = code
 attr[seg_0000:6bb7]: type = code
 attr[seg_0000:6bd8]: type = code
 attr[seg_0000:6bf6]: type = code
-attr[seg_0000:6c2e]: type = code; name = vm_index_byte; comment = [[[
-    Index/scale helper shared by the indexed byte opcodes; called from 8 handlers.
-]]]
 attr[seg_0000:6c5b]: type = code; name = vm_index_word; comment = [[[
     Index/scale helper for the indexed word opcodes.
 ]]]
@@ -1469,12 +1463,6 @@ attr[seg_0000:58e5]: type = code; name = vm_stmt_e6; comment = [[[
 ]]]
 
 // Restored after a bad edit lost 149 annotations; plus T29c/T29d/T19c.
-attr[seg_0000:1249]: type = code; name = mouse_event_handler; comment = [[[
-    The INT 33h event callback the game installs at startup (AX=0x0c, mask 0x3f). It only
-    stores its arguments and returns far: buttons to cs:[11c1], x to cs:[11bd], y to
-    cs:[11bf]. Spice86 never invokes it, which is why the pointer UI cannot be driven from
-    the harness. FINDINGS.md 6.5.
-]]]
 attr[seg_0000:072d]: type = code; name = far_target_072d
 attr[seg_0941:1299]: type = code; name = far_target_1299
 attr[seg_0941:1c31]: type = code; name = far_target_1c31
@@ -1572,15 +1560,22 @@ attr[seg_0e97:06d5]: type = code; name = viewport_fill_rect; comment = [[[
     per-row stride in BX. The sky and ground bands.
 ]]]
 attr[seg_0000:1249]: type = code; name = mouse_event_handler; comment = [[[
-    The INT 33h event handler the game installs at startup, caught live: during boot
-    it calls AX=0x00 reset, 0x0f ratio, 0x04 set position, 0x07/0x08 ranges, then
-    **AX=0x0c with ES:DX = 017d:1249** -- this routine. After that it never calls INT
-    33h again, which is why a mid-game trace recorded 'the game does not use the
-    mouse' (FINDINGS 6.4) -- the wrong window, not a wrong conclusion about the code.
-    It does not fire under the harness: 0 hits while injecting moves and clicks,
-    against 507 for a control at vm_run. Spice86 never raises IRQ12 for injected
-    mouse input, so INT 74h never runs and the driver never reaches this callback
-    (T29c2).
+    The INT 33h event callback the game installs at startup. During boot it calls AX=0x00
+    reset, 0x0f ratio, 0x04 set position, 0x07/0x08 ranges, then **AX=0x0c with
+    ES:DX = 017d:1249** -- this routine -- and never calls INT 33h again. That is why a
+    mid-game trace recorded "the game does not use the mouse" (FINDINGS 6.4): the wrong
+    window, not a wrong conclusion about the code.
+
+    It only stores its arguments and returns far: buttons to cs:[11c1], x to cs:[11bd],
+    y to cs:[11bf].
+
+    **Historical note, since this entry twice said otherwise.** It was recorded as never
+    firing under the harness -- 0 hits against 507 for a control at vm_run -- and that was
+    read as "Spice86 never raises IRQ12 for injected mouse input, so the pointer UI cannot
+    be driven". The measurement was right and the conclusion was wrong: the mouse device
+    had simply been wired to the GUI rather than to the input hub, two lines in
+    Spice86DependencyInjection.cs. Fixed in T29c3; the pointer has been driving the game
+    ever since.
 ]]]
 attr[seg_0000:35ae]: type = code; name = ui_menu_draw_loop; comment = [[[
     Runs 4,248 times while the ACTION menu is drawn and **zero** times in an equal idle
@@ -1874,5 +1869,28 @@ attr[seg_0000:7150]: type = code; name = vm_expr_sequence; comment = [[[
 attr[seg_0000:7156]: type = code; name = vm_expr_sequence_end; comment = [[[
     Expressions 0x3a and 0xe4: `add sp,2 / ret` -- discards the caller's return address,
     which is what ends vm_expr_sequence's loop.
+]]]
+attr[seg_0000:69ab]: type = code; name = vm_expr_dispatch; comment = [[[
+    The expression dispatcher, and the most-called routine in the VM:
+
+        sub ax,ax / lodsb / mov di,ax / jmp word ptr cs:[di+1f2h]
+
+    Byte-scaled, which is why every expression opcode is even. It **jumps** rather than
+    calls, so a handler's `ret` returns to whoever called the dispatcher -- that is what
+    lets vm_expr_sequence_end break out by discarding a return address (FORMATS 7.2h).
+
+    Four entries reach it: 69a6 and 69b5 set BX = 277ch (the expression stack base) first,
+    69a9 saves DX into CX, and 69ab is the bare dispatch.
+]]]
+attr[seg_0000:93a6]: type = code; name = adlib_sequencer; comment = [[[
+    The AdLib/OPL sequencer tick. `lds si, cs:[91a2]` takes the stream pointer, `lodsb`
+    fetches a byte, zero ends the stream, otherwise `neg al / add al,3fh / and al,3fh` and
+    `out 389h, al` writes an OPL data register; the advanced pointer goes back to cs:[91a2].
+
+    **A trap worth knowing.** Its stream pointer parks in memory that overlaps the loaded
+    map grid, so a MEMORY_READ breakpoint on a map cell catches this routine reading a zero
+    and stopping. It was briefly read as a second consumer of the map (T11g3d); the only
+    real one is vm_expr_load_global_indexed. Filter seg_0000:93b5 alongside wait_loop at
+    seg_0000:3d64 when watching map memory.
 ]]]
 end
