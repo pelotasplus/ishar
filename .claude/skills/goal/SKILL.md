@@ -92,6 +92,12 @@ how a session produces confident nonsense.
 
 ## Reporting
 
+**Commit first, then report. Never the reverse.** The pre-commit hook is the only thing
+that catches a finding which never reached a generated file, and it fires on `git commit`.
+Reporting first means claiming work is finished before the one check that can contradict
+you has run -- which is exactly how three findings in one session were reported as done and
+found incomplete afterwards, by the user rather than by anything here.
+
 Tick the task in `ROADMAP.md` (`[x]`, or `[!]` with one line on the blocker) as part of
 finishing, not afterwards.
 
