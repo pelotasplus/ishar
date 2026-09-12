@@ -2509,3 +2509,47 @@ Compose rewrite has to do.
       a raw bank -- which the hypothesis has to account for.*
       **Done when:** FINDINGS says what at least one `s*` asset holds, with the evidence
       being a traced consumer rather than the filename.
+
+## Rendering the viewport (the rewrite's stated goal)
+
+- [ ] **T53 · Measure the static UI layout**
+      The chrome's art is done -- `frise.io` is the whole panel, action bar and life bars at
+      three palette bases, `buste.io` the portraits, one verified byte-for-byte against VRAM
+      (FINDINGS 4.15). **Placement is the only gap**, and T40d/e/f failed three times to
+      derive it: positions are not in the file, they are fields of 38-byte runtime instances
+      whose panel entries were never found.
+      For a rewrite this does not need deriving. The UI is static and never moves.
+      *Method: one clean gameplay screenshot, and for each of `frise.io`'s and `buste.io`'s
+      sprites find its (x, y) by searching the framebuffer for its decoded pixels at the
+      known palette base -- the T36 technique, which matched the panel immediately even
+      though it never matched the viewport. Record the table; do not chase the mechanism.*
+      **Done when:** FORMATS carries an (asset, sprite offset, x, y, palette base) table for
+      every chrome sprite, and rendering from it reproduces the panel against a captured
+      frame.
+
+- [ ] **T54 · The viewport projection: what sets the two per-row steps**
+      `viewport_row_loop` advances source and destination by two independent per-row deltas
+      read from `cs:[002c]` and `cs:[002e]` -- sampled live at 15 and 321 while walking in
+      Fragonir (FORMATS 3.13d). A destination step of 321 on a 320-wide buffer shears every
+      row one pixel sideways, which is the perspective; the source step sets how fast the
+      sprite is consumed, which is the size. **Nothing knows what computes either from an
+      object's distance**, and that is the maths a rewrite has to reproduce.
+      *Method: the party's cell is readable and so are the instances (`explore-world`), so
+      distance to a drawn object is known. Poll `cs:[002c]`/`[002e]` while stepping toward a
+      fixed object -- a tree in Fragonir -- and tabulate the pair against distance. A
+      reciprocal in the source step would be the classic 1/z. Then find the writer of those
+      two words and read it.*
+      **Done when:** FORMATS gives the two steps as a function of distance, and a predicted
+      pair matches a polled one at a distance not used to derive it.
+
+- [ ] **T55 · Which asset does a viewport object come from?**
+      Instances carry a viewport object's X/Y (FORMATS 3.17) and the scene scripts read the
+      map (FINDINGS 4.19d), but nothing connects a drawn object to the sprite it is drawn
+      from -- and the framebuffer cannot answer it, because viewport pixels are sheared and
+      row-skipped and never appear verbatim (4.15).
+      *Method: break in `viewport_expand_4bpp` (`seg_0e97:0644`) and read DS:SI at the stop
+      -- that is the source pixels, so the pointer identifies the asset and the offset
+      within it, the same attribution `tools/t44-when.py` does for script PCs. Walk toward a
+      lone tree and the same source should recur at growing sizes.*
+      **Done when:** FINDINGS names the asset and sprite offset behind one identified
+      viewport object, with the source pointer that establishes it.
